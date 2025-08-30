@@ -1,0 +1,729 @@
+import CustomButton from "@/components/customcomponents/CustomButton";
+import { CustomModal } from "@/components/customcomponents/CustomModal";
+import ExerciseComponent from "@/components/customcomponents/ExerciseComponent";
+import SelectComponent from "@/components/customcomponents/SelectComponent";
+import SendIcon from "@/components/svgcomponents/Send";
+import FullScreenLoader from "@/components/ui/loader";
+import WorkoutComponentSidebar from "@/components/workoutcommponentsidebar";
+import { IMAGES } from "@/contants/images";
+import axiosInstance from "@/utils/axiosInstance";
+import localStorageService from "@/utils/localStorageService";
+import { getMaxWeek } from "@/utils/sec";
+import { Icon } from "@iconify/react/dist/iconify.js";
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useUser } from "@/context/UserContext";
+import { DrawerSidebar } from "@/components/customcomponents/DrawerSidebar";
+
+import TextInput from "@/components/customcomponents/TextInput";
+import { Checkbox } from "@/components/ui/checkbox";
+import moment from "moment";
+
+const WorkoutDetails = () => {
+  const { user } = useUser();
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const [week, setWeek] = useState(1);
+  const [day, setDay] = useState(1);
+  const [deleteLoader, setDeleteLoader] = useState(false);
+  const [deleteExercise, setDeleteExercise] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [loader, setLoader] = useState(false);
+  const [progress, setProgress] = useState([]);
+
+  const [openShare, setOpenShare] = useState(false);
+  const [selectedGroups, setSelectedGroups] = useState<any[]>([]);
+  const [selectedGroupsCopy, setSelectedGroupsCopy] = useState<any[]>([]);
+
+  const [isShared, setIsShared] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [groups, setGroups] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+
+  const [option1, setOption1] = useState([]); // for week options
+  const [option2, setOption2] = useState([]); // for day options
+
+  const allSelected =
+    selectedGroups.length === groups.length && groups.length > 0;
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedGroups([]);
+    } else {
+      setSelectedGroups(groups);
+    }
+  };
+
+  const fetchGroups = async () => {
+    // setIsLoading(true);
+    try {
+      const token = localStorageService.getItem("accessToken");
+      const res = await axiosInstance.get("group", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const { body } = res.data;
+      setGroups(body.groups || []);
+    } catch (error: any) {
+      const message = error?.response?.data?.error || "Fetching groups failed.";
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGroups();
+  }, []);
+
+  useEffect(() => {
+    if (week) {
+      setDay(1);
+    }
+  }, [week]);
+
+  const filteredGroups = groups?.filter((group) =>
+    group.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const toggleGroup = (group: any) => {
+    const exists = selectedGroups.find((g) => g._id === group._id);
+    if (exists) {
+      setSelectedGroups(selectedGroups.filter((g) => g._id !== group._id));
+    } else {
+      setSelectedGroups([...selectedGroups, group]);
+    }
+  };
+
+  useEffect(() => {
+    getProgress();
+    document.body.classList.add("custom-override");
+    return () => document.body.classList.remove("custom-override");
+  }, []);
+
+  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<"add" | "edit">("add");
+
+  const handleDeleteExercise = async () => {
+    setDeleteLoader(true);
+
+    try {
+      const token = localStorageService.getItem("accessToken");
+
+      const resExe = await axiosInstance.delete(`/exercise/${state?._id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      toast.success(resExe.data.message);
+    } catch (error: any) {
+      const message = error?.response?.data?.error || "Internal Server Error.";
+      toast.error(message);
+    } finally {
+      setDeleteExercise(false);
+      setDeleteLoader(false);
+    }
+  };
+
+  const getProgress = async () => {
+    setDeleteLoader(true);
+
+    try {
+      const token = localStorageService.getItem("accessToken");
+
+      const res = await axiosInstance.get(`/workout/progress/${state?._id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setProgress(res.data.body);
+    } catch (error: any) {
+      const message = error?.response?.data?.error || "Internal Server Error.";
+      toast.error(message);
+    } finally {
+      setDeleteExercise(false);
+      setDeleteLoader(false);
+    }
+  };
+
+  const handlePinWorkout = async () => {
+    try {
+      const token = localStorageService.getItem("accessToken");
+      const resExe = await axiosInstance.put(
+        `/workout/pin/${state?._id}`,
+        {
+          is_pinned: !state?.is_pinned,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      navigate("/user/profile", {
+        replace: true,
+      });
+      toast.success(resExe.data.message);
+    } catch (error: any) {
+      const message = error?.response?.data?.error || "Internal Server Error.";
+      toast.error(message);
+    } finally {
+      // setFullLoader(false);
+    }
+  };
+
+  const handleDeletePost = async () => {
+    setLoader(true);
+    try {
+      const token = localStorageService.getItem("accessToken");
+
+      const resExe = await axiosInstance.delete(`/workout/${state?._id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      navigate("/user/profile", {
+        replace: true,
+      });
+      toast.success(resExe.data.message);
+    } catch (error: any) {
+      const message = error?.response?.data?.error || "Internal Server Error.";
+      toast.error(message);
+    } finally {
+      setLoader(false);
+    }
+  };
+
+  const shareToGroups = async () => {
+    if (selectedGroups.length === 0) return;
+    // setLoader(true);
+    try {
+      const token = localStorageService.getItem("accessToken");
+      const data = {
+        groups: selectedGroups.map((g) => g._id),
+        workout_id: state._id.toString(),
+      };
+      const resExe = await axiosInstance.post(`/group/share-to-groups`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // navigate("/user/profile", {
+      //   replace: true,
+      // });
+      setSelectedGroups([]);
+      toast.success(resExe.data.message);
+    } catch (error: any) {
+      const message = error?.response?.data?.error || "Internal Server Error.";
+      toast.error(message);
+    } finally {
+      // setLoader(false);
+    }
+  };
+
+  useEffect(() => {
+    if (state?.exercises?.length) {
+      const weeksSet = Array.from(
+        new Set(state.exercises.map((item) => item.week))
+      ).sort((a, b) => a - b);
+
+      setOption1(
+        weeksSet.map((weekNumber) => ({
+          value: weekNumber,
+          label: `Week ${weekNumber}`,
+        }))
+      );
+    }
+  }, [state.exercises, week]);
+
+  useEffect(() => {
+    if (state?.exercises?.length && week != null) {
+      const filteredDays = state.exercises
+        .filter((item) => item.week === week)
+        .map((item) => item.day);
+
+      const daysSet = Array.from(new Set(filteredDays)).sort((a, b) => a - b);
+
+      setOption2(
+        daysSet.map((dayNumber) => ({
+          value: dayNumber,
+          label: `Day ${dayNumber}`,
+        }))
+      );
+
+      // Reset day to first available if current day doesn't belong to selected week
+      if (!daysSet.includes(day)) {
+        setDay(daysSet[0]);
+      }
+    }
+  }, [week, state.exercises]);
+
+  const selectedExerciseDay = state.exercises.find(
+    (item__) => item__.week === week && item__.day === day
+  ) || { exercises: [] };
+
+  return (
+    <div className=" text-white my-6 mb-0 pb-9 px-1">
+      {deleteLoader && <FullScreenLoader />}
+      {/* Workouts */}
+      <div className="mt-0 sm:mt-8">
+        <div className="grid grid-cols-0 md:grid-cols-1 lg:grid-cols-12 xl:grid-cols-12 gap-6">
+          {/* Main content - 8 columns */}
+          <div className="lg:col-span-8 xl:col-span-9 md:col-span-12">
+            <div className="flex items-center gap-4 mb-3">
+              <h2
+                className="md:text-2xl text-md font-semibold flex items-center gap-2 cursor-pointer"
+                onClick={() => navigate(-1)}
+              >
+                <img
+                  src={IMAGES.arrowLeft}
+                  alt="arrowLeft"
+                  className="w-6 h-6 cursor-pointer"
+                />
+                {/* <span className="text-white">Pre</span> */}
+              </h2>
+
+              {user._id == state.user_id && (
+                <div className="flex items-center gap-3 ms-auto">
+                  {!state?.is_draft && (
+                    <>
+                      <Icon
+                        onClick={handlePinWorkout}
+                        icon="tabler:pin"
+                        fontSize={25}
+                        className={`${
+                          state?.is_pinned ? "text-primary" : "text-white"
+                        } cursor-pointer hover:text-primary transition-all duration-300 ease-in-out`}
+                      />
+                      <SendIcon
+                        onClick={() => {
+                          setOpenShare(true);
+                        }}
+                        className="text-white cursor-pointer send-icon"
+                        width={25}
+                        height={25}
+                      />
+                    </>
+                  )}
+
+                  <Icon
+                    icon="mage:edit-pen"
+                    fontSize={25}
+                    onClick={() => {
+                      navigate("/user/edit-workout", {
+                        state: state,
+                      });
+                      // setMode("edit");
+                      // setOpen(true);
+                    }}
+                    className="text-white cursor-pointer hover:text-primary transition-all duration-300 ease-in-out"
+                  />
+                  <Icon
+                    onClick={() => {
+                      setDeleteModal(true);
+                    }}
+                    icon="mynaui:trash"
+                    fontSize={25}
+                    className="text-white cursor-pointer hover:text-primary transition-all duration-300 ease-in-out"
+                  />
+                </div>
+              )}
+            </div>
+            <div className="relative mb-4">
+              <img
+                src={state.thumbnail}
+                alt="workout"
+                className="w-full h-[400px] object-contain"
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(179deg, rgba(0, 0, 0, 0.70) 4.16%, rgba(0, 0, 0, 0.00) 40.1%, rgba(0, 0, 0, 0.70) 90.09%), linear-gradient(0deg, rgba(0, 0, 0, 0.20) 0%, rgba(0, 0, 0, 0.20) 100%)",
+                }}
+              ></div>
+            </div>
+            <div className="flex justify-between items-center">
+              <div>
+                <h4 className="font-semibold text-sm mb-1">{state.title}</h4>
+                <p className="text-sm text-gray-400 flex gap-1 items-center">
+                  <img
+                    src={IMAGES.calendar}
+                    alt="Calendar"
+                    className="w-4 h-4"
+                  />
+                  {getMaxWeek(state?.exercises, "week")}
+                  <img
+                    src={IMAGES.clock}
+                    alt="Calendar"
+                    className="w-4 h-4 ml-2"
+                  />{" "}
+                  {state?.exercises.reduce(
+                    (acc, curr) => acc + (curr.workout_duration || 0),
+                    0
+                  )}{" "}
+                  min
+                  <img
+                    src={IMAGES.editiconimg}
+                    alt="Calendar"
+                    className="w-7 h-7 ml-2"
+                  />{" "}
+                  {state.updated_at
+                    ? moment(state.updated_at).fromNow()
+                    : moment(state.created_at).fromNow()}
+                </p>
+              </div>
+
+              <CustomButton
+                className="w-auto py-5 bg-primary text-black"
+                text={`${state.fees ? `$${state.fees}` : "Free"}`}
+                type="button"
+                disableHover={true}
+              />
+            </div>
+
+            <p className="text-sm text-white mt-4">{state.caption}</p>
+
+            <div className="flex items-center gap-2 justify-between w-full flex-1 mt-5 mb-3">
+              <h4 className="font-semibold text-sm mb-1">
+                Participant ({progress.length})
+              </h4>
+              {progress.length > 1 && (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() =>
+                      navigate("/user/athletes-comparison", {
+                        state: {
+                          workout_title: state.title,
+                          workout_id: state._id.toString(),
+                          weeks: state.exercises,
+                        },
+                      })
+                    }
+                    className="flex items-center gap-2 cursor-pointer"
+                    style={{ color: "#94eb00" }}
+                  >
+                    <img
+                      src={IMAGES.compareAthletes}
+                      alt="compareAthletes"
+                      className="w-5 h-5"
+                    />
+                    Compare Athletes
+                  </button>
+                  <Icon
+                    icon="tabler:search"
+                    fontSize={16}
+                    className="text-white cursor-pointer hover:text-primary transition-all duration-300 ease-in-out"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {progress.map((item) => {
+                return (
+                  <div
+                    onClick={() =>
+                      navigate("/user/chat/progress-details", {
+                        state: {
+                          ...item,
+                          workout_title: state.title,
+                          workout_id: state._id.toString(),
+                          exercises: state.exercises,
+                        },
+                      })
+                    }
+                    className="bg-black cursor-pointer text-white rounded-[10px] border border-white/10 p-3 flex items-center justify-between"
+                  >
+                    {/* Avatar and Info */}
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={
+                          item.user.profile_picture || IMAGES.placeholderAvatar
+                        } // Replace with actual avatar source
+                        alt="avatar"
+                        className="w-16 h-16 rounded-full"
+                      />
+                      <div>
+                        <p className="text-md font-semibold mb-1">
+                          {item.user.fullname}
+                        </p>
+                        <p
+                          className={`${
+                            item.progress_percent == 100
+                              ? "text-primary"
+                              : item.progress_percent == 0
+                              ? "text-red"
+                              : "text-grey"
+                          } text-sm flex items-center gap-2`}
+                        >
+                          <div
+                            className={`w-4 h-4 rounded-full border-1 border-primary flex items-center justify-center`}
+                          >
+                            <Icon icon="tabler:check" fontSize={10} />
+                          </div>
+                          {item.progress_percent == 100
+                            ? "Completed"
+                            : item.progress_percent > 0
+                            ? "In Progress"
+                            : "Not Started"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Circular Progress */}
+                    <div className="relative w-14 h-14 flex items-center justify-center">
+                      <svg
+                        className="absolute top-0 left-0"
+                        width="56"
+                        height="56"
+                        viewBox="0 0 36 36"
+                      >
+                        <circle
+                          cx="18"
+                          cy="18"
+                          r="16"
+                          stroke="#333333"
+                          strokeWidth="3"
+                          fill="none"
+                        />
+                        <circle
+                          cx="18"
+                          cy="18"
+                          r="16"
+                          stroke={
+                            item.progress_percent >= 80
+                              ? "#A3FF12"
+                              : item.progress_percent >= 50
+                              ? "#FFA500"
+                              : item.progress_percent > 0
+                              ? "#3391FF"
+                              : "#666"
+                          }
+                          strokeWidth="3"
+                          fill="none"
+                          strokeLinecap="round"
+                          transform="rotate(-90 18 18)"
+                          strokeDasharray="100"
+                          strokeDashoffset={100 - item.progress_percent}
+                        />
+                      </svg>
+                      <span
+                        className={`${
+                          item.progress_percent == 0
+                            ? "text-white"
+                            : "text-primary"
+                        } text-sm font-semibold`}
+                      >
+                        {item.progress_percent}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* <div className="text-primary text-sm  mt-4 cursor-pointer hover:text-primary/80 transition-all duration-300 ease-in-out">
+              View More
+            </div> */}
+          </div>
+
+          {/* Sidebar - 4 columns */}
+          <div className="col-span-0 md:col-span-12 lg:col-span-4 xl:col-span-3 pl-2">
+            <div className="max-h-[calc(100vh-100px)] overflow-y-auto pr-1 scroll-hide">
+              <div className="flex items-center gap-4 mb-3">
+                <h2 className="text-md font-semibold">
+                  <span className="text-white">Exercises</span>
+                </h2>
+
+                <div className="flex items-center gap-1 ms-auto">
+                  <div className="relative ">
+                    <SelectComponent
+                      value={week}
+                      onChange={setWeek}
+                      icon={IMAGES.calendar}
+                      className="py-2 px-3 w-[120px] cursor-pointer"
+                      options={option1}
+                    />
+                  </div>
+                  <div className="relative ">
+                    <SelectComponent
+                      value={day}
+                      onChange={setDay}
+                      className="py-2 px-3 w-[90px] cursor-pointer"
+                      options={option2}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="text-xl font-semibold mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-4">
+                {selectedExerciseDay.exercises.length > 0 ? (
+                  selectedExerciseDay.exercises.map((exercise, index) => (
+                    <ExerciseComponent
+                      key={exercise._id + index}
+                      image={exercise.exercise_info.thumbnail}
+                      title={exercise.exercise_info.title}
+                      sets={exercise.sets ? exercise.sets.length : 0}
+                      reps={
+                        exercise.sets
+                          ? exercise.sets.map((set: any) => set.reps).join(", ")
+                          : 0
+                      }
+                      rest={
+                        exercise.sets
+                          ? exercise.sets
+                              .map((set: any) => `${set.rest} Sec`)
+                              .join(", ")
+                          : 0
+                      }
+                      className="mb-0 cursor-pointer"
+                      onClick={() =>
+                        navigate("/user/chat/exercise-details", {
+                          state: {
+                            ...exercise,
+                            workout_id: state._id.toString(),
+                            day,
+                            week,
+                          },
+                        })
+                      }
+                    />
+                  ))
+                ) : (
+                  <p className="text-white text-sm">
+                    No exercises available for this day.
+                  </p>
+                )}
+              </div>
+            </div>{" "}
+            {/* End of scrollable content */}
+          </div>
+        </div>
+      </div>
+      <WorkoutComponentSidebar open={open} setOpen={setOpen} mode={mode} />
+
+      {/* <CustomModal
+        disabled={deleteLoader}
+        title="Add Exercise"
+        submitText="Yes I'm Sure"
+        open={deleteExercise}
+        setOpen={setDeleteExercise}
+        onCancel={() => setDeleteExercise(false)}
+        onSubmit={() => handleDeleteExercise()}
+        customButtonClass="!py-6"
+        children={
+          <div className="text-white text-center mb-3">
+            <h3 className="font-semibold text-lg mb-1">Delete Exercise?</h3>
+            <p className="text-grey text-sm">
+              Are you sure you want to delete{" "}
+              <span className="text-white">{editExercise?.title}</span>{" "}
+              exercise?
+            </p>
+          </div>
+        }
+      /> */}
+
+      {/* Modal */}
+      <CustomModal
+        disabled={loader}
+        title="Delete Workout"
+        submitText="Yes I'm Sure"
+        open={deleteModal}
+        setOpen={setDeleteModal}
+        onCancel={() => {
+          setSelectedGroups([]);
+          setDeleteModal(false);
+        }}
+        onSubmit={() => handleDeletePost()}
+        customButtonClass="!py-6"
+        children={
+          <div className="text-white text-center mb-3">
+            <h3 className="font-semibold text-lg mb-1">Delete Workout?</h3>
+            <p className="text-grey text-sm">
+              Are you sure you want to delete this Workout?
+            </p>
+          </div>
+        }
+      />
+
+      <DrawerSidebar
+        title="Share"
+        submitText="Share"
+        cancelText="Cancel"
+        onSubmit={() => {
+          if (selectedGroups.length === 0) return;
+          shareToGroups();
+          setOpenShare(false);
+        }}
+        onCancel={() => {
+          setSelectedGroups(selectedGroupsCopy);
+          setOpenShare(false);
+        }}
+        open={openShare}
+        setOpen={setOpenShare}
+        showFooter={true}
+        className="drawer-override"
+      >
+        <div className="p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h6 className="text-white text-m font-medium">
+              Select Groups {groups.length > 0 && `(${groups.length})`}
+            </h6>
+            <button className="text-primary text-sm" onClick={toggleSelectAll}>
+              {allSelected ? "Deselect All" : "Select All"}
+            </button>
+          </div>
+
+          <TextInput
+            placeholder="Search groups..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            type="text"
+            icon={<Icon icon="uil:search" color="white" className="w-5 h-5" />}
+            className="mb-3"
+          />
+
+          {isLoading ? (
+            <p className="text-white text-center py-6">Loading groups...</p>
+          ) : (
+            filteredGroups.map((group) => (
+              <div
+                key={group._id}
+                className="flex items-center justify-between gap-4 mb-0"
+                onClick={() => toggleGroup(group)}
+              >
+                <img
+                  src={group.group_picture_url || IMAGES.groupPlaceholder}
+                  alt={group.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+                <div className="flex items-center gap-3 justify-between w-full border-b border-gray-800 py-4">
+                  <div>
+                    <p className="text-white text-sm font-medium mb-1">
+                      {group.name}
+                    </p>
+                    <p className="text-gray-400 text-xs">{group.followers}</p>
+                  </div>
+                  <Checkbox
+                    id={`group-${group._id}`}
+                    className="cursor-pointer text-black border-grey hover:border-primary transition-colors"
+                    checked={selectedGroups.some((g) => g._id === group._id)}
+                    // onCheckedChange={() => toggleGroup(group)}
+                  />
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </DrawerSidebar>
+    </div>
+  );
+};
+
+export default WorkoutDetails;

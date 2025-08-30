@@ -1,0 +1,266 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --font-primary: "Poppins", sans-serif;
+  --color-primary: #94eb00;
+  --color-lightdark: #212121;
+  --color-grey: #6f6f6f;
+  --primary-color: #94eb00;
+  --color-info: #007aff;
+  --color-white: #ffffff;
+  --color-blue: #007aff;
+  --color-red: #e7252c;
+  --color-green: #38b100;
+  --gradient-primary: linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+  --text-banner-heading: 5em;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 57px; /* height of your fixed header */
+}
+
+body {
+  padding-top: 57px !important;
+  background-color: #000000;
+  &.auth-body {
+    padding-top: 0 !important;
+  }
+  &.bodyPadRemove {
+    padding-top: 0 !important;
+  }
+  &.landing-page {
+    padding-top: 0 !important;
+    @media (max-width: 768px) {
+      padding-top: 57px !important;
+    }
+  }
+}
+
+body[data-scroll-locked] {
+  padding-top: 57px !important;
+
+  overscroll-behavior: contain;
+  position: relative !important;
+  padding-left: 0px;
+  padding-top: 0px;
+  padding-right: 0px;
+  margin-left: 0;
+  margin-top: 0;
+  margin-right: 0 !important;
+}
+
+body[data-scroll-locked].custom-override {
+  background-color: #212121 !important;
+  overflow: auto !important;
+  margin-right: 0 !important;
+}
+
+.gradient-primary {
+  background: var(--gradient-primary);
+}
+
+body {
+  font-family: var(--font-primary);
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #212121 inset !important; /* match your bg */
+  -webkit-text-fill-color: #ffffff !important; /* match your text color */
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.slick-dots {
+  bottom: 13px !important;
+  left: 20px !important;
+  display: flex !important;
+  gap: 6px !important;
+  li {
+    margin: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    button {
+      all: unset;
+      background-color: rgba(255, 255, 255, 0.5) !important;
+      border-radius: 100px;
+      height: 9px !important;
+      width: 9px !important;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      padding: 0 !important;
+    }
+
+    &.slick-active button {
+      background-color: rgba(255, 255, 255, 1) !important;
+      width: 31px !important;
+    }
+
+    button::before {
+      display: none !important;
+    }
+  }
+}
+
+.scrollCustom {
+  --sb-track-color: #000000;
+  --sb-thumb-color: #393939;
+  --sb-size: 7px;
+  padding-right: 4px;
+  &.scrollCustom1 {
+    padding-right: 0px;
+  }
+}
+
+.scrollCustom::-webkit-scrollbar {
+  width: var(--sb-size);
+}
+
+.scrollCustom::-webkit-scrollbar-track {
+  background: var(--sb-track-color);
+  border-radius: 7px;
+}
+
+.scrollCustom::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-color);
+  border-radius: 7px;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .scrollCustom {
+    scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+  }
+}
+
+.drawer-override {
+  @apply max-w-[475px];
+  max-width: 475px !important;
+  & .max-w-sm {
+    max-width: 100% !important;
+  }
+}
+
+.customWidthDrawer {
+  max-width: 400px !important;
+  .max-w-sm {
+    max-width: 100% !important;
+  }
+}
+
+.send-icon {
+  path {
+    transition: all 0.3s ease;
+    stroke: var(--color-white);
+  }
+  &:hover {
+    path {
+      stroke: var(--color-primary);
+    }
+  }
+}
+
+/* adddddd hereeeeeee */
+.customTab {
+  justify-content: flex-start;
+}
+.customTab button {
+  max-width: fit-content;
+}
+
+.svgHover {
+  svg {
+    g {
+      path {
+        transition: all 0.3s ease;
+      }
+    }
+    path {
+      transition: all 0.3s ease;
+    }
+  }
+  &:hover {
+    svg {
+      g {
+        path {
+          stroke: var(--color-white);
+          fill: var(--color-white);
+        }
+      }
+      path {
+        stroke: var(--color-white);
+        fill: var(--color-white);
+      }
+    }
+  }
+}
+
+@media (max-width: 575px) {
+  .data-\[vaul-drawer-direction\=right\]\:w-3\/4 {
+    &[data-vaul-drawer-direction="right"] {
+      width: calc(3 / 3 * 100%);
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .addPosClass {
+    background-position: -250px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .custom-workout-access {
+    flex-direction: column !important;
+    align-items: stretch;
+    width: 100%;
+  }
+  .custom-workout-access input {
+    margin-top: 10px;
+  }
+  .custom-workout-access span {
+    width: 100%;
+  }
+}
+
+.Toastify__toast-container {
+  z-index: 9999 !important;
+}
+
+.Toastify__toast-container {
+  pointer-events: auto !important;
+}
+
+.uploadinner {
+  input {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    z-index: 3 !important;
+    clip: unset !important;
+    clip-path: none !important;
+  }
+}
+
+.scroll-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for Firefox */
+.scroll-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
