@@ -50,14 +50,14 @@ const App = () => {
       <ScrollToTop />
       <Routes>
         {/* Unauthenticated users */}
-        <Route path="/" element={<LandingPage />} />
-        {/* {profileStatus === "unauthenticated" && (
+        {profileStatus === "unauthenticated" && (
           <>
             <Route path="/auth/*" element={<AuthRoutes />} />
 
+            <Route path="/" element={<LandingPage />} />
             <Route path="*" element={<Navigate to="/auth" replace />} />
           </>
-        )} */}
+        )}
 
         {/* Authenticated users but profile incomplete */}
         {[
