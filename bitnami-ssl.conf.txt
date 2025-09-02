@@ -13,8 +13,8 @@ SSLSessionCacheTimeout  300
 <VirtualHost _default_:443>
   DocumentRoot "/opt/bitnami/apache/htdocs"
   SSLEngine on
-  SSLCertificateFile "/opt/bitnami/apache/conf/muvello.indiitserver.in.crt"
-  SSLCertificateKeyFile "/opt/bitnami/apache/conf/muvello.indiitserver.in.key"
+  SSLCertificateFile "/opt/bitnami/apache/conf/muvello.com.crt"
+  SSLCertificateKeyFile "/opt/bitnami/apache/conf/muvello.com.key"
 
   # Exclude API routes from static file handling
   ProxyPreserveHost On
