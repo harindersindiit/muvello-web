@@ -29,6 +29,7 @@ import ExerciseComponentSkeleton from "@/components/skeletons/ExerciseComponentS
 import WorkoutComponentSkeleton from "@/components/skeletons/WorkoutComponentSkeleton";
 
 import AddPost from "@/components/customcomponents/AddPost";
+import { useInView } from "react-intersection-observer";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { reportUserSchema } from "@/utils/validations";
 
@@ -59,8 +60,13 @@ const Home = () => {
     }
   }, []);
 
+  const { ref: inViewRef, inView } = useInView({
+    threshold: 1,
+    root: intersectionRoot,
+  });
+
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { updateUser, user } = useUser();
 
   const [open, setOpen] = useState(false);
   const [postDrawer, setPostDrawer] = useState(false);
@@ -70,7 +76,9 @@ const Home = () => {
   const [isShared, setIsShared] = useState(false);
   const [isReport, setIsReport] = useState(false);
 
+  const [reportType, setReportType] = useState("");
   const [mode, setMode] = useState<"add" | "edit">("add");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   /////
 
@@ -96,15 +104,68 @@ const Home = () => {
 
   /// add post ////
   // const [postDetails, setPostDetails] = useState();
+  const [selectGroupsOpen, setSelectGroupsOpen] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const fileArray = Array.from(files).map((file) => ({
+      file,
+      url: URL.createObjectURL(file),
+    }));
+
+    setUploadedFiles((prev) => [...prev, ...fileArray]);
+  };
+
+  const removeFile = (idx: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleSubmit = () => {
+    console.log(caption, selectedTab);
+    if (!uploadedFiles.length) return alert("Please upload a file");
+    const formData = new FormData();
+
+    uploadedFiles.forEach(({ file }) => formData.append("files", file));
+    formData.append("caption", caption);
+    formData.append("category", selectedTab);
+    formData.append("shareOnGroups", isShared.toString());
+
+    // Call your backend API here
+    fetch("/api/posts/upload", {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        console.log("Upload success:", res);
+        setPostDrawer(false);
+        // Reset form
+        setUploadedFiles([]);
+        // setCaption("");
+        setSelectedTab("");
+        setIsShared(false);
+      })
+      .catch((err) => {
+        console.error("Upload error:", err);
+      });
+  };
+
+  useEffect(() => {
+    if (inView && hasMore) {
+      getPostsList(page + 1);
+    }
+  }, [inView]);
 
   // add post ////
   const getPostsList = async (currentPage = 1) => {
     if (!hasMore || isFetchingMore) return;
 
     setIsFetchingMore(true);
-    if (currentPage === 1) {
-      // Reset for first page
-    }
 
     try {
       const token = localStorageService.getItem("accessToken");
@@ -392,13 +453,11 @@ const Home = () => {
                 }`}
               >
                 {workoutLoader ? (
-                  <div className="relative">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <WorkoutComponentSkeleton key={index} />
-                    ))}
-                  </div>
+                  Array.from({ length: 3 }).map((_, index) => (
+                    <WorkoutComponentSkeleton key={index} />
+                  ))
                 ) : (
-                  <div className="animate-fadeIn bg-[#1a1a1a] rounded-xl p-4">
+                  <>
                     {workouts.map((workout, index) => (
                       <WorkoutComponent
                         visibility={workout.visibility}
@@ -411,8 +470,7 @@ const Home = () => {
                           (acc, curr) => acc + (curr.workout_duration || 0),
                           0
                         )}
-                        weeks={Number(getMaxWeek(workout?.exercises, "week"))}
-                        showEditDelete={false}
+                        weeks={getMaxWeek(workout?.exercises, "week")}
                         onViewClick={() =>
                           navigate(`/user/workouts/workout-details`, {
                             state: workout,
@@ -424,7 +482,7 @@ const Home = () => {
                     {!workoutLoader && workouts.length === 0 && (
                       <NoDataPlaceholder />
                     )}
-                  </div>
+                  </>
                 )}
               </div>
             </div>
@@ -466,16 +524,14 @@ const Home = () => {
               </div>
               {preferencesLoader || exersicesLoader ? (
                 // <Loader2 className="animate-spin text-white w-12 h-12" />
-                <div className="relative">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <ExerciseComponentSkeleton key={index} />
-                    ))}
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <ExerciseComponentSkeleton key={index} />
+                  ))}
                 </div>
               ) : (
                 <div
-                  className={`grid pb-15 gap-4 md:grid-cols-2 animate-fadeIn bg-[#1a1a1a] rounded-xl p-4 ${
+                  className={`grid pb-15 gap-4 md:grid-cols-2  ${
                     !exersicesLoader && exercises.length === 0
                       ? "xl:grid-cols-1"
                       : "xl:grid-cols-3"
@@ -532,13 +588,11 @@ const Home = () => {
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-1 lg:grid-cols-2 md:grid-cols-2 gap-4">
               {loader ? (
-                <div className="relative">
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <PostCardSkeleton key={index} />
-                  ))}
-                </div>
+                Array.from({ length: 3 }).map((_, index) => (
+                  <PostCardSkeleton key={index} />
+                ))
               ) : (
-                <div className="animate-fadeIn bg-[#1a1a1a] rounded-xl p-4">
+                <>
                   {posts.map((item, index) => (
                     <PostCard
                       key={item._id || index}
@@ -559,12 +613,12 @@ const Home = () => {
                     ))}
 
                   {/* Intersection Observer Anchor */}
-                  {/* <div ref={inViewRef} className="h-10"></div> */}
+                  <div ref={inViewRef} className="h-10"></div>
 
                   {!isFetchingMore && posts.length === 0 && (
                     <NoDataPlaceholder />
                   )}
-                </div>
+                </>
               )}
             </div>
           </div>
@@ -573,9 +627,9 @@ const Home = () => {
 
       {/* Create Post Drawer */}
       <AddPost
+        preferences={preferences}
         setPostDrawer={setPostDrawer}
         postDrawer={postDrawer}
-        postDetails={null}
         refreshPosts={refreshPosts}
       />
       {/* Create Post Drawer */}
@@ -679,11 +733,10 @@ const Home = () => {
         open={openExercise}
         setOpen={setOpenExercise}
         mode={mode}
-        preferences={[]}
+        preferences={preferences}
         getExercises={() => {
           getExercises();
         }}
-        editExercise={null}
       />
     </div>
   );
