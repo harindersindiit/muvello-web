@@ -19,6 +19,8 @@ interface ExerciseComponentProps {
   progressShow?: boolean;
   total?: number; // e.g. 100
   onClick?: () => void;
+  onImageLoad?: () => void;
+  onImageError?: () => void;
 }
 
 const ExerciseComponent = ({
@@ -39,6 +41,8 @@ const ExerciseComponent = ({
   progressShow,
   total,
   onClick,
+  onImageLoad = () => {},
+  onImageError = () => {},
 }: ExerciseComponentProps) => {
   const progPercentage =
     progress && total ? ((progress / total) * 100).toFixed(2) : "0.00";
@@ -63,6 +67,8 @@ const ExerciseComponent = ({
             src={image}
             alt={title}
             className="w-full h-[130px] rounded-[10px] object-cover"
+            onLoad={onImageLoad}
+            onError={onImageError}
           />
           {category && (
             <span className="absolute bottom-0 left-0 bg-white text-[#33a100] text-xs font-semibold px-2 py-1 rounded-tr-xl rounded-bl-xl">

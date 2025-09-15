@@ -39,6 +39,8 @@ interface PostCardProps {
   onViewProfile?: any;
   onReport?: any;
   setPosts?: any;
+  onImageLoad?: () => void;
+  onImageError?: () => void;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -48,6 +50,8 @@ const PostCard: React.FC<PostCardProps> = ({
   onViewProfile,
   onReport = () => {},
   setPosts = () => {},
+  onImageLoad = () => {},
+  onImageError = () => {},
   item,
   posts,
 }) => {
@@ -295,6 +299,8 @@ const PostCard: React.FC<PostCardProps> = ({
                       src={img.url}
                       alt="Post"
                       className="w-full h-[350px] object-cover rounded-t-xl"
+                      onLoad={onImageLoad}
+                      onError={onImageError}
                     />
                   ) : (
                     <video

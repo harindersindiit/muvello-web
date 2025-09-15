@@ -13,7 +13,9 @@ interface WorkoutComponentProps {
   onClickEdit?: () => void;
   onClickDelete?: () => void;
   onViewClick?: () => void;
-  is_draft?: boolean; // <-- new
+  is_draft?: boolean;
+  onImageLoad?: () => void;
+  onImageError?: () => void;
 }
 
 const WorkoutComponent = ({
@@ -28,6 +30,8 @@ const WorkoutComponent = ({
   onViewClick,
   onClickDelete,
   onClickEdit,
+  onImageLoad = () => {},
+  onImageError = () => {},
 }: WorkoutComponentProps) => {
   return (
     <div className="rounded-xl overflow-hidden">
@@ -36,6 +40,8 @@ const WorkoutComponent = ({
           src={image}
           alt="Workout"
           className="w-full h-48 object-cover rounded-t-[15px] cursor-pointer"
+          onLoad={onImageLoad}
+          onError={onImageError}
         />
 
         {showEditDelete && (
