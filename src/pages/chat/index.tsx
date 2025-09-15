@@ -1277,11 +1277,14 @@ const GroupChatUI = () => {
                   item.recipientDetails._id == userId
               );
 
-              console.log(data);
+              if (data) {
+                getSingleChat(data._id);
+                setSelectedUser(data);
+                setActiveTab("users");
+              }
 
-              getSingleChat(data._id);
-              setSelectedUser(data);
-              setActiveTab("users");
+              // console.log(data);
+
               setInitAPILoading(false);
             }, 2000);
           } else if (res.data.success && res.data.statusCode == 203) {

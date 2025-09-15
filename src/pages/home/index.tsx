@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import CustomButton from "@/components/customcomponents/CustomButton";
@@ -46,6 +46,7 @@ const reportOptions = [
 
 const Home = () => {
   const postContainerRef = useRef(null);
+  const inViewRef = useRef(null);
   const [intersectionRoot, setIntersectionRoot] = useState(null);
 
   const initialValues = {
@@ -69,6 +70,7 @@ const Home = () => {
   const [caption, setCaption] = useState("");
   const [isShared, setIsShared] = useState(false);
   const [isReport, setIsReport] = useState(false);
+  const [reportType, setReportType] = useState("");
 
   const [mode, setMode] = useState<"add" | "edit">("add");
 
@@ -98,39 +100,42 @@ const Home = () => {
   // const [postDetails, setPostDetails] = useState();
 
   // add post ////
-  const getPostsList = async (currentPage = 1) => {
-    if (!hasMore || isFetchingMore) return;
+  const getPostsList = useCallback(
+    async (currentPage = 1) => {
+      if (!hasMore || isFetchingMore) return;
 
-    setIsFetchingMore(true);
-    if (currentPage === 1) {
-      // Reset for first page
-    }
-
-    try {
-      const token = localStorageService.getItem("accessToken");
-      const res = await axiosInstance.get(
-        `post?limit=${limit}&page=${currentPage}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const newPosts = res.data.body.posts;
-
-      setPosts((prev) => [...prev, ...newPosts]);
-      setPage(currentPage);
-
-      if (newPosts.length < limit) {
-        setHasMore(false);
+      setIsFetchingMore(true);
+      if (currentPage === 1) {
+        // Reset for first page
       }
-    } catch (error: any) {
-      toast.error(error?.response?.data?.error || "Failed to fetch posts.");
-    } finally {
-      setIsFetchingMore(false);
-    }
-  };
+
+      try {
+        const token = localStorageService.getItem("accessToken");
+        const res = await axiosInstance.get(
+          `post?limit=${limit}&page=${currentPage}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const newPosts = res.data.body.posts;
+
+        setPosts((prev) => [...prev, ...newPosts]);
+        setPage(currentPage);
+
+        if (newPosts.length < limit) {
+          setHasMore(false);
+        }
+      } catch (error: any) {
+        toast.error(error?.response?.data?.error || "Failed to fetch posts.");
+      } finally {
+        setIsFetchingMore(false);
+      }
+    },
+    [hasMore, isFetchingMore, limit]
+  );
 
   const refreshPosts = async () => {
     try {
@@ -243,6 +248,34 @@ const Home = () => {
       document.body.style.overflow = ""; // ✅ reset on unmount
     };
   }, [user]);
+
+  // Intersection Observer for infinite scrolling
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && hasMore && !isFetchingMore) {
+          getPostsList(page + 1);
+        }
+      },
+      {
+        root: intersectionRoot,
+        rootMargin: "100px",
+        threshold: 0.1,
+      }
+    );
+
+    const currentInViewRef = inViewRef.current;
+    if (currentInViewRef) {
+      observer.observe(currentInViewRef);
+    }
+
+    return () => {
+      if (currentInViewRef) {
+        observer.unobserve(currentInViewRef);
+      }
+    };
+  }, [intersectionRoot, hasMore, isFetchingMore, page, getPostsList]);
 
   /////
 
