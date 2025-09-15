@@ -1296,10 +1296,12 @@ const GroupChatUI = () => {
                   item.initiatorDetails._id == userId ||
                   item.recipientDetails._id == userId
               );
-              console.log(data);
-              getSingleChat(data._id);
-              setSelectedUser(data);
-              setActiveTab("requests");
+              if (data) {
+                getSingleChat(data._id);
+                setSelectedUser(data);
+                setActiveTab("requests");
+              }
+
               setInitAPILoading(false);
             }, 2000);
           }
