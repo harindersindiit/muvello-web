@@ -850,6 +850,7 @@ const GroupChatUI = () => {
 
       toast.success(res.data.message);
       setSelectedUser(null);
+      getMessageRequests();
       getSingleChats();
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Failed to block user");
