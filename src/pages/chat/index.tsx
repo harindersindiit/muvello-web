@@ -1033,7 +1033,7 @@ const GroupChatUI = () => {
     // Connect and listen
     if (!socket) return;
     socket.on("connect", () => {
-      console.log("Connected to socket server", socket.id);
+      console.log("Connected to socket server 1", socket.id);
     });
 
     socket.on(`${CHAT_EVENTS.GROUP}.receive_message`, (data) => {
