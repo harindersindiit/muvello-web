@@ -792,11 +792,16 @@ const GroupChatUI = () => {
 
       setDirectChats(res.data.body.conversations);
       setDirectChatsBackup(res.data.body.conversations);
+      const conversation = res.data.body.conversations.find(
+        (conversation) => conversation._id == selectedUser._id
+      );
+      if (!conversation) {
+        setSelectedUser(null);
+      }
     } catch (error: any) {
       console.log(error);
       const message = error?.response?.data?.error || "Internal server error.";
       toast.error(message);
-    } finally {
     }
   };
 
