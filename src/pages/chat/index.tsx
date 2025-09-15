@@ -851,7 +851,6 @@ const GroupChatUI = () => {
       toast.success(res.data.message);
       setSelectedUser(null);
       getSingleChats();
-      getMessageRequests();
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Failed to block user");
     } finally {
@@ -1277,14 +1276,11 @@ const GroupChatUI = () => {
                   item.recipientDetails._id == userId
               );
 
-              if (data) {
-                getSingleChat(data._id);
-                setSelectedUser(data);
-                setActiveTab("users");
-              }
+              console.log(data);
 
-              // console.log(data);
-
+              getSingleChat(data._id);
+              setSelectedUser(data);
+              setActiveTab("users");
               setInitAPILoading(false);
             }, 2000);
           } else if (res.data.success && res.data.statusCode == 203) {
@@ -1296,12 +1292,10 @@ const GroupChatUI = () => {
                   item.initiatorDetails._id == userId ||
                   item.recipientDetails._id == userId
               );
-              if (data) {
-                getSingleChat(data._id);
-                setSelectedUser(data);
-                setActiveTab("requests");
-              }
-
+              console.log(data);
+              getSingleChat(data._id);
+              setSelectedUser(data);
+              setActiveTab("requests");
               setInitAPILoading(false);
             }, 2000);
           }
