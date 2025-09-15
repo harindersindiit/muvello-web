@@ -13,18 +13,22 @@ const CommentCard = ({
 }) => {
   const { user } = useUser();
   const [showReplies, setShowReplies] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(2);
+  const [visibleCount, setVisibleCount] = useState(5);
   const [replyInput, setReplyInput] = useState("");
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [isReplySubmitting, setIsReplySubmitting] = useState(false);
+  const [isCommentExpanded, setIsCommentExpanded] = useState(false);
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(
+    new Set()
+  );
 
   const toggleReplies = () => {
     setShowReplies((prev) => !prev);
-    if (!showReplies) setVisibleCount(2);
+    if (!showReplies) setVisibleCount(5);
   };
 
   const loadMoreReplies = () => {
-    setVisibleCount((prev) => prev + 2);
+    setVisibleCount((prev) => prev + 5);
   };
 
   const handleReplySubmit = async () => {
@@ -35,6 +39,29 @@ const CommentCard = ({
     setShowReplyBox(false);
     setIsReplySubmitting(false);
   };
+
+  const toggleCommentExpansion = () => {
+    setIsCommentExpanded((prev) => !prev);
+  };
+
+  const toggleReplyExpansion = (replyId: string) => {
+    setExpandedReplies((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(replyId)) {
+        newSet.delete(replyId);
+      } else {
+        newSet.add(replyId);
+      }
+      return newSet;
+    });
+  };
+
+  const COMMENT_LIMIT = 150;
+  const isCommentLong = details.comment.length > COMMENT_LIMIT;
+  const displayComment =
+    isCommentLong && !isCommentExpanded
+      ? details.comment.substring(0, COMMENT_LIMIT) + "..."
+      : details.comment;
 
   return (
     <div key={details._id} className="flex gap-3 mb-6">
@@ -66,9 +93,19 @@ const CommentCard = ({
           </span>
         </div>
 
-        <p className="text-xs text-white/90 leading-snug mt-1 break-all">
-          {details.comment}
-        </p>
+        <div className="mt-1">
+          <p className="text-xs text-white/90 leading-snug break-all">
+            {displayComment}
+          </p>
+          {isCommentLong && (
+            <button
+              onClick={toggleCommentExpansion}
+              className="text-xs text-blue-400 cursor-pointer hover:text-primary transition mt-1"
+            >
+              {isCommentExpanded ? "See less" : "See more"}
+            </button>
+          )}
+        </div>
 
         {/* Toggle reply box */}
         <p
@@ -153,21 +190,37 @@ const CommentCard = ({
                           {moment(reply.created_at).fromNow()}
                         </span>
                       </div>
-                      <p className="text-xs text-white/90 mt-1 leading-snug break-all">
-                        {reply.comment}
-                      </p>
+                      <div className="mt-1">
+                        <p className="text-xs text-white/90 leading-snug break-all">
+                          {reply.comment.length > COMMENT_LIMIT &&
+                          !expandedReplies.has(reply._id)
+                            ? reply.comment.substring(0, COMMENT_LIMIT) + "..."
+                            : reply.comment}
+                        </p>
+                        {reply.comment.length > COMMENT_LIMIT && (
+                          <button
+                            onClick={() => toggleReplyExpansion(reply._id)}
+                            className="text-xs text-blue-400 cursor-pointer hover:text-primary transition mt-1"
+                          >
+                            {expandedReplies.has(reply._id)
+                              ? "See less"
+                              : "See more"}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
 
-                {visibleCount < details.replies.length && (
-                  <p
-                    onClick={loadMoreReplies}
-                    className="text-xs text-blue-400 cursor-pointer text-center underline"
-                  >
-                    Load more replies
-                  </p>
-                )}
+                {details.replies.length > 5 &&
+                  visibleCount < details.replies.length && (
+                    <p
+                      onClick={loadMoreReplies}
+                      className="text-xs text-blue-400 cursor-pointer text-center underline"
+                    >
+                      Load more replies
+                    </p>
+                  )}
               </div>
             )}
           </>

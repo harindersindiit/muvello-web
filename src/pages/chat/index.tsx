@@ -281,7 +281,6 @@ const GroupChatUI = () => {
 
   const handleReportSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      console.log(values);
       const token = localStorageService.getItem("accessToken");
 
       const payload = {
@@ -1953,10 +1952,14 @@ const GroupChatUI = () => {
                                   {msg.sender.fullname}
                                 </h3>
                               )}
-                              <p className="text-sm mb-0">{msg.text}</p>
+                              <p className="text-sm mb-0 break-words overflow-wrap-anywhere">
+                                {msg.text}
+                              </p>
                             </>
                           ) : (
-                            <p className="text-sm mb-0">{msg.text}</p>
+                            <p className="text-sm mb-0 break-words overflow-wrap-anywhere">
+                              {msg.text}
+                            </p>
                           )}
                         </div>
                         <span
@@ -2140,7 +2143,7 @@ const GroupChatUI = () => {
               {/* Message Input */}
               <div className="p-4 pt-0 flex items-center gap-3">
                 <CustomButton
-                  text={deleteRequestLoader ? "Rejecting..." : "Reject"}
+                  text={"Reject"}
                   type="button"
                   className="w-auto flex-1 bg-red text-white border-none"
                   onClick={() =>
@@ -2148,7 +2151,7 @@ const GroupChatUI = () => {
                   }
                 />
                 <CustomButton
-                  text={deleteRequestLoader ? "Accepting..." : "Accept"}
+                  text={"Accept"}
                   type="button"
                   onClick={() =>
                     !deleteRequestLoader && handleRequest("accept")
@@ -2980,6 +2983,7 @@ const GroupChatUI = () => {
       </Formik>
 
       {(isLoading || initAPILoading) && <FullScreenLoader />}
+      {deleteRequestLoader && <FullScreenLoader />}
     </div>
   );
 };

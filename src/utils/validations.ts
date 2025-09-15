@@ -114,7 +114,7 @@ export const editProfileSchema = Yup.object().shape({
   bio: Yup.string()
     .transform((value) => value.trimStart())
     .min(10, "About must be at least 10 characters")
-    .max(500, "About must be less than 500 characters")
+    .max(1000, "About must be less than 1000 characters")
     .required("Please write something about yourself"),
 });
 

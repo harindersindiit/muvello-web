@@ -120,6 +120,8 @@ const CreateWorkout = () => {
   const location = useLocation();
   const editingWorkout = location.state || null;
 
+  console.log(editingWorkout);
+
   const { updateUser, user } = useUser();
   const navigate = useNavigate();
   const [visibility, setVisibility] = useState("Private");
@@ -458,7 +460,7 @@ const CreateWorkout = () => {
           </span>
         </button>
         <div className="flex gap-3 w-full md:w-auto justify-end">
-          {!editingWorkout && (
+          {editingWorkout && !editingWorkout.once_published && (
             <CustomButton
               className="w-1/2 md:w-auto py-5 px-11 border-2 border-[#94eb00] text-[#94eb00] bg-transparent font-semibold rounded-full transition-all hover:bg-[#94eb00]/10"
               text="Save as Draft"

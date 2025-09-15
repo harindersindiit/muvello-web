@@ -131,7 +131,14 @@ const Workouts = () => {
         }
       );
 
-      getWorkouts(page);
+      // Remove the deleted workout from both workouts and filteredWorkouts arrays
+      setWorkouts((prev) =>
+        prev.filter((workout) => workout._id !== editExercise._id)
+      );
+      setFilteredWorkouts((prev) =>
+        prev.filter((workout) => workout._id !== editExercise._id)
+      );
+
       toast.success(resExe.data.message);
     } catch (error: any) {
       const message = error?.response?.data?.error || "Internal Server Error.";
@@ -139,6 +146,7 @@ const Workouts = () => {
     } finally {
       setDeleteExercise(false);
       setDeleteLoader(false);
+      setEditExercise(null);
     }
   };
 

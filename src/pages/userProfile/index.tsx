@@ -441,7 +441,7 @@ const UserProfile = () => {
           <div className="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-10 flex-wrap w-full justify-between">
             {/* Name and Followers */}
             <div className=" hidden sm:flex flex-col gap-2 min-w-[150px]">
-              <h5 className="text-lg font-semibold truncate max-w-[190px] whitespace-nowrap overflow-hidden text-white text-sm">
+              <h5 className="text-lg font-semibold truncate max-w-[250px] whitespace-nowrap overflow-hidden text-white text-sm">
                 {/* {state?.name || "Mariana Castro"} */}
                 {capitalize(user?.fullname)}
               </h5>

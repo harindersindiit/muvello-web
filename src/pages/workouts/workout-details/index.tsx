@@ -416,11 +416,11 @@ const WorkoutDetails = () => {
                     />
                     Compare Athletes
                   </button>
-                  <Icon
+                  {/* <Icon
                     icon="tabler:search"
                     fontSize={16}
                     className="text-white cursor-pointer hover:text-primary transition-all duration-300 ease-in-out"
-                  />
+                  /> */}
                 </div>
               )}
             </div>

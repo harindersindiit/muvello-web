@@ -709,10 +709,10 @@ export default function Header() {
                     />
                   </Avatar>
                   <div>
-                    <p className="truncate max-w-[170px] whitespace-nowrap overflow-hidden text-white text-sm">
+                    <p className="truncate max-w-[200px] whitespace-nowrap overflow-hidden text-white text-sm">
                       {capitalize(user?.fullname)}
                     </p>
-                    <p className="truncate max-w-[170px] whitespace-nowrap overflow-hidden text-white text-sm">
+                    <p className="truncate max-w-[200px] whitespace-nowrap overflow-hidden text-white text-sm">
                       {user?.email}
                     </p>
                   </div>
