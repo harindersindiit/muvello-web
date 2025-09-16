@@ -6,7 +6,9 @@ import BMIRangeBar from "./BMIRangeBar";
 import { useEffect, useMemo, useState } from "react";
 import SelectComponent from "@/components/customcomponents/SelectComponent";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "@/context/UserContext";
 export default function BMISummaryCard({ state, title, statistics }) {
+  const { user } = useUser();
   const navigate = useNavigate();
   const [BMI, setBMI] = useState(0);
   const [weekBMI, setWeekBMI] = useState(1);
@@ -43,7 +45,11 @@ export default function BMISummaryCard({ state, title, statistics }) {
           <Button
             className="ml-4 cursor-pointer bg-lime-400 text-black rounded-full px-4 py-1 text-sm font-semibold hover:bg-lime-500 transition"
             onClick={() => {
-              navigate("/user/profile", { state: { id: state?.user?._id } });
+              const id = state?.user?._id;
+              navigate(
+                "/user/profile",
+                user._id != id ? { state: { id } } : undefined
+              );
             }}
           >
             View Profile

@@ -615,6 +615,27 @@ const Home = () => {
                   {/* Intersection Observer Anchor */}
                   <div ref={inViewRef} className="h-10"></div>
 
+                  {/* End of posts message */}
+                  {!hasMore && posts.length > 0 && !isFetchingMore && (
+                    <div className="col-span-full flex flex-col items-center justify-center py-8 px-4 text-center">
+                      <div className="w-16 h-16 bg-[#2a2a2a] rounded-full flex items-center justify-center mb-4">
+                        <Icon
+                          icon="material-symbols:check-circle-outline"
+                          className="text-[#94eb00]"
+                          style={{ width: "32px", height: "32px" }}
+                        />
+                      </div>
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        You're all caught up!
+                      </h3>
+                      <p className="text-sm text-gray-400 max-w-sm">
+                        You've seen all the recent posts. Check back later for
+                        new content or create your own post to share with the
+                        community.
+                      </p>
+                    </div>
+                  )}
+
                   {!isFetchingMore && posts.length === 0 && (
                     <NoDataPlaceholder />
                   )}

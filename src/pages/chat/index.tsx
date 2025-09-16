@@ -310,6 +310,11 @@ const GroupChatUI = () => {
   const [activeUserId, setActiveUserId] = useState<string | null>(null);
   // const [selectedGroup, setSelectedChat] = useState<Chat | null>(null);
   const [activeTab, setActiveTab] = useState<string>("groups");
+  useEffect(() => {
+    if (activeTab) {
+      setNewMessage("");
+    }
+  }, [activeTab]);
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState<string>("");
   useEffect(() => {
@@ -791,11 +796,14 @@ const GroupChatUI = () => {
 
       setDirectChats(res.data.body.conversations);
       setDirectChatsBackup(res.data.body.conversations);
-      const conversation = res.data.body.conversations.find(
-        (conversation) => conversation._id == selectedUser._id
-      );
-      if (!conversation) {
-        setSelectedUser(null);
+
+      if (selectedUser) {
+        const conversation = res.data.body.conversations.find(
+          (conversation) => conversation._id == selectedUser._id
+        );
+        if (conversation) {
+          setSelectedUser(null);
+        }
       }
     } catch (error: any) {
       console.log(error);

@@ -602,7 +602,7 @@ export default function Header() {
                 <FullScreenLoader />
               </div>
             ) : (
-              <div className="p-4 max-h-[75vh] overflow-y-auto overflow-x-hidden">
+              <div className="p-4 h-full overflow-y-auto overflow-x-hidden">
                 {notifications.length === 0 && !loading && (
                   <div className="text-center text-white py-10">
                     No notifications found.

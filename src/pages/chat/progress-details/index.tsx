@@ -93,7 +93,8 @@ const ProgressDetails = () => {
         }))
       );
 
-      if (!daysSet.includes(day)) {
+      // Reset day if it doesn't exist in the new week
+      if (!daysSet.includes(day) && daysSet.length > 0) {
         setDay(daysSet[0]);
       }
     }
@@ -174,7 +175,7 @@ const ProgressDetails = () => {
                       ?.find(
                         (item__) => item__.week === week && item__.day === day
                       )
-                      .exercises.map((exercise, index) => (
+                      ?.exercises?.map((exercise, index) => (
                         <ExerciseComponent
                           total={exercise?.progress?.total || 0}
                           progressShow={true}

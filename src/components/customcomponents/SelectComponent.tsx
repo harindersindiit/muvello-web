@@ -82,7 +82,7 @@ const SelectComponent: React.FC<SelectComponentProps> = ({
       </SelectContent> */}
 
       <SelectContent
-        className={`${getVariantClasses()} text-white border-none shadow-[0px_10px_20px_0px_rgba(0,0,0,0.10),0px_3px_6px_0px_rgba(0,0,0,0.10)]`}
+        className={`${getVariantClasses()} text-white border-none shadow-[0px_10px_20px_0px_rgba(0,0,0,0.10),0px_3px_6px_0px_rgba(0,0,0,0.10)] [&_*]:text-white`}
       >
         {/* Optional Placeholder Item (not selectable but gives context) */}
         {!value && (
@@ -101,7 +101,7 @@ const SelectComponent: React.FC<SelectComponentProps> = ({
             <SelectItem
               key={option.value}
               value={option.value}
-              className="cursor-pointer hover:text-primary"
+              className="cursor-pointer hover:text-primary text-white data-[highlighted]:text-white data-[state=checked]:text-white focus:text-white"
             >
               {option.label}
             </SelectItem>

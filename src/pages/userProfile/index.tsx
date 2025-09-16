@@ -29,7 +29,7 @@ const UserProfile = () => {
 
   const { state } = useLocation();
 
-  console.log(state);
+  console.log({ state });
 
   const userId = state?.id;
 
