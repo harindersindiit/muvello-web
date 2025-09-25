@@ -413,12 +413,15 @@ const GroupChatUI = () => {
     setEditLoading(true);
     try {
       const token = localStorageService.getItem("accessToken");
-
+      const adminId = selectedGroup.members.find(
+        (member: any) => member.is_admin
+      )?.user._id;
       const reqData: any = {
         name: selectedGroup.name,
         created_by: selectedGroup.created_by,
         members: newMembers,
         group_picture_url: selectedGroup.group_picture_url,
+        admin_id: adminId,
       };
 
       const groupId = selectedGroup?._id; // Ensure selectedGroup is set

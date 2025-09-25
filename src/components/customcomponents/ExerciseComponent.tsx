@@ -96,7 +96,7 @@ const ExerciseComponent = ({
                 <label htmlFor="terms"></label>
               </div>
             )}
-            {showEditDelete && (
+            {/* {showEditDelete && (
               <div className="flex items-center space-x-2">
                 <img
                   src={IMAGES.edit}
@@ -111,7 +111,7 @@ const ExerciseComponent = ({
                   onClick={onClickDelete}
                 />
               </div>
-            )}
+            )} */}
           </div>
           <p className="text-xs text-white flex gap-1 items-center">
             <img src={IMAGES.exercise1} alt="Sets" className="w-4 h-4" /> Sets:{" "}

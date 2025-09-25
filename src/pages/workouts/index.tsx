@@ -234,6 +234,7 @@ const Workouts = () => {
             <>
               {filteredWorkouts.map((workout, index) => (
                 <WorkoutComponent
+                  canDelete={workout.totalParticipants == 0}
                   visibility={workout.visibility}
                   is_draft={workout.is_draft}
                   onClickEdit={() => {

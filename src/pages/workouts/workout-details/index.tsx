@@ -23,6 +23,7 @@ import moment from "moment";
 const WorkoutDetails = () => {
   const { user } = useUser();
   const { state } = useLocation();
+  console.log("state", state);
   const navigate = useNavigate();
   const [week, setWeek] = useState(1);
   const [day, setDay] = useState(1);
@@ -324,14 +325,16 @@ const WorkoutDetails = () => {
                     }}
                     className="text-white cursor-pointer hover:text-primary transition-all duration-300 ease-in-out"
                   />
-                  <Icon
-                    onClick={() => {
-                      setDeleteModal(true);
-                    }}
-                    icon="mynaui:trash"
-                    fontSize={25}
-                    className="text-white cursor-pointer hover:text-primary transition-all duration-300 ease-in-out"
-                  />
+                  {state.totalParticipants == 0 && (
+                    <Icon
+                      onClick={() => {
+                        setDeleteModal(true);
+                      }}
+                      icon="mynaui:trash"
+                      fontSize={25}
+                      className="text-white cursor-pointer hover:text-primary transition-all duration-300 ease-in-out"
+                    />
+                  )}
                 </div>
               )}
             </div>

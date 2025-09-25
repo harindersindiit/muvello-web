@@ -119,6 +119,15 @@ const SelectExercisePopup = ({
 const CreateWorkout = () => {
   const location = useLocation();
   const editingWorkout = location.state || null;
+  const [canEdit, setCanEdit] = useState(false);
+
+  useEffect(() => {
+    if (editingWorkout) {
+      setCanEdit(editingWorkout.totalParticipants == 0);
+    }
+    console.log({ canEdit });
+  }, [editingWorkout]);
+
   const canSaveDraft = !editingWorkout?.once_published;
 
   const { updateUser, user } = useUser();
@@ -148,6 +157,7 @@ const CreateWorkout = () => {
   const [preferencesLoader, setPreferncesLoader] = useState(false);
   const [exerciseLoader, setExerciseLoader] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showWarning, setShowWarning] = useState(true);
 
   const onSelectGroups = (groups) => {
     setSelectedgroups(groups);
@@ -485,9 +495,39 @@ const CreateWorkout = () => {
         </div>
       </div>
 
+      {/* Warning Message */}
+      {!canEdit && showWarning && (
+        <div className="mx-4 mb-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 relative">
+          <div className="flex items-start gap-3">
+            <Icon
+              icon="material-symbols:warning"
+              className="text-yellow-500 mt-0.5 flex-shrink-0"
+              fontSize={20}
+            />
+            <div className="flex-1">
+              <p className="text-yellow-500 font-medium">
+                Limited Editing Mode
+              </p>
+              <p className="text-yellow-400/80 text-sm mt-1">
+                Some users have already started this workout, so you can only
+                edit the title, thumbnail, and description.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowWarning(false)}
+              className="text-yellow-500/60 hover:text-yellow-500 transition-colors"
+            >
+              <Icon icon="material-symbols:close" fontSize={20} />
+            </button>
+          </div>
+        </div>
+      )}
+
       <Formik
         enableReinitialize={true} // ✅ ADD THIS LINE
-        innerRef={(ref) => (formik = ref)}
+        innerRef={(ref) => {
+          formik = ref;
+        }}
         initialValues={initialVal}
         validationSchema={addWorkoutSchema}
         onSubmit={handleSubmitFun}
@@ -577,7 +617,11 @@ const CreateWorkout = () => {
                       value={values.title}
                       onChange={handleChange("title")}
                       type="text"
-                      error={touched.title && errors.title}
+                      error={
+                        touched.title && errors.title
+                          ? String(errors.title)
+                          : ""
+                      }
                       icon={
                         <img
                           src={IMAGES.textBlock}
@@ -592,10 +636,15 @@ const CreateWorkout = () => {
                       placeholder="Select Workout Category"
                       value={values.workout_category}
                       onChange={(value: any) =>
-                        setFieldValue("workout_category", value)
+                        canEdit && setFieldValue("workout_category", value)
                       }
                       icon={IMAGES.category}
-                      className="mb-3 cursor-pointer"
+                      className={`mb-3 ${
+                        canEdit
+                          ? "cursor-pointer"
+                          : "cursor-not-allowed opacity-60"
+                      }`}
+                      disabled={!canEdit}
                       options={[
                         { label: "Select Workout Category", value: "" },
                         ...workoutCategories.map((item) => ({
@@ -607,7 +656,7 @@ const CreateWorkout = () => {
 
                     {touched.workout_category && errors.workout_category && (
                       <p className="text-red-500 text-sm col-span-2 mt-[-10px]">
-                        {errors.workout_category}
+                        {String(errors.workout_category)}
                       </p>
                     )}
 
@@ -615,7 +664,11 @@ const CreateWorkout = () => {
                       placeholder="Write caption..."
                       value={values.caption}
                       onChange={handleChange("caption")}
-                      error={touched.caption && errors.caption}
+                      error={
+                        touched.caption && errors.caption
+                          ? String(errors.caption)
+                          : ""
+                      }
                       icon={<Lines color="white" />}
                       className="min-h-[120px] max-h-[120px]"
                     />
@@ -623,178 +676,200 @@ const CreateWorkout = () => {
                 </div>
               </div>
 
-              {weeks.map((week, weekIndex) => (
-                <div
-                  key={weekIndex}
-                  className="mb-4 bg-white/3 p-5 rounded-lg relative"
-                >
-                  {weeks.length > 1 && (
-                    <div className="text-right absolute -top-1 -right-2">
-                      <div
-                        onClick={() => removeWeek(weekIndex)}
-                        className="cursor-pointer p-2 w-[30px] h-[30px] rounded-full flex justify-center items-center bg-red"
-                      >
-                        <Icon
-                          icon="bitcoin-icons:cross-outline"
-                          className="text-white"
-                          fontSize={34}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <h2 className="text-lg font-semibold mb-4">
-                    Week {week.week}
-                  </h2>
-
-                  {week.days.map((day, dayIndex) => (
-                    <div
-                      key={dayIndex}
-                      className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3"
-                    >
-                      <TextInput
-                        placeholder={`Week ${week.week}`}
-                        value={`Week ${week.week}`}
-                        disabled
-                        type="text"
-                        inputClassName="!bg-[#333333]"
-                        icon={
-                          <img
-                            src={IMAGES.calendar}
-                            alt=""
-                            className="w-5 h-5"
-                          />
-                        }
-                      />
-                      <TextInput
-                        placeholder={`Day ${day.day}`}
-                        value={`Day ${day.day}`}
-                        disabled
-                        type="text"
-                        inputClassName="!bg-[#333333]"
-                        icon={
-                          <img
-                            src={IMAGES.calendar}
-                            alt=""
-                            className="w-5 h-5"
-                          />
-                        }
-                      />
-                      {/* <InputTag showInput={false} /> */}
-
-                      {/* Exercise List */}
-                      {day.exercises.length > 0 && (
-                        <div className="col-span-2 bg-white/5 p-3 rounded-lg">
-                          <p className="text-sm font-semibold text-white mb-2">
-                            Selected Exercises:
-                          </p>
-
-                          <div className="flex flex-wrap gap-2">
-                            {day.exercises.map((exercise, idx) => (
-                              <span
-                                key={idx}
-                                className="bg-green-600/20 text-green-400 text-sm px-3 py-1 rounded-full"
-                              >
-                                {exercise.title}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex flex-row gap-10">
-                        <div className="w-100">
-                          <TextInput
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            error={
-                              isSubmit &&
-                              (!day.duration || day.duration == "0") &&
-                              " Please add duration"
-                            }
-                            placeholder="45 min"
-                            value={day.duration}
-                            onChange={(e) =>
-                              handleDurationChange(
-                                weekIndex,
-                                dayIndex,
-                                e.target.value
-                              )
-                            }
-                            inputClassName="!bg-[#333333]"
-                            icon={
-                              <img
-                                src={IMAGES.clock}
-                                alt=""
-                                className="w-5 h-5"
-                              />
-                            }
-                          />
-                        </div>
-                        <div className="flex flex-row gap-2">
-                          <div
-                            onClick={() => {
-                              setSelectExerciseOpen(true);
-                              setCurrentEditingDay({ weekIndex, dayIndex }); // 👈 Make sure this state exists
-                            }}
-                            className="cursor-pointer p-2 w-[60px] h-[60px] rounded-full flex justify-center items-center bg-blue"
-                          >
-                            <Icon
-                              icon="simple-line-icons:plus"
-                              className="text-white"
-                              fontSize={30}
-                            />
-                          </div>
-
-                          <div
-                            onClick={() =>
-                              removeDayFromWeek(weekIndex, dayIndex)
-                            }
-                            className="cursor-pointer p-2 w-[60px] h-[60px] rounded-full flex justify-center items-center bg-red"
-                          >
-                            <Icon
-                              icon="lsicon:minus-outline"
-                              className="text-white"
-                              fontSize={34}
-                            />
-                          </div>
-                        </div>
-                        {isSubmit &&
-                          (!day.exercises || day.exercises.length === 0) && (
-                            <p className="text-red-500 text-sm col-span-2 mt-[-10px]">
-                              Please add at least one exercise for Day {day.day}{" "}
-                              of Week {week.week}
-                            </p>
-                          )}
-                      </div>
-                    </div>
-                  ))}
-
-                  <button
-                    className="text-sm text-green-400 mb-2"
-                    type="button"
-                    onClick={() => addDayToWeek(weekIndex)}
+              <div className={!canEdit ? "opacity-60" : ""}>
+                {weeks.map((week, weekIndex) => (
+                  <div
+                    key={weekIndex}
+                    className="mb-4 bg-white/3 p-5 rounded-lg relative"
                   >
-                    + Add Day to Week {week.week}
-                  </button>
-                </div>
-              ))}
+                    {weeks.length > 1 && canEdit && (
+                      <div className="text-right absolute -top-1 -right-2">
+                        <div
+                          onClick={() => removeWeek(weekIndex)}
+                          className="cursor-pointer p-2 w-[30px] h-[30px] rounded-full flex justify-center items-center bg-red"
+                        >
+                          <Icon
+                            icon="bitcoin-icons:cross-outline"
+                            className="text-white"
+                            fontSize={34}
+                          />
+                        </div>
+                      </div>
+                    )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 mb-6">
-                <button
-                  className="flex items-center gap-2 text-lime-400 hover:text-lime-300 transition-colors cursor-pointer"
-                  // onClick={() => addExercise(1, 1)}
-                  onClick={addWeek} // 👈 Fixed this line
-                  type="button"
-                >
-                  <img src={IMAGES.addsquare} alt="" className="w-5 h-5" />
-                  <span>Add More Week/Day Workout</span>
-                </button>
+                    <h2 className="text-lg font-semibold mb-4">
+                      Week {week.week}
+                    </h2>
+
+                    {week.days.map((day, dayIndex) => (
+                      <div
+                        key={dayIndex}
+                        className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3"
+                      >
+                        <TextInput
+                          placeholder={`Week ${week.week}`}
+                          value={`Week ${week.week}`}
+                          disabled
+                          type="text"
+                          inputClassName="!bg-[#333333]"
+                          icon={
+                            <img
+                              src={IMAGES.calendar}
+                              alt=""
+                              className="w-5 h-5"
+                            />
+                          }
+                        />
+                        <TextInput
+                          placeholder={`Day ${day.day}`}
+                          value={`Day ${day.day}`}
+                          disabled
+                          type="text"
+                          inputClassName="!bg-[#333333]"
+                          icon={
+                            <img
+                              src={IMAGES.calendar}
+                              alt=""
+                              className="w-5 h-5"
+                            />
+                          }
+                        />
+                        {/* <InputTag showInput={false} /> */}
+
+                        {/* Exercise List */}
+                        {day.exercises.length > 0 && (
+                          <div className="col-span-2 bg-white/5 p-3 rounded-lg">
+                            <p className="text-sm font-semibold text-white mb-2">
+                              Selected Exercises:
+                            </p>
+
+                            <div className="flex flex-wrap gap-2">
+                              {day.exercises.map((exercise, idx) => (
+                                <span
+                                  key={idx}
+                                  className="bg-green-600/20 text-green-400 text-sm px-3 py-1 rounded-full"
+                                >
+                                  {exercise.title}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex flex-row gap-10">
+                          <div className="w-100">
+                            <TextInput
+                              type="text"
+                              error={
+                                isSubmit &&
+                                (!day.duration || day.duration == "0") &&
+                                " Please add duration"
+                              }
+                              placeholder="45 min"
+                              value={day.duration}
+                              onChange={(e) =>
+                                canEdit &&
+                                handleDurationChange(
+                                  weekIndex,
+                                  dayIndex,
+                                  e.target.value
+                                )
+                              }
+                              inputClassName="!bg-[#333333]"
+                              disabled={!canEdit}
+                              icon={
+                                <img
+                                  src={IMAGES.clock}
+                                  alt=""
+                                  className="w-5 h-5"
+                                />
+                              }
+                            />
+                          </div>
+                          <div className="flex flex-row gap-2">
+                            <div
+                              onClick={() => {
+                                if (canEdit) {
+                                  setSelectExerciseOpen(true);
+                                  setCurrentEditingDay({ weekIndex, dayIndex }); // 👈 Make sure this state exists
+                                }
+                              }}
+                              className={`p-2 w-[60px] h-[60px] rounded-full flex justify-center items-center bg-blue ${
+                                canEdit
+                                  ? "cursor-pointer"
+                                  : "cursor-not-allowed opacity-60"
+                              }`}
+                            >
+                              <Icon
+                                icon="simple-line-icons:plus"
+                                className="text-white"
+                                fontSize={30}
+                              />
+                            </div>
+
+                            <div
+                              onClick={() => {
+                                if (canEdit) {
+                                  removeDayFromWeek(weekIndex, dayIndex);
+                                }
+                              }}
+                              className={`p-2 w-[60px] h-[60px] rounded-full flex justify-center items-center bg-red ${
+                                canEdit
+                                  ? "cursor-pointer"
+                                  : "cursor-not-allowed opacity-60"
+                              }`}
+                            >
+                              <Icon
+                                icon="lsicon:minus-outline"
+                                className="text-white"
+                                fontSize={34}
+                              />
+                            </div>
+                          </div>
+                          {isSubmit &&
+                            (!day.exercises || day.exercises.length === 0) && (
+                              <p className="text-red-500 text-sm col-span-2 mt-[-10px]">
+                                Please add at least one exercise for Day{" "}
+                                {day.day} of Week {week.week}
+                              </p>
+                            )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {canEdit && (
+                      <button
+                        className="text-sm text-green-400 mb-2"
+                        type="button"
+                        onClick={() => addDayToWeek(weekIndex)}
+                      >
+                        + Add Day to Week {week.week}
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                {canEdit && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 mb-6">
+                    <button
+                      className="flex items-center gap-2 text-lime-400 hover:text-lime-300 transition-colors cursor-pointer"
+                      // onClick={() => addExercise(1, 1)}
+                      onClick={addWeek} // 👈 Fixed this line
+                      type="button"
+                    >
+                      <img src={IMAGES.addsquare} alt="" className="w-5 h-5" />
+                      <span>Add More Week/Day Workout</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
-                <div className="p-5 rounded-lg pl-0">
+                <div
+                  className={`p-5 rounded-lg pl-0 ${
+                    !canEdit ? "opacity-60" : ""
+                  }`}
+                >
                   <h2 className="text-lg font-semibold mb-4 text-white">
                     Choose Your Workout Access
                   </h2>
@@ -802,10 +877,14 @@ const CreateWorkout = () => {
                     <div className="flex items-center gap-2 bg-white/3 p-2 rounded-full">
                       <span
                         onClick={() => {
-                          formik.setFieldValue("fees", ""); // 👈 ADD THIS
-                          formik.setFieldValue("access", "Free"); // 👈 ADD THIS
+                          if (canEdit) {
+                            formik.setFieldValue("fees", ""); // 👈 ADD THIS
+                            formik.setFieldValue("access", "Free"); // 👈 ADD THIS
+                          }
                         }}
-                        className={` px-6 py-3 rounded-full cursor-pointer pl-10 pr-10 ${
+                        className={` px-6 py-3 rounded-full pl-10 pr-10 ${
+                          canEdit ? "cursor-pointer" : "cursor-not-allowed"
+                        } ${
                           values.access === "Free"
                             ? "bg-primary text-black"
                             : "bg-transparent text-white pl-10 pr-10"
@@ -815,9 +894,13 @@ const CreateWorkout = () => {
                       </span>
                       <span
                         onClick={() => {
-                          formik.setFieldValue("access", "Paid"); // 👈 ADD THIS
+                          if (canEdit) {
+                            formik.setFieldValue("access", "Paid"); // 👈 ADD THIS
+                          }
                         }}
-                        className={`px-6 py-3 rounded-full cursor-pointer pl-10 pr-10 ${
+                        className={`px-6 py-3 rounded-full pl-10 pr-10 ${
+                          canEdit ? "cursor-pointer" : "cursor-not-allowed"
+                        } ${
                           values.access === "Paid"
                             ? "bg-primary text-black"
                             : "bg-transparent text-white pl-10 pr-10"
@@ -834,8 +917,13 @@ const CreateWorkout = () => {
                           placeholder="Enter Amount"
                           value={values.fees}
                           onChange={handleChange("fees")}
-                          error={touched.fees && errors.fees}
+                          error={
+                            touched.fees && errors.fees
+                              ? String(errors.fees)
+                              : ""
+                          }
                           className="w-full"
+                          disabled={!canEdit}
                           icon={
                             <img
                               src={IMAGES.dollarsquare}
@@ -853,8 +941,14 @@ const CreateWorkout = () => {
                   </h2>
                   <div className="flex items-center gap-2 bg-white/3 p-2 rounded-full">
                     <span
-                      onClick={() => setVisibility("Public")}
-                      className={` px-6 py-3 w-[50%] text-center rounded-full cursor-pointer ${
+                      onClick={() => {
+                        if (canEdit) {
+                          setVisibility("Public");
+                        }
+                      }}
+                      className={` px-6 py-3 w-[50%] text-center rounded-full ${
+                        canEdit ? "cursor-pointer" : "cursor-not-allowed"
+                      } ${
                         visibility === "Public"
                           ? "bg-primary text-black"
                           : "bg-transparent text-white"
@@ -863,8 +957,14 @@ const CreateWorkout = () => {
                       Public
                     </span>
                     <span
-                      onClick={() => setVisibility("Private")}
-                      className={`px-6 py-3 w-[50%] text-center rounded-full cursor-pointer ${
+                      onClick={() => {
+                        if (canEdit) {
+                          setVisibility("Private");
+                        }
+                      }}
+                      className={`px-6 py-3 w-[50%] text-center rounded-full ${
+                        canEdit ? "cursor-pointer" : "cursor-not-allowed"
+                      } ${
                         visibility === "Private"
                           ? "bg-primary text-black"
                           : "bg-transparent text-white"
@@ -874,10 +974,14 @@ const CreateWorkout = () => {
                     </span>
                   </div>
                 </div>
-                <div className="p-5 rounded-lg">
+                <div
+                  className={`p-5 rounded-lg ${!canEdit ? "opacity-60" : ""}`}
+                >
                   <GroupInputTag
                     onClickGroup={() => {}}
-                    onSelectGroups={onSelectGroups}
+                    onSelectGroups={
+                      canEdit ? onSelectGroups : (groups: any[]) => {}
+                    }
                   />
                 </div>
               </div>

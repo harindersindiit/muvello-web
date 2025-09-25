@@ -16,6 +16,7 @@ interface WorkoutComponentProps {
   is_draft?: boolean;
   onImageLoad?: () => void;
   onImageError?: () => void;
+  canDelete: boolean | null | undefined;
 }
 
 const WorkoutComponent = ({
@@ -25,6 +26,7 @@ const WorkoutComponent = ({
   duration,
   weeks,
   showEditDelete,
+  canDelete,
   is_draft,
   visibility,
   onViewClick,
@@ -52,12 +54,14 @@ const WorkoutComponent = ({
               alt="Edit"
               className="w-5 h-5 cursor-pointer"
             />
-            <img
-              src={IMAGES.trash}
-              alt="Trash"
-              className="w-5 h-5 cursor-pointer"
-              onClick={onClickDelete}
-            />
+            {canDelete && (
+              <img
+                src={IMAGES.trash}
+                alt="Trash"
+                className="w-5 h-5 cursor-pointer"
+                onClick={onClickDelete}
+              />
+            )}
           </div>
         )}
 
