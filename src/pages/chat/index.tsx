@@ -425,6 +425,7 @@ const GroupChatUI = () => {
       };
 
       const groupId = selectedGroup?._id; // Ensure selectedGroup is set
+
       await axiosInstance.put(`/group/${groupId}`, reqData, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -452,15 +453,19 @@ const GroupChatUI = () => {
 
     try {
       const token = localStorageService.getItem("accessToken");
-
+      const adminId = selectedGroup.members.find(
+        (member: any) => member.is_admin
+      )?.user._id;
       const reqData: any = {
         name: selectedGroup.name,
         created_by: selectedGroup.created_by,
         members: newMembers,
         group_picture_url: selectedGroup.group_picture_url,
+        admin_id: adminId,
       };
 
       const groupId = selectedGroup?._id; // Ensure selectedGroup is set
+
       await axiosInstance.put(`/group/${groupId}`, reqData, {
         headers: {
           Authorization: `Bearer ${token}`,
