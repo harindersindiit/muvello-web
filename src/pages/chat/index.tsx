@@ -809,7 +809,7 @@ const GroupChatUI = () => {
         const conversation = res.data.body.conversations.find(
           (conversation) => conversation._id == selectedUser._id
         );
-        if (conversation) {
+        if (!conversation) {
           setSelectedUser(null);
         }
       }
