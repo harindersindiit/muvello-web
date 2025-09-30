@@ -54,8 +54,8 @@ const UploadDropBox = ({ onFileSelect, preview, type = "img" }) => {
       <UploadCloud className="mx-auto text-blue-500" size={40} />
       <p className="text-white font-medium text-md">
         {isDragActive
-          ? "Drop your .png or .jpg or .webp image here"
-          : "Drag & drop or sel a .png or.jpg or .webp image here"}
+          ? "Drop or select your .png or .jpg or .webp image here"
+          : "Drag & drop or select a .png or.jpg or .webp image here"}
       </p>
 
       {preview && (

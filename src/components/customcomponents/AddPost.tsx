@@ -7,8 +7,7 @@ import { Icon } from "@iconify/react";
 import Lines from "@/components/svgcomponents/Lines";
 import SelectComponent from "@/components/customcomponents/SelectComponent";
 import GroupInputTag from "@/components/customcomponents/GroupInputTag";
-import { Formik, Form, Field } from "formik";
-import * as Yup from "yup";
+import { Formik, Form } from "formik";
 import { addPostSchema } from "@/utils/validations";
 import localStorageService from "@/utils/localStorageService";
 import axiosInstance from "@/utils/axiosInstance";
@@ -121,6 +120,25 @@ const AddPost = ({
       toast.error(
         "Some files were skipped because they are not valid images or videos."
       );
+    }
+
+    // Check if adding these valid files would exceed the limit of 6
+    if (uploadedFiles.length + validFiles.length > 6) {
+      const remainingSlots = 6 - uploadedFiles.length;
+      if (remainingSlots > 0) {
+        toast.warning(
+          `You can only add ${remainingSlots} more file${
+            remainingSlots === 1 ? "" : "s"
+          }. You selected ${validFiles.length} file${
+            validFiles.length === 1 ? "" : "s"
+          }.`
+        );
+      } else {
+        toast.error(
+          "You have already reached the maximum limit of 6 media files."
+        );
+      }
+      return;
     }
 
     const fileArray = validFiles.map((file) => ({
@@ -283,15 +301,40 @@ const AddPost = ({
 
               {/* Upload Box */}
               <div
-                className="border-2 cursor-pointer mb-3 border-dashed border-blue-500 rounded-lg h-40 flex flex-col justify-center items-center bg-[#1f1f1f]"
-                onClick={() => !postDetails && fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-lg h-40 flex flex-col justify-center items-center bg-[#1f1f1f] mb-3 ${
+                  uploadedFiles.length >= 6 || postDetails
+                    ? "border-gray-500 cursor-not-allowed opacity-50"
+                    : "border-blue-500 cursor-pointer"
+                }`}
+                onClick={() => {
+                  if (!postDetails && uploadedFiles.length < 6) {
+                    fileInputRef.current?.click();
+                  }
+                }}
               >
                 <Icon
                   icon="solar:gallery-outline"
-                  className="text-blue mb-2"
+                  className={`mb-2 ${
+                    uploadedFiles.length >= 6 || postDetails
+                      ? "text-gray-500"
+                      : "text-blue"
+                  }`}
                   fontSize={34}
                 />
-                <p className="text-white text-sm">Upload Images or Videos</p>
+                <p
+                  className={`text-sm ${
+                    uploadedFiles.length >= 6 || postDetails
+                      ? "text-gray-500"
+                      : "text-white"
+                  }`}
+                >
+                  {uploadedFiles.length >= 6
+                    ? "Maximum 6 media files reached"
+                    : "Upload Images or Videos"}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {uploadedFiles.length}/6 files uploaded
+                </p>
               </div>
 
               <input

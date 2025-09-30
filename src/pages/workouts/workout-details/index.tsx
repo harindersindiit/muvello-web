@@ -353,7 +353,7 @@ const WorkoutDetails = () => {
               ></div>
             </div>
             <div className="flex justify-between items-center">
-              <div>
+              <div className="text-left">
                 <h4 className="font-semibold text-sm mb-1">{state.title}</h4>
                 <p className="text-sm text-gray-400 flex gap-1 items-center">
                   <img
@@ -371,7 +371,7 @@ const WorkoutDetails = () => {
                     (acc, curr) => acc + (curr.workout_duration || 0),
                     0
                   )}{" "}
-                  min
+                  min/day
                   <img
                     src={IMAGES.editiconimg}
                     alt="Calendar"
@@ -394,7 +394,7 @@ const WorkoutDetails = () => {
             <p className="text-sm text-white mt-4">{state.caption}</p>
 
             <div className="flex items-center gap-2 justify-between w-full flex-1 mt-5 mb-3">
-              <h4 className="font-semibold text-sm mb-1">
+              <h4 className="font-semibold text-sm mb-1 text-left">
                 Participant ({progress.length})
               </h4>
               {progress.length > 1 && (
@@ -430,6 +430,20 @@ const WorkoutDetails = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {progress.map((item) => {
+                // Calculate progress percentage based on the formula: (completed_exercises / total_exercises) * 100
+                const calculatedProgress =
+                  item.total_exercises === 0
+                    ? 0
+                    : Math.round(
+                        (item.completed_exercises / item.total_exercises) * 100
+                      );
+
+                // Ensure progress is between 0 and 100
+                const finalProgress = Math.min(
+                  100,
+                  Math.max(0, calculatedProgress)
+                );
+
                 return (
                   <div
                     onClick={() =>
@@ -453,27 +467,29 @@ const WorkoutDetails = () => {
                         alt="avatar"
                         className="w-16 h-16 rounded-full"
                       />
-                      <div>
+                      <div className="text-left">
                         <p className="text-md font-semibold mb-1">
                           {item.user.fullname}
                         </p>
                         <p
                           className={`${
-                            item.progress_percent == 100
+                            finalProgress == 100
                               ? "text-primary"
-                              : item.progress_percent == 0
-                              ? "text-red"
-                              : "text-grey"
+                              : item.total_done_exercises > 0
+                              ? "text-grey"
+                              : "text-red"
                           } text-sm flex items-center gap-2`}
                         >
-                          <div
-                            className={`w-4 h-4 rounded-full border-1 border-primary flex items-center justify-center`}
-                          >
-                            <Icon icon="tabler:check" fontSize={10} />
-                          </div>
-                          {item.progress_percent == 100
+                          {finalProgress == 100 && (
+                            <div
+                              className={`w-4 h-4 rounded-full border-1 border-primary flex items-center justify-center`}
+                            >
+                              <Icon icon="tabler:check" fontSize={10} />
+                            </div>
+                          )}
+                          {finalProgress == 100
                             ? "Completed"
-                            : item.progress_percent > 0
+                            : item.total_done_exercises > 0
                             ? "In Progress"
                             : "Not Started"}
                         </p>
@@ -501,11 +517,11 @@ const WorkoutDetails = () => {
                           cy="18"
                           r="16"
                           stroke={
-                            item.progress_percent >= 80
+                            finalProgress >= 80
                               ? "#A3FF12"
-                              : item.progress_percent >= 50
+                              : finalProgress >= 50
                               ? "#FFA500"
-                              : item.progress_percent > 0
+                              : finalProgress > 0
                               ? "#3391FF"
                               : "#666"
                           }
@@ -514,17 +530,23 @@ const WorkoutDetails = () => {
                           strokeLinecap="round"
                           transform="rotate(-90 18 18)"
                           strokeDasharray="100"
-                          strokeDashoffset={100 - item.progress_percent}
+                          strokeDashoffset={100 - finalProgress}
                         />
                       </svg>
                       <span
-                        className={`${
-                          item.progress_percent == 0
-                            ? "text-white"
-                            : "text-primary"
-                        } text-sm font-semibold`}
+                        className="text-sm font-semibold"
+                        style={{
+                          color:
+                            finalProgress >= 80
+                              ? "#A3FF12"
+                              : finalProgress >= 50
+                              ? "#FFA500"
+                              : finalProgress > 0
+                              ? "#3391FF"
+                              : "#666",
+                        }}
                       >
-                        {item.progress_percent}%
+                        {finalProgress}%
                       </span>
                     </div>
                   </div>
@@ -541,8 +563,16 @@ const WorkoutDetails = () => {
           <div className="col-span-0 md:col-span-12 lg:col-span-4 xl:col-span-3 pl-2">
             <div className="max-h-[calc(100vh-100px)] overflow-y-auto pr-1 scroll-hide">
               <div className="flex items-center gap-4 mb-3">
-                <h2 className="text-md font-semibold">
-                  <span className="text-white">Exercises</span>
+                <h2 className="text-md font-semibold text-left">
+                  <span className="text-white flex items-center gap-1">
+                    Exercises (
+                    <img
+                      src={IMAGES.exercise3}
+                      alt="Sets"
+                      className="w-4 h-4"
+                    />
+                    {selectedExerciseDay.workout_duration} mins)
+                  </span>
                 </h2>
 
                 <div className="flex items-center gap-1 ms-auto">
@@ -610,27 +640,6 @@ const WorkoutDetails = () => {
         </div>
       </div>
       <WorkoutComponentSidebar open={open} setOpen={setOpen} mode={mode} />
-
-      {/* <CustomModal
-        disabled={deleteLoader}
-        title="Add Exercise"
-        submitText="Yes I'm Sure"
-        open={deleteExercise}
-        setOpen={setDeleteExercise}
-        onCancel={() => setDeleteExercise(false)}
-        onSubmit={() => handleDeleteExercise()}
-        customButtonClass="!py-6"
-        children={
-          <div className="text-white text-center mb-3">
-            <h3 className="font-semibold text-lg mb-1">Delete Exercise?</h3>
-            <p className="text-grey text-sm">
-              Are you sure you want to delete{" "}
-              <span className="text-white">{editExercise?.title}</span>{" "}
-              exercise?
-            </p>
-          </div>
-        }
-      /> */}
 
       {/* Modal */}
       <CustomModal

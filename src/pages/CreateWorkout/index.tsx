@@ -119,7 +119,7 @@ const SelectExercisePopup = ({
 const CreateWorkout = () => {
   const location = useLocation();
   const editingWorkout = location.state || null;
-  const [canEdit, setCanEdit] = useState(false);
+  const [canEdit, setCanEdit] = useState(true);
 
   useEffect(() => {
     if (editingWorkout) {
@@ -767,14 +767,18 @@ const CreateWorkout = () => {
                               }
                               placeholder="45 min"
                               value={day.duration}
-                              onChange={(e) =>
-                                canEdit &&
-                                handleDurationChange(
-                                  weekIndex,
-                                  dayIndex,
-                                  e.target.value
-                                )
-                              }
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Only allow numbers (no decimals)
+                                if (/^\d*$/.test(value)) {
+                                  canEdit &&
+                                    handleDurationChange(
+                                      weekIndex,
+                                      dayIndex,
+                                      value
+                                    );
+                                }
+                              }}
                               inputClassName="!bg-[#333333]"
                               disabled={!canEdit}
                               icon={

@@ -17,6 +17,15 @@ export default function BMISummaryCard({ state, title, statistics }) {
     value: index + 1,
   }));
 
+  // Calculate progress percentage based on the formula: (completed_exercises / total_exercises) * 100
+  const calculatedProgress =
+    state.total_exercises === 0
+      ? 0
+      : Math.round((state.completed_exercises / state.total_exercises) * 100);
+
+  // Ensure progress is between 0 and 100
+  const finalProgress = Math.min(100, Math.max(0, calculatedProgress));
+
   useEffect(() => {
     const selectedWeekData = statistics.find((w) => w.week === weekBMI);
     console.log(selectedWeekData);
@@ -77,26 +86,57 @@ export default function BMISummaryCard({ state, title, statistics }) {
                 cx="18"
                 cy="18"
                 r="16"
-                stroke="#94EB00"
+                stroke={
+                  finalProgress >= 80
+                    ? "#A3FF12"
+                    : finalProgress >= 50
+                    ? "#FFA500"
+                    : finalProgress > 0
+                    ? "#3391FF"
+                    : "#666"
+                }
                 strokeWidth="3"
                 fill="none"
                 strokeLinecap="round"
                 transform="rotate(-90 18 18)"
                 strokeDasharray="100"
-                strokeDashoffset={100 - state.progress_percent}
+                strokeDashoffset={100 - finalProgress}
               />
             </svg>
-            <span className="text-white text-sm font-semibold">
-              {state.progress_percent}%
+            <span
+              className="text-sm font-semibold"
+              style={{
+                color:
+                  finalProgress >= 80
+                    ? "#A3FF12"
+                    : finalProgress >= 50
+                    ? "#FFA500"
+                    : finalProgress > 0
+                    ? "#3391FF"
+                    : "#666",
+              }}
+            >
+              {finalProgress}%
             </span>
           </div>
           <div className="text-start">
             <p className="text-xs text-gray-400 mb-1">Progress</p>
-            <p className="text-sm font-semibold text-lime-400">
-              {" "}
-              {state.progress_percent == 100
+            <p
+              className="text-sm font-semibold"
+              style={{
+                color:
+                  finalProgress >= 80
+                    ? "#A3FF12"
+                    : finalProgress >= 50
+                    ? "#FFA500"
+                    : finalProgress > 0
+                    ? "#3391FF"
+                    : "#666",
+              }}
+            >
+              {finalProgress == 100
                 ? "Completed"
-                : state.progress_percent > 0
+                : state.total_done_exercises > 0
                 ? "In Progress"
                 : "Not Started"}
             </p>

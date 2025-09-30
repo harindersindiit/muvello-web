@@ -244,7 +244,7 @@ const ChooseAdmin = ({
 };
 
 const GroupChatUI = () => {
-  const { socket } = useSocket();
+  const { socket, isConnected } = useSocket();
   const { user } = useUser();
 
   const initialValues = {
@@ -991,7 +991,7 @@ const GroupChatUI = () => {
           (item) => item._id == selectedGroup._id
         );
 
-        setSelectedGroup(group || null);
+        // setSelectedGroup(group || null);
       }
     } catch (error: any) {
       const message = error?.response?.data?.error || "Internal server error.";
@@ -1039,7 +1039,6 @@ const GroupChatUI = () => {
     } catch (error: any) {
       const message = error?.response?.data?.error || "Internal server error.";
       toast.error(message);
-    } finally {
     }
   };
 
@@ -1145,7 +1144,6 @@ const GroupChatUI = () => {
     };
 
     socket.emit("group_chat.send_msg", messagePayload, (acknowledgement) => {
-      console.log(acknowledgement);
       if (acknowledgement.success) {
         setChatMessages((prev) => [
           ...prev,
@@ -1186,6 +1184,7 @@ const GroupChatUI = () => {
   };
 
   const [groupAdmin, setGroupAdmin] = useState(null);
+
   useEffect(() => {
     let roomId = null;
 
@@ -1194,6 +1193,8 @@ const GroupChatUI = () => {
     } else if (selectedUser?._id) {
       roomId = selectedUser._id;
     }
+
+    console.log("Room ID:", roomId, "Socket connected:", socket?.connected);
 
     if (roomId && socket?.connected) {
       console.log("Joining room:", roomId);
@@ -1209,6 +1210,31 @@ const GroupChatUI = () => {
       } else {
         getSingleChat(roomId); // Replace with your direct chat fetch function
       }
+    } else if (roomId && socket && !socket.connected) {
+      console.log("Socket not connected, waiting for connection...");
+      // Wait for socket to connect, then join room
+      const handleConnect = () => {
+        console.log("Socket connected, now joining room:", roomId);
+        joinRoom(roomId);
+
+        // fetch the appropriate chat
+        if (selectedGroup?._id) {
+          const isAdmin = selectedGroup.members.find((item) => item.is_admin);
+          setGroupAdmin(isAdmin ? isAdmin.user_id : null);
+          getGroupChat(roomId);
+        } else {
+          getSingleChat(roomId);
+        }
+
+        socket.off("connect", handleConnect);
+      };
+
+      socket.on("connect", handleConnect);
+
+      // Cleanup function
+      return () => {
+        socket.off("connect", handleConnect);
+      };
     }
   }, [selectedGroup, selectedUser, socket]);
 
@@ -1364,6 +1390,11 @@ const GroupChatUI = () => {
 
     fetchUser();
   }, [selectedUser, user]);
+
+  // Show loader until socket connects
+  if (!isConnected) {
+    return <FullScreenLoader />;
+  }
 
   return (
     <div className="flex flex-col md:grid md:grid-cols-[400px_1fr] bg-black text-white">
@@ -2112,6 +2143,7 @@ const GroupChatUI = () => {
                       e.preventDefault();
 
                       if (activeTab === "requests" || activeTab === "users") {
+                        console.log("sendDirectMessage");
                         sendDirectMessage();
                       }
                       if (activeTab === "groups") {
@@ -2910,7 +2942,7 @@ const GroupChatUI = () => {
         validationSchema={reportUserSchema}
         onSubmit={handleReportSubmit}
       >
-        {({ values, setFieldValue, isSubmitting, handleSubmit }) => (
+        {({ values, setFieldValue, isSubmitting, handleSubmit, resetForm }) => (
           <Form>
             <DrawerSidebar
               title="Report"
@@ -2921,6 +2953,10 @@ const GroupChatUI = () => {
               }
               open={isReport}
               setOpen={setIsReport}
+              onCancel={() => {
+                resetForm();
+                setIsReport(false);
+              }}
             >
               <div className="p-4">
                 <h3 className="text-white text-md font-semibold mb-3">

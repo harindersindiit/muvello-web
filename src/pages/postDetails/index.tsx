@@ -491,6 +491,23 @@ const PostDetails = () => {
           )}
 
           <div className="mt-4">
+            <div className="mb-2">
+              <p className="text-gray-400 text-xs">
+                Posted by{" "}
+                <span className="text-white font-medium">
+                  {state.user?.fullname}
+                </span>
+              </p>
+              <p className="text-gray-400 text-xs">
+                {new Date(state.created_at).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            </div>
             <p className="text-white text-sm font-medium mb-1">
               {updatedCaption || state.caption}
             </p>

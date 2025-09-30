@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import CustomButton from "@/components/customcomponents/CustomButton";
@@ -61,8 +61,9 @@ const Home = () => {
   }, []);
 
   const { ref: inViewRef, inView } = useInView({
-    threshold: 1,
+    threshold: 0.1,
     root: intersectionRoot,
+    rootMargin: "100px",
   });
 
   const navigate = useNavigate();
@@ -82,22 +83,23 @@ const Home = () => {
 
   /////
 
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<any[]>([]);
   const limit = 6;
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [postsError, setPostsError] = useState<string | null>(null);
 
-  const [workouts, setWorkouts] = useState([]);
+  const [workouts, setWorkouts] = useState<any[]>([]);
   const [loader, setLoader] = useState(false);
 
   const [workoutLoader, setWorkoutLoader] = useState(false);
 
-  const [preferences, setPrefernces] = useState([]);
+  const [preferences, setPrefernces] = useState<any[]>([]);
   const [preferencesLoader, setPreferncesLoader] = useState(false);
-  const [workoutCategories, setWorkoutCategories] = useState([]);
+  const [workoutCategories, setWorkoutCategories] = useState<any[]>([]);
   const [exersicesLoader, setExersicesLoader] = useState(false);
-  const [exercises, setExercises] = useState([]);
+  const [exercises, setExercises] = useState<any[]>([]);
 
   const [selectedTab, setSelectedTab] = useState("all");
   const [selectedCat, setSelectedCat] = useState("all");
@@ -155,61 +157,60 @@ const Home = () => {
       });
   };
 
+  // add post ////
+  const getPostsList = useCallback(
+    async (currentPage = 1) => {
+      if (!hasMore || isFetchingMore) return;
+
+      setIsFetchingMore(true);
+      setPostsError(null);
+
+      try {
+        const token = localStorageService.getItem("accessToken");
+        const res = await axiosInstance.get(
+          `post?limit=${limit}&page=${currentPage}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const newPosts = res.data.body.posts;
+
+        if (currentPage === 1) {
+          setPosts(newPosts);
+        } else {
+          setPosts((prev) => [...prev, ...newPosts]);
+        }
+        setPage(currentPage);
+
+        if (newPosts.length < limit) {
+          setHasMore(false);
+        }
+      } catch (error: any) {
+        const errorMessage =
+          error?.response?.data?.error || "Failed to fetch posts.";
+        setPostsError(errorMessage);
+        toast.error(errorMessage);
+      } finally {
+        setIsFetchingMore(false);
+      }
+    },
+    [hasMore, isFetchingMore, limit]
+  );
+
   useEffect(() => {
-    if (inView && hasMore) {
+    if (inView && hasMore && !isFetchingMore) {
       getPostsList(page + 1);
     }
-  }, [inView]);
-
-  // add post ////
-  const getPostsList = async (currentPage = 1) => {
-    if (!hasMore || isFetchingMore) return;
-
-    setIsFetchingMore(true);
-
-    try {
-      const token = localStorageService.getItem("accessToken");
-      const res = await axiosInstance.get(
-        `post?limit=${limit}&page=${currentPage}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const newPosts = res.data.body.posts;
-
-      setPosts((prev) => [...prev, ...newPosts]);
-      setPage(currentPage);
-
-      if (newPosts.length < limit) {
-        setHasMore(false);
-      }
-    } catch (error: any) {
-      toast.error(error?.response?.data?.error || "Failed to fetch posts.");
-    } finally {
-      setIsFetchingMore(false);
-    }
-  };
+  }, [inView, hasMore, isFetchingMore, page, getPostsList]);
 
   const refreshPosts = async () => {
-    try {
-      const token = localStorageService.getItem("accessToken");
-      const res = await axiosInstance.get(`post?limit=${limit}&page=1`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const newPosts = res.data.body.posts;
-
-      setPosts(newPosts); // Replace old posts
-      setPage(1);
-      setHasMore(newPosts.length >= limit);
-    } catch (error: any) {
-      toast.error(error?.response?.data?.error || "Failed to refresh posts.");
-    }
+    setPostsError(null);
+    setPage(1);
+    setHasMore(true);
+    await getPostsList(1);
   };
 
   const getWorkouts = async (id = null) => {
@@ -470,7 +471,9 @@ const Home = () => {
                           (acc, curr) => acc + (curr.workout_duration || 0),
                           0
                         )}
-                        weeks={getMaxWeek(workout?.exercises, "week")}
+                        weeks={
+                          getMaxWeek(workout?.exercises, "week") || "0 weeks"
+                        }
                         onViewClick={() =>
                           navigate(`/user/workouts/workout-details`, {
                             state: workout,
@@ -636,8 +639,32 @@ const Home = () => {
                     </div>
                   )}
 
-                  {!isFetchingMore && posts.length === 0 && (
+                  {!isFetchingMore && posts.length === 0 && !postsError && (
                     <NoDataPlaceholder />
+                  )}
+
+                  {postsError && (
+                    <div className="col-span-full flex flex-col items-center justify-center py-8 px-4 text-center">
+                      <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+                        <Icon
+                          icon="material-symbols:error-outline"
+                          className="text-red-500"
+                          style={{ width: "32px", height: "32px" }}
+                        />
+                      </div>
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        Failed to load posts
+                      </h3>
+                      <p className="text-sm text-gray-400 max-w-sm mb-4">
+                        {postsError}
+                      </p>
+                      <button
+                        onClick={refreshPosts}
+                        className="px-4 py-2 bg-[#94eb00] text-black rounded-lg hover:bg-[#7bc700] transition-colors"
+                      >
+                        Try Again
+                      </button>
+                    </div>
                   )}
                 </>
               )}
@@ -648,9 +675,9 @@ const Home = () => {
 
       {/* Create Post Drawer */}
       <AddPost
-        preferences={preferences}
         setPostDrawer={setPostDrawer}
         postDrawer={postDrawer}
+        postDetails={null}
         refreshPosts={refreshPosts}
       />
       {/* Create Post Drawer */}
@@ -661,7 +688,7 @@ const Home = () => {
         validationSchema={reportUserSchema}
         onSubmit={handleReportSubmit}
       >
-        {({ values, setFieldValue, isSubmitting, handleSubmit }) => (
+        {({ values, setFieldValue, isSubmitting, handleSubmit, resetForm }) => (
           <Form>
             <DrawerSidebar
               title="Report"
@@ -672,6 +699,10 @@ const Home = () => {
               }
               open={isReport}
               setOpen={setIsReport}
+              onCancel={() => {
+                resetForm();
+                setIsReport(false);
+              }}
             >
               <div className="p-4">
                 <h3 className="text-white text-md font-semibold mb-3">

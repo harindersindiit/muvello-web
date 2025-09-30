@@ -400,10 +400,12 @@ const ExerciseCommonSidebar = ({
                             />
                           }
                           value={set.reps}
-                          onChange={handleChange}
-                          // type="number"
+                          onChange={(e) => {
+                            // Only allow whole numbers (no decimals)
+                            const value = e.target.value.replace(/[^0-9]/g, "");
+                            setFieldValue(`sets[${index}].reps`, value);
+                          }}
                           type="text"
-                          inputMode="numeric"
                           pattern="[0-9]*"
                           className="w-full"
                         />
@@ -428,10 +430,12 @@ const ExerciseCommonSidebar = ({
                             />
                           }
                           value={set.rest}
-                          onChange={handleChange}
-                          // type="number"
+                          onChange={(e) => {
+                            // Only allow whole numbers (no decimals)
+                            const value = e.target.value.replace(/[^0-9]/g, "");
+                            setFieldValue(`sets[${index}].rest`, value);
+                          }}
                           type="text"
-                          inputMode="numeric"
                           pattern="[0-9]*"
                           className="w-full"
                         />
@@ -494,13 +498,17 @@ const ExerciseCommonSidebar = ({
                       name={`sets[${index}].weight_value`}
                       placeholder="Enter Weight"
                       value={set.weight_value}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Only allow numbers (including decimals)
+                        if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                          handleChange(e);
+                        }
+                      }}
                       icon={
                         <img src={IMAGES.weight} alt="" className="w-5 h-5" />
                       }
-                      // type="number"
                       type="text"
-                      inputMode="numeric"
                       pattern="[0-9]*"
                       className="w-full"
                     />

@@ -44,8 +44,7 @@ const ExerciseComponent = ({
   onImageLoad = () => {},
   onImageError = () => {},
 }: ExerciseComponentProps) => {
-  const progPercentage =
-    progress && total ? ((progress / total) * 100).toFixed(2) : "0.00";
+  const progPercentage = progress && total ? (progress / total) * 100 : 0;
 
   const getColorClass = () => {
     if (progPercentage === 100) return "bg-lime-400";
@@ -62,7 +61,10 @@ const ExerciseComponent = ({
   return (
     <div className={`bg-lightdark rounded-xl p-3 ${className}`}>
       <div className={`text-white items-center flex gap-3 `}>
-        <div className="w-1/3 relative overflow-hidden" onClick={onClick}>
+        <div
+          className="w-1/3 relative overflow-hidden hover:scale-105 transition-all duration-300 hover:cursor-pointer"
+          onClick={onClick}
+        >
           <img
             src={image}
             alt={title}
@@ -82,9 +84,9 @@ const ExerciseComponent = ({
           )}
         </div>
 
-        <div className="w-2/3 flex flex-col gap-3">
-          <div className="flex justify-between">
-            <h4 className="font-semibold text-base truncate whitespace-nowrap overflow-hidden w-full">
+        <div className="w-2/3 flex flex-col gap-3  hover:cursor-pointer">
+          <div className="flex justify-between items-start">
+            <h4 className="font-semibold text-base truncate whitespace-nowrap overflow-hidden w-full text-left">
               {title}
             </h4>
             {checkbox && (
@@ -113,16 +115,28 @@ const ExerciseComponent = ({
               </div>
             )} */}
           </div>
-          <p className="text-xs text-white flex gap-1 items-center">
-            <img src={IMAGES.exercise1} alt="Sets" className="w-4 h-4" /> Sets:{" "}
-            {sets}
+          <p className="text-xs text-white flex gap-1 items-center text-left">
+            <img
+              src={IMAGES.exercise1}
+              alt="Sets"
+              className="w-4 h-4 flex-shrink-0"
+            />{" "}
+            Sets: {sets}
           </p>
-          <p className="text-xs text-white flex gap-1 items-center">
-            <img src={IMAGES.exercise2} alt="Sets" className="w-4 h-4" /> Reps:{" "}
-            {reps}
+          <p className="text-xs text-white flex gap-1 items-center text-left">
+            <img
+              src={IMAGES.exercise2}
+              alt="Sets"
+              className="w-4 h-4 flex-shrink-0"
+            />{" "}
+            Reps: {reps}
           </p>
-          <p className="text-xs text-white flex gap-1 items-center">
-            <img src={IMAGES.exercise3} alt="Sets" className="w-4 h-4" />{" "}
+          <p className="text-xs text-white flex gap-1 items-center text-left">
+            <img
+              src={IMAGES.exercise3}
+              alt="Sets"
+              className="w-4 h-4 flex-shrink-0"
+            />{" "}
             Rest/Set: {rest}
           </p>
         </div>
@@ -131,11 +145,11 @@ const ExerciseComponent = ({
       {progressShow && (
         <div className="flex items-center w-full mt-2">
           {/* Play icon */}
-          <Icon
+          {/* <Icon
             icon="ph:play-fill" // any play icon you like
             fontSize={18}
             className="mr-2 flex-shrink-0 text-white/80"
-          />
+          /> */}
 
           {/* Progress bar */}
           <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">

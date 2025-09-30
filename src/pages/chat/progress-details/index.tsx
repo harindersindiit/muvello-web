@@ -177,9 +177,9 @@ const ProgressDetails = () => {
                       )
                       ?.exercises?.map((exercise, index) => (
                         <ExerciseComponent
-                          total={exercise?.progress?.total || 0}
+                          total={exercise?.sets?.length || 0}
+                          progress={exercise?.progress?.sets_completion || 0}
                           progressShow={true}
-                          progress={exercise?.progress?.progress || 0}
                           key={exercise?._id + index}
                           image={exercise?.exercise_info?.thumbnail || ""}
                           title={exercise?.exercise_info?.title || ""}

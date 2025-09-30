@@ -196,7 +196,7 @@ export const reportUserSchema = Yup.object({
             "Reason cannot be only whitespace.",
             (value) => !!value && value.trim().length > 0
           )
-          .max(500, "Reason must not exceed 500 characters."),
+          .max(1000, "Reason must not exceed 1000 characters."),
       otherwise: (schema) => schema.notRequired(),
     }),
 });

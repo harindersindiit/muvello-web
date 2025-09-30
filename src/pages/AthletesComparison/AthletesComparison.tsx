@@ -69,6 +69,10 @@ const AthletesComparison = () => {
   };
 
   const handleCancelSelection = () => {
+    if (selectedAthletesTemp.length === 0) {
+      navigate(-1);
+      return;
+    }
     setSelectedAthletesTemp([]);
     setShowPopup(false);
     setSearchText("");
@@ -213,101 +217,133 @@ const AthletesComparison = () => {
               />
 
               <div className="space-y-2 max-h-[450px] scrollCustom overflow-y-auto">
-                {filteredFollowers.map((athlete) => (
-                  <div
-                    key={athlete.user._id}
-                    className="flex items-center py-4"
-                    style={{ borderBottom: "1px solid #6F6F6F" }}
-                    onClick={() => handleCheckboxChange(athlete.user._id)}
-                  >
+                {filteredFollowers.map((athlete) => {
+                  // Calculate progress percentage based on the formula: (completed_exercises / total_exercises) * 100
+                  const calculatedProgress =
+                    athlete.total_exercises === 0
+                      ? 0
+                      : Math.round(
+                          (athlete.completed_exercises /
+                            athlete.total_exercises) *
+                            100
+                        );
+
+                  // Ensure progress is between 0 and 100
+                  const finalProgress = Math.min(
+                    100,
+                    Math.max(0, calculatedProgress)
+                  );
+
+                  return (
                     <div
-                      className={`w-5 h-5 mr-3 border rounded flex items-center justify-center ${
-                        selectedAthletesTemp.includes(athlete.user._id)
-                          ? "bg-[#A3FF12] border-[#A3FF12]"
-                          : "border-gray-500"
-                      }`}
+                      key={athlete.user._id}
+                      className="flex items-center py-4"
+                      style={{ borderBottom: "1px solid #6F6F6F" }}
+                      onClick={() => handleCheckboxChange(athlete.user._id)}
                     >
-                      {selectedAthletesTemp.includes(athlete.user._id) && (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-3 w-3 text-black"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586l-3.293-3.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
-                            clipRule="evenodd"
+                      <div
+                        className={`w-5 h-5 mr-3 border rounded flex items-center justify-center ${
+                          selectedAthletesTemp.includes(athlete.user._id)
+                            ? "bg-[#A3FF12] border-[#A3FF12]"
+                            : "border-gray-500"
+                        }`}
+                      >
+                        {selectedAthletesTemp.includes(athlete.user._id) && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-3 w-3 text-black"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586l-3.293-3.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex items-center flex-1">
+                        <img
+                          src={
+                            athlete.user.profile_picture ||
+                            IMAGES.placeholderAvatar
+                          }
+                          alt={athlete.user.fullname}
+                          className="w-10 h-10 rounded-full mr-3"
+                        />
+                        <div>
+                          <h4 className="font-medium">
+                            {athlete.user.fullname}
+                          </h4>
+                          <p
+                            className={`text-sm ${
+                              finalProgress == 100
+                                ? "text-[#A3FF12]"
+                                : athlete.total_done_exercises > 0
+                                ? "text-gray-400"
+                                : "text-red-500"
+                            }`}
+                          >
+                            {finalProgress == 100
+                              ? "Completed"
+                              : athlete.total_done_exercises > 0
+                              ? "In Progress"
+                              : "Not Started"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="w-12 h-12 relative">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span
+                            className="text-xs font-medium"
+                            style={{
+                              color:
+                                finalProgress >= 80
+                                  ? "#A3FF12"
+                                  : finalProgress >= 50
+                                  ? "#FFA500"
+                                  : finalProgress > 0
+                                  ? "#3391FF"
+                                  : "#666",
+                            }}
+                          >
+                            {finalProgress}%
+                          </span>
+                        </div>
+                        <svg className="w-full h-full" viewBox="0 0 36 36">
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="16"
+                            fill="none"
+                            stroke="#333"
+                            strokeWidth="3"
+                          />
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="16"
+                            fill="none"
+                            stroke={
+                              finalProgress >= 80
+                                ? "#A3FF12"
+                                : finalProgress >= 50
+                                ? "#FFA500"
+                                : finalProgress > 0
+                                ? "#3391FF"
+                                : "#666"
+                            }
+                            strokeWidth="3"
+                            strokeDasharray={`${finalProgress} 100`}
+                            strokeLinecap="round"
+                            transform="rotate(-90 18 18)"
                           />
                         </svg>
-                      )}
-                    </div>
-                    <div className="flex items-center flex-1">
-                      <img
-                        src={
-                          athlete.user.profile_picture ||
-                          IMAGES.placeholderAvatar
-                        }
-                        alt={athlete.user.fullname}
-                        className="w-10 h-10 rounded-full mr-3"
-                      />
-                      <div>
-                        <h4 className="font-medium">{athlete.user.fullname}</h4>
-                        <p
-                          className={`text-sm ${
-                            athlete.progress_percent == 100
-                              ? "text-[#A3FF12]"
-                              : athlete.progress_percent > 0
-                              ? "text-gray-400"
-                              : "text-red-500"
-                          }`}
-                        >
-                          {athlete.progress_percent == 100
-                            ? "Completed"
-                            : athlete.progress_percent > 0
-                            ? "In Progress"
-                            : "Not Started"}
-                        </p>
                       </div>
                     </div>
-                    <div className="w-12 h-12 relative">
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs font-medium">
-                          {athlete.progress_percent}%
-                        </span>
-                      </div>
-                      <svg className="w-full h-full" viewBox="0 0 36 36">
-                        <circle
-                          cx="18"
-                          cy="18"
-                          r="16"
-                          fill="none"
-                          stroke="#333"
-                          strokeWidth="3"
-                        />
-                        <circle
-                          cx="18"
-                          cy="18"
-                          r="16"
-                          fill="none"
-                          stroke={
-                            athlete.progress_percent >= 80
-                              ? "#A3FF12"
-                              : athlete.progress_percent >= 50
-                              ? "#FFA500"
-                              : athlete.progress_percent > 0
-                              ? "#3391FF"
-                              : "#666"
-                          }
-                          strokeWidth="3"
-                          strokeDasharray={`${athlete.progress_percent} 100`}
-                          strokeLinecap="round"
-                          transform="rotate(-90 18 18)"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -521,105 +557,135 @@ const AthletesComparison = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
         {allAthletesData
           .filter((athlete) => selectedAthletes.includes(athlete.user._id))
-          .map((athlete, index) => (
-            <div
-              key={athlete.user._id}
-              className="bg-[#080808] rounded-2xl relative border border-white/10"
-            >
-              <div
-                className="flex items-center mb-4 p-4 rounded-t-2xl"
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <img
-                      src={
-                        athlete.user.profile_picture || IMAGES.placeholderAvatar
-                      }
-                      alt={athlete.user.fullname}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-2 h-2 rounded-full"
-                        style={{
-                          backgroundColor:
-                            COLORS[
-                              selectedAthletes.findIndex(
-                                (id) => id === athlete.user._id
-                              ) % COLORS.length
-                            ],
-                        }}
-                      ></div>
-                      <span className="text-xs text-gray-400">
-                        Athlete {index + 1}
-                      </span>
-                    </div>
-                    <h4 className="font-medium text-lg">
-                      {athlete.user.fullname}
-                    </h4>
-                  </div>
-                </div>
-                <div className="ms-auto">
-                  <div className="relative w-14 h-14">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-sm font-medium">
-                        {athlete.progress_percent}%
-                      </span>
-                    </div>
-                    <svg className="w-full h-full" viewBox="0 0 36 36">
-                      <circle
-                        cx="18"
-                        cy="18"
-                        r="16"
-                        fill="none"
-                        stroke="#333"
-                        strokeWidth="3"
-                      />
-                      <circle
-                        cx="18"
-                        cy="18"
-                        r="16"
-                        fill="none"
-                        stroke={
-                          athlete.progress_percent >= 80
-                            ? "#A3FF12"
-                            : athlete.progress_percent >= 50
-                            ? "#FFA500"
-                            : athlete.progress_percent > 0
-                            ? "#3391FF"
-                            : "#666"
-                        }
-                        strokeWidth="3"
-                        strokeDasharray={`${athlete.progress_percent} 100`}
-                        strokeLinecap="round"
-                        transform="rotate(-90 18 18)"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </div>
+          .map((athlete, index) => {
+            // Calculate progress percentage based on the formula: (completed_exercises / total_exercises) * 100
+            const calculatedProgress =
+              athlete.total_exercises === 0
+                ? 0
+                : Math.round(
+                    (athlete.completed_exercises / athlete.total_exercises) *
+                      100
+                  );
 
-              <div className="grid grid-cols-1 gap-4 mt-4 p-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Current BMI:</span>
-                  <span className="font-medium">{athlete.bmi}</span>
+            // Ensure progress is between 0 and 100
+            const finalProgress = Math.min(
+              100,
+              Math.max(0, calculatedProgress)
+            );
+
+            return (
+              <div
+                key={athlete.user._id}
+                className="bg-[#080808] rounded-2xl relative border border-white/10"
+              >
+                <div
+                  className="flex items-center mb-4 p-4 rounded-t-2xl"
+                  style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <img
+                        src={
+                          athlete.user.profile_picture ||
+                          IMAGES.placeholderAvatar
+                        }
+                        alt={athlete.user.fullname}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{
+                            backgroundColor:
+                              COLORS[
+                                selectedAthletes.findIndex(
+                                  (id) => id === athlete.user._id
+                                ) % COLORS.length
+                              ],
+                          }}
+                        ></div>
+                        <span className="text-xs text-gray-400">
+                          Athlete {index + 1}
+                        </span>
+                      </div>
+                      <h4 className="font-medium text-lg">
+                        {athlete.user.fullname}
+                      </h4>
+                    </div>
+                  </div>
+                  <div className="ms-auto">
+                    <div className="relative w-14 h-14">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span
+                          className="text-sm font-medium"
+                          style={{
+                            color:
+                              finalProgress >= 80
+                                ? "#A3FF12"
+                                : finalProgress >= 50
+                                ? "#FFA500"
+                                : finalProgress > 0
+                                ? "#3391FF"
+                                : "#666",
+                          }}
+                        >
+                          {finalProgress}%
+                        </span>
+                      </div>
+                      <svg className="w-full h-full" viewBox="0 0 36 36">
+                        <circle
+                          cx="18"
+                          cy="18"
+                          r="16"
+                          fill="none"
+                          stroke="#333"
+                          strokeWidth="3"
+                        />
+                        <circle
+                          cx="18"
+                          cy="18"
+                          r="16"
+                          fill="none"
+                          stroke={
+                            finalProgress >= 80
+                              ? "#A3FF12"
+                              : finalProgress >= 50
+                              ? "#FFA500"
+                              : finalProgress > 0
+                              ? "#3391FF"
+                              : "#666"
+                          }
+                          strokeWidth="3"
+                          strokeDasharray={`${finalProgress} 100`}
+                          strokeLinecap="round"
+                          transform="rotate(-90 18 18)"
+                        />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                {/* <div className="flex justify-between">
-                  <span className="text-gray-400">Average Rest Time:</span> */}
-                {/* <span className="font-medium">{athlete.averageRestTime}</span> */}
-                {/* </div> */}
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Workout Completed:</span>
-                  <span className="font-medium">
-                    {athlete.completed_exercises}
-                  </span>
+
+                <div className="grid grid-cols-1 gap-4 mt-4 p-4">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Current BMI:</span>
+                    <span className="font-medium">{athlete.bmi}</span>
+                  </div>
+                  {/* <div className="flex justify-between">
+                    <span className="text-gray-400">Average Rest Time:</span> */}
+                  {/* <span className="font-medium">{athlete.averageRestTime}</span> */}
+                  {/* </div> */}
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Workout Completed:</span>
+                    <span className="font-medium">
+                      {athlete.completed_exercises}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
       </div>
 
       {loading && <FullScreenLoader />}

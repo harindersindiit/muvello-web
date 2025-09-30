@@ -85,7 +85,9 @@ const WorkoutComponent = ({
 
       <div className="flex justify-between items-center">
         <div>
-          <h4 className="font-semibold text-sm mb-1">{title}</h4>
+          <h4 className="font-semibold text-sm mb-1 truncate" title={title}>
+            {title.length > 40 ? title.substring(0, 40) + "..." : title}
+          </h4>
 
           <p className="text-sm text-gray-400 flex gap-1 items-center">
             <img src={IMAGES.calendar} alt="Calendar" className="w-4 h-4" />
@@ -95,7 +97,7 @@ const WorkoutComponent = ({
               alt="Calendar"
               className="w-4 h-4 ml-2"
             />{" "}
-            {getMinutesFromSeconds(duration)} min ({visibility})
+            {getMinutesFromSeconds(duration)} min/day ({visibility})
           </p>
         </div>
         <CustomButton
