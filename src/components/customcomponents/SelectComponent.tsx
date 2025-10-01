@@ -61,25 +61,11 @@ const SelectComponent: React.FC<SelectComponentProps> = ({
           disabled ? "opacity-50 cursor-not-allowed" : ""
         }`}
       >
-        <div className="flex items-center gap-[16px] text-grey w-full">
+        <div className="flex items-center gap-[16px] text-white w-full">
           {icon && <img src={icon} alt={iconAlt} className="relative left-1" />}
           <SelectValue placeholder={placeholder} className="text-white" />
         </div>
       </SelectTrigger>
-
-      {/* <SelectContent
-        className={`${getVariantClasses()} text-white border-none shadow-[0px_10px_20px_0px_rgba(0,0,0,0.10),0px_3px_6px_0px_rgba(0,0,0,0.10)]`}
-      >
-        {options.map((option) => (
-          <SelectItem
-            key={option.value}
-            value={option.value}
-            className={`cursor-pointer hover:text-primary`}
-          >
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent> */}
 
       <SelectContent
         className={`${getVariantClasses()} text-white border-none shadow-[0px_10px_20px_0px_rgba(0,0,0,0.10),0px_3px_6px_0px_rgba(0,0,0,0.10)] [&_*]:text-white`}

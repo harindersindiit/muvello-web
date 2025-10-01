@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { IMAGES } from "@/contants/images";
 import TextInput from "@/components/customcomponents/TextInput";
@@ -7,7 +7,6 @@ import CustomButton from "@/components/customcomponents/CustomButton";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import CustomTextArea from "@/components/customcomponents/CustomTextArea";
 import Lines from "@/components/svgcomponents/Lines";
-import InputTag from "@/components/customcomponents/InputTag";
 import GroupInputTag from "@/components/customcomponents/GroupInputTag";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Formik, Form } from "formik";
@@ -19,7 +18,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import * as Yup from "yup";
 import { addWorkoutSchema } from "@/utils/validations";
 import localStorageService from "@/utils/localStorageService";
 import axiosInstance from "@/utils/axiosInstance";
@@ -37,7 +35,7 @@ const SelectExercisePopup = ({
   weeks,
   searchText,
   setSearchText,
-  setSelectExerciseOpen,
+  onClose,
 }) => {
   const filteredExercises = exercises.filter((exercise) =>
     exercise.title.toLowerCase().includes(searchText.toLowerCase())
@@ -52,7 +50,7 @@ const SelectExercisePopup = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setSelectExerciseOpen}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="bg-[#2b2a2a] text-white border-transparent">
         <DialogHeader>
           <DialogTitle>Select Exercise</DialogTitle>
@@ -108,7 +106,7 @@ const SelectExercisePopup = ({
             text="Save"
             type="button"
             className="bg-primary text-black px-6 py-7 rounded-full border-transparent"
-            onClick={() => setSelectExerciseOpen(false)}
+            onClick={onClose}
           />
         </div>
       </DialogContent>
@@ -130,7 +128,7 @@ const CreateWorkout = () => {
 
   const canSaveDraft = !editingWorkout?.once_published;
 
-  const { updateUser, user } = useUser();
+  const { user } = useUser();
   const navigate = useNavigate();
   const [visibility, setVisibility] = useState("Private");
 
@@ -144,22 +142,83 @@ const CreateWorkout = () => {
     thumbnail: "",
   };
 
-  const [preferences, setPrefernces] = useState([]);
+  const [, setPrefernces] = useState([]);
   const [workoutCategories, setWorkoutCategories] = useState([]);
   const [isSelectExerciseOpen, setSelectExerciseOpen] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState(null);
   const [exercises, setExercises] = useState([]);
   const [initialVal, setInitialVal] = useState(iniVal);
   const [currentEditingDay, setCurrentEditingDay] = useState(null);
   const [isSubmit, setIsSubmit] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [selectedgroups, setSelectedgroups] = useState<any[]>([]);
+  const [selectedgroups, setSelectedgroups] = useState<unknown[]>([]);
   const [preferencesLoader, setPreferncesLoader] = useState(false);
   const [exerciseLoader, setExerciseLoader] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showWarning, setShowWarning] = useState(true);
 
-  const onSelectGroups = (groups) => {
+  // Refs for form fields to enable scrolling to errors
+  const titleRef = useRef(null);
+  const categoryRef = useRef(null);
+  const captionRef = useRef(null);
+  const thumbnailRef = useRef(null);
+  const feesRef = useRef(null);
+
+  const closeSelectExercisePopup = () => {
+    setSelectExerciseOpen(false);
+    setSearchText("");
+  };
+
+  // Function to scroll to the first error field
+  const scrollToFirstError = (errors, touched) => {
+    const errorFields = [
+      { field: "title", ref: titleRef },
+      { field: "workout_category", ref: categoryRef },
+      { field: "caption", ref: captionRef },
+      { field: "thumbnail", ref: thumbnailRef },
+      { field: "fees", ref: feesRef },
+    ];
+
+    // Find the first field with an error
+    for (const { field, ref } of errorFields) {
+      if (errors[field] && touched[field] && ref.current) {
+        ref.current.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+        break;
+      }
+    }
+
+    // Check for workout day errors (exercises and duration)
+    if (isSubmit) {
+      for (let weekIndex = 0; weekIndex < weeks.length; weekIndex++) {
+        const week = weeks[weekIndex];
+        for (let dayIndex = 0; dayIndex < week.days.length; dayIndex++) {
+          const day = week.days[dayIndex];
+          if (
+            !day.exercises ||
+            day.exercises.length === 0 ||
+            !day.duration ||
+            day.duration === "0"
+          ) {
+            // Find the first day with errors and scroll to it
+            const dayElement = document.querySelector(
+              `[data-week="${weekIndex}"][data-day="${dayIndex}"]`
+            );
+            if (dayElement) {
+              dayElement.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+              break;
+            }
+          }
+        }
+      }
+    }
+  };
+
+  const onSelectGroups = (groups: unknown[]) => {
     setSelectedgroups(groups);
   };
 
@@ -305,7 +364,7 @@ const CreateWorkout = () => {
         }
       );
       setExercises(res.data.body.exercises || []);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load exercises");
     } finally {
       setExerciseLoader(false);
@@ -353,7 +412,9 @@ const CreateWorkout = () => {
         visibility: visibility,
         is_draft: values.is_draft,
         workout_exercises,
-        groups: values.is_draft ? [] : selectedgroups.map((group) => group._id),
+        groups: values.is_draft
+          ? []
+          : selectedgroups.map((group: any) => group._id),
       };
 
       if (typeof thumbnailFile === "object") {
@@ -370,6 +431,8 @@ const CreateWorkout = () => {
         const { body } = res.data;
         payload.thumbnail = body.fileUrl;
       }
+
+      console.log(payload);
 
       if (editingWorkout) {
         const res = await axiosInstance.put(
@@ -477,6 +540,10 @@ const CreateWorkout = () => {
               onClick={() => {
                 setIsSubmit(true);
                 formik.setFieldValue("is_draft", true);
+                // Scroll to first error after a short delay to allow form validation
+                setTimeout(() => {
+                  scrollToFirstError(formik.errors, formik.touched);
+                }, 100);
                 document.getElementById("workout-form-submit")?.click();
               }}
             />
@@ -489,6 +556,10 @@ const CreateWorkout = () => {
             onClick={() => {
               setIsSubmit(true);
               formik.setFieldValue("is_draft", false);
+              // Scroll to first error after a short delay to allow form validation
+              setTimeout(() => {
+                scrollToFirstError(formik.errors, formik.touched);
+              }, 100);
               document.getElementById("workout-form-submit")?.click();
             }}
           />
@@ -534,14 +605,7 @@ const CreateWorkout = () => {
         validateOnChange={true}
         validateOnBlur={true}
       >
-        {({
-          values,
-          errors,
-          touched,
-          handleChange,
-          handleSubmit,
-          setFieldValue,
-        }) => (
+        {({ values, errors, touched, handleChange, setFieldValue }) => (
           <Form>
             <div className="px-4 py-4">
               <div className="mb-6">
@@ -559,6 +623,7 @@ const CreateWorkout = () => {
                   </div> */}
 
                   <div
+                    ref={thumbnailRef}
                     className="border-2 cursor-pointer mb-3 border-dashed border-blue-500 rounded-lg h-85 flex flex-col justify-center items-center bg-[#1f1f1f] relative overflow-hidden"
                     onClick={() =>
                       document.getElementById("thumbnailInput")?.click()
@@ -606,53 +671,57 @@ const CreateWorkout = () => {
                     />
                     {touched.thumbnail && errors.thumbnail && (
                       <p className="text-red-500 text-sm mt-1">
-                        {errors.thumbnail}
+                        {String(errors.thumbnail)}
                       </p>
                     )}
                   </div>
 
                   <div className="space-y-4">
-                    <TextInput
-                      placeholder="Workout Title"
-                      value={values.title}
-                      onChange={handleChange("title")}
-                      type="text"
-                      error={
-                        touched.title && errors.title
-                          ? String(errors.title)
-                          : ""
-                      }
-                      icon={
-                        <img
-                          src={IMAGES.textBlock}
-                          alt=""
-                          className="w-5 h-5"
-                        />
-                      }
-                      className="mb-3"
-                    />
+                    <div ref={titleRef}>
+                      <TextInput
+                        placeholder="Workout Title"
+                        value={values.title}
+                        onChange={handleChange("title")}
+                        type="text"
+                        error={
+                          touched.title && errors.title
+                            ? String(errors.title)
+                            : ""
+                        }
+                        icon={
+                          <img
+                            src={IMAGES.textBlock}
+                            alt=""
+                            className="w-5 h-5"
+                          />
+                        }
+                        className="mb-3"
+                      />
+                    </div>
 
-                    <SelectComponent
-                      placeholder="Select Workout Category"
-                      value={values.workout_category}
-                      onChange={(value: any) =>
-                        canEdit && setFieldValue("workout_category", value)
-                      }
-                      icon={IMAGES.category}
-                      className={`mb-3 ${
-                        canEdit
-                          ? "cursor-pointer"
-                          : "cursor-not-allowed opacity-60"
-                      }`}
-                      disabled={!canEdit}
-                      options={[
-                        { label: "Select Workout Category", value: "" },
-                        ...workoutCategories.map((item) => ({
-                          label: item.title,
-                          value: item._id,
-                        })),
-                      ]}
-                    />
+                    <div ref={categoryRef}>
+                      <SelectComponent
+                        placeholder="Select Workout Category"
+                        value={values.workout_category}
+                        onChange={(value: string) =>
+                          canEdit && setFieldValue("workout_category", value)
+                        }
+                        icon={IMAGES.category}
+                        className={`mb-3 ${
+                          canEdit
+                            ? "cursor-pointer"
+                            : "cursor-not-allowed opacity-60"
+                        }`}
+                        disabled={!canEdit}
+                        options={[
+                          { label: "Select Workout Category", value: "" },
+                          ...workoutCategories.map((item) => ({
+                            label: item.title,
+                            value: item._id,
+                          })),
+                        ]}
+                      />
+                    </div>
 
                     {touched.workout_category && errors.workout_category && (
                       <p className="text-red-500 text-sm col-span-2 mt-[-10px]">
@@ -660,18 +729,20 @@ const CreateWorkout = () => {
                       </p>
                     )}
 
-                    <CustomTextArea
-                      placeholder="Write caption..."
-                      value={values.caption}
-                      onChange={handleChange("caption")}
-                      error={
-                        touched.caption && errors.caption
-                          ? String(errors.caption)
-                          : ""
-                      }
-                      icon={<Lines color="white" />}
-                      className="min-h-[120px] max-h-[120px]"
-                    />
+                    <div ref={captionRef}>
+                      <CustomTextArea
+                        placeholder="Write caption..."
+                        value={values.caption}
+                        onChange={handleChange("caption")}
+                        error={
+                          touched.caption && errors.caption
+                            ? String(errors.caption)
+                            : ""
+                        }
+                        icon={<Lines color="white" />}
+                        className="min-h-[120px] max-h-[120px]"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -704,6 +775,8 @@ const CreateWorkout = () => {
                     {week.days.map((day, dayIndex) => (
                       <div
                         key={dayIndex}
+                        data-week={weekIndex}
+                        data-day={dayIndex}
                         className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3"
                       >
                         <TextInput
@@ -736,28 +809,8 @@ const CreateWorkout = () => {
                         />
                         {/* <InputTag showInput={false} /> */}
 
-                        {/* Exercise List */}
-                        {day.exercises.length > 0 && (
-                          <div className="col-span-2 bg-white/5 p-3 rounded-lg">
-                            <p className="text-sm font-semibold text-white mb-2">
-                              Selected Exercises:
-                            </p>
-
-                            <div className="flex flex-wrap gap-2">
-                              {day.exercises.map((exercise, idx) => (
-                                <span
-                                  key={idx}
-                                  className="bg-green-600/20 text-green-400 text-sm px-3 py-1 rounded-full"
-                                >
-                                  {exercise.title}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
                         <div className="flex flex-row gap-10">
-                          <div className="w-100">
+                          <div className="w-80">
                             <TextInput
                               type="text"
                               error={
@@ -771,12 +824,13 @@ const CreateWorkout = () => {
                                 const value = e.target.value;
                                 // Only allow numbers (no decimals)
                                 if (/^\d*$/.test(value)) {
-                                  canEdit &&
+                                  if (canEdit) {
                                     handleDurationChange(
                                       weekIndex,
                                       dayIndex,
                                       value
                                     );
+                                  }
                                 }
                               }}
                               inputClassName="!bg-[#333333]"
@@ -791,25 +845,23 @@ const CreateWorkout = () => {
                             />
                           </div>
                           <div className="flex flex-row gap-2">
-                            <div
+                            <button
+                              type="button"
                               onClick={() => {
                                 if (canEdit) {
                                   setSelectExerciseOpen(true);
-                                  setCurrentEditingDay({ weekIndex, dayIndex }); // 👈 Make sure this state exists
+                                  setCurrentEditingDay({ weekIndex, dayIndex });
                                 }
                               }}
-                              className={`p-2 w-[60px] h-[60px] rounded-full flex justify-center items-center bg-blue ${
+                              className={`px-3 py-2 rounded-lg flex justify-center items-center bg-blue text-white font-semibold text-sm transition-all duration-200 ${
                                 canEdit
-                                  ? "cursor-pointer"
+                                  ? "cursor-pointer hover:bg-blue-700"
                                   : "cursor-not-allowed opacity-60"
                               }`}
+                              disabled={!canEdit}
                             >
-                              <Icon
-                                icon="simple-line-icons:plus"
-                                className="text-white"
-                                fontSize={30}
-                              />
-                            </div>
+                              Select Exercises
+                            </button>
 
                             <div
                               onClick={() => {
@@ -830,14 +882,34 @@ const CreateWorkout = () => {
                               />
                             </div>
                           </div>
-                          {isSubmit &&
-                            (!day.exercises || day.exercises.length === 0) && (
-                              <p className="text-red-500 text-sm col-span-2 mt-[-10px]">
-                                Please add at least one exercise for Day{" "}
-                                {day.day} of Week {week.week}
-                              </p>
-                            )}
                         </div>
+
+                        {/* Exercise List */}
+                        {day.exercises.length > 0 && (
+                          <div className="col-span-2 bg-white/5 p-3 rounded-lg">
+                            <p className="text-sm font-semibold text-white mb-2">
+                              Selected Exercises:
+                            </p>
+
+                            <div className="flex flex-wrap gap-2">
+                              {day.exercises.map((exercise, idx) => (
+                                <span
+                                  key={idx}
+                                  className="bg-green-600/20 text-green-400 text-sm px-3 py-1 rounded-full"
+                                >
+                                  {exercise.title}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {isSubmit &&
+                          (!day.exercises || day.exercises.length === 0) && (
+                            <p className="text-red-500 text-sm col-span-2 mt-[-10px]">
+                              Please add at least one exercise for Day {day.day}{" "}
+                              of Week {week.week}
+                            </p>
+                          )}
                       </div>
                     ))}
 
@@ -914,7 +986,7 @@ const CreateWorkout = () => {
                       </span>
                     </div>
                     {values.access === "Paid" && (
-                      <div className="w-full">
+                      <div ref={feesRef} className="w-full">
                         <TextInput
                           type="number"
                           // pattern="[0-9]*"
@@ -984,7 +1056,7 @@ const CreateWorkout = () => {
                   <GroupInputTag
                     onClickGroup={() => {}}
                     onSelectGroups={
-                      canEdit ? onSelectGroups : (groups: any[]) => {}
+                      canEdit ? onSelectGroups : (groups: unknown[]) => {}
                     }
                   />
                 </div>
@@ -1009,7 +1081,7 @@ const CreateWorkout = () => {
         open={isSelectExerciseOpen}
         searchText={searchText}
         setSearchText={setSearchText}
-        setSelectExerciseOpen={setSelectExerciseOpen}
+        onClose={closeSelectExercisePopup}
         exercises={exercises}
         currentEditingDay={currentEditingDay}
         weeks={weeks}

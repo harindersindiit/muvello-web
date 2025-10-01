@@ -157,7 +157,7 @@ export default function BMISummaryCard({ state, title, statistics }) {
           value={weekBMI}
           onChange={setWeekBMI}
           icon={IMAGES.calendar}
-          className="py-2 px-3 w-[120px] cursor-pointer"
+          className="py-2 px-3 w-[130px] cursor-pointer"
           options={options}
         />
       </div>

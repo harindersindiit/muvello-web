@@ -414,12 +414,12 @@ export default function Header() {
                       )}
                     </div>
 
-                    <div className="max-h-[60vh] md:max-h-[400px] overflow-y-auto">
+                    <div className="max-h-[60vh] md:max-h-[400px] overflow-y-auto cursor-pointer">
                       <ul className="space-y-3 pr-2">
                         {userList.map((user, idx) => (
                           <li
                             key={idx}
-                            className="flex items-center justify-between"
+                            className="flex items-center justify-between hover:bg-white/10 p-2 rounded-lg"
                           >
                             <div
                               className="flex items-center gap-3"
@@ -614,7 +614,7 @@ export default function Header() {
                     key={notif._id || index}
                     className={`flex items-start gap-3 mb-4 w-full ${
                       notif.type === "follow_reject" ? "opacity-50" : ""
-                    }`}
+                    } cursor-pointer hover:scale-105 transition-all duration-300 ease-in-out`}
                   >
                     <img
                       src={
@@ -622,7 +622,7 @@ export default function Header() {
                         IMAGES.placeholderAvatar
                       }
                       alt="Notification"
-                      className="w-12 h-12 rounded-full shrink-0"
+                      className="w-12 h-12 rounded-full shrink-0 hover:scale-105 transition-all duration-300 ease-in-out"
                       onClick={() => {
                         if (notif?.sender_id) {
                           navigate(`/user/profile`, {
@@ -702,7 +702,7 @@ export default function Header() {
             <div>
               <div className="flex items-center justify-between py-5 px-4 border-b-5 border-white/10">
                 <div className="flex items-center gap-4 flex-1">
-                  <Avatar className="w-15 h-15 rounded-full">
+                  <Avatar className="w-16 h-16 rounded-full">
                     <AvatarImage
                       src={user?.profile_picture || IMAGES.placeholderAvatar}
                       alt="@user"

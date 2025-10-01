@@ -179,7 +179,9 @@ const ExerciseDetails = () => {
                       );
                     })}
                   </div>
-                  {!loader && media.length === 0 && <NoDataPlaceholder />}
+                  {!loader && media.length === 0 && (
+                    <NoDataPlaceholder message="No videos/images uploaded" />
+                  )}
                 </div>
               )}
             </div>

@@ -41,7 +41,7 @@ const ExperienceLevel = () => {
 
       if (message && success && body.user) {
         updateUser(body.user);
-        toast.success(message);
+        toast.success("Experience Level Saved Successfully");
         navigate("/profile/upload-profile-picture", { replace: true });
       }
     } catch (error) {

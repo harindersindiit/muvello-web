@@ -563,14 +563,14 @@ const WorkoutDetails = () => {
           <div className="col-span-0 md:col-span-12 lg:col-span-4 xl:col-span-3 pl-2">
             <div className="max-h-[calc(100vh-100px)] overflow-y-auto pr-1 scroll-hide">
               <div className="flex items-center gap-4 mb-3">
-                <h2 className="text-md font-semibold text-left">
+                <h2 className="text-sm font-semibold text-left">
                   <span className="text-white flex items-center gap-1">
                     Exercises (
-                    <img
+                    {/* <img
                       src={IMAGES.exercise3}
                       alt="Sets"
-                      className="w-4 h-4"
-                    />
+                      className="w-3 h-3"
+                    /> */}
                     {selectedExerciseDay.workout_duration} mins)
                   </span>
                 </h2>
@@ -581,7 +581,7 @@ const WorkoutDetails = () => {
                       value={week}
                       onChange={setWeek}
                       icon={IMAGES.calendar}
-                      className="py-2 px-3 w-[120px] cursor-pointer"
+                      className="py-2 px-3 w-[140px] cursor-pointer"
                       options={option1}
                     />
                   </div>
@@ -605,12 +605,16 @@ const WorkoutDetails = () => {
                       sets={exercise.sets ? exercise.sets.length : 0}
                       reps={
                         exercise.sets
-                          ? exercise.sets.map((set: any) => set.reps).join(", ")
+                          ? exercise.sets
+                              .slice(0, 5)
+                              .map((set: any) => set.reps)
+                              .join(", ")
                           : 0
                       }
                       rest={
                         exercise.sets
                           ? exercise.sets
+                              .slice(0, 4)
                               .map((set: any) => `${set.rest} Sec`)
                               .join(", ")
                           : 0
@@ -687,7 +691,14 @@ const WorkoutDetails = () => {
             <h6 className="text-white text-m font-medium">
               Select Groups {groups.length > 0 && `(${groups.length})`}
             </h6>
-            <button className="text-primary text-sm" onClick={toggleSelectAll}>
+            <button
+              className={`text-primary text-sm transition-colors duration-200 rounded px-2 py-1 ${
+                allSelected
+                  ? "hover:bg-red-500/20 hover:text-red-400"
+                  : "hover:bg-[#94eb00]/20 hover:text-[#94eb00]"
+              }`}
+              onClick={toggleSelectAll}
+            >
               {allSelected ? "Deselect All" : "Select All"}
             </button>
           </div>

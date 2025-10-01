@@ -32,7 +32,7 @@ const BmiBar = ({ currentBMI, week }) => {
       <div className="relative h-4 rounded-full  bg-gradient-to-r from-blue-400 via-yellow-400 to-red-400 mt-6 mb-6">
         {/* Marker */}
         <div
-          className="absolute top-[-16px] h-12 w-[10px] bg-red-500 z-1"
+          className="absolute top-[-16px] h-12 w-[10px] bg-blue-500 z-1"
           style={{
             left: `${position}%`,
             transform: "translateX(-50%)",

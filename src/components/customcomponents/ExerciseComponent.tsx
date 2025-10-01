@@ -33,9 +33,6 @@ const ExerciseComponent = ({
   modified,
   className,
   checkbox,
-  onClickEdit,
-  onClickDelete,
-  showEditDelete,
   progress,
   label,
   progressShow,
@@ -59,16 +56,18 @@ const ExerciseComponent = ({
   };
 
   return (
-    <div className={`bg-lightdark rounded-xl p-3 ${className}`}>
-      <div className={`text-white items-center flex gap-3 `}>
+    <div
+      className={`bg-gray-800/30 rounded-xl p-4 border border-gray-700/50 ${className}`}
+    >
+      <div className={`text-white items-center flex gap-4`}>
         <div
-          className="w-1/3 relative overflow-hidden hover:scale-105 transition-all duration-300 hover:cursor-pointer"
+          className="w-2/5 relative overflow-hidden hover:scale-105 transition-all duration-300 hover:cursor-pointer"
           onClick={onClick}
         >
           <img
             src={image}
             alt={title}
-            className="w-full h-[130px] rounded-[10px] object-cover"
+            className="w-full h-[140px] rounded-lg object-cover"
             onLoad={onImageLoad}
             onError={onImageError}
           />
@@ -78,15 +77,15 @@ const ExerciseComponent = ({
             </span>
           )}
           {modified && (
-            <span className="absolute text-center bottom-0 rounded-b-[10px] right-0 left-0 w-full bg-white text-green text-xs font-semibold px-2 py-1">
+            <span className="absolute text-center bottom-0 rounded-b-lg right-0 left-0 w-full bg-white text-green text-xs font-semibold px-2 py-1">
               Modified
             </span>
           )}
         </div>
 
-        <div className="w-2/3 flex flex-col gap-3  hover:cursor-pointer">
+        <div className="w-3/5 flex flex-col gap-3 hover:cursor-pointer">
           <div className="flex justify-between items-start">
-            <h4 className="font-semibold text-base truncate whitespace-nowrap overflow-hidden w-full text-left">
+            <h4 className="font-semibold text-lg truncate whitespace-nowrap overflow-hidden w-full text-left">
               {title}
             </h4>
             {checkbox && (
@@ -98,47 +97,31 @@ const ExerciseComponent = ({
                 <label htmlFor="terms"></label>
               </div>
             )}
-            {/* {showEditDelete && (
-              <div className="flex items-center space-x-2">
-                <img
-                  src={IMAGES.edit}
-                  onClick={onClickEdit}
-                  alt="Edit"
-                  className="w-5 h-5 cursor-pointer"
-                />
-                <img
-                  src={IMAGES.trash}
-                  alt="Trash"
-                  className="w-5 h-5 cursor-pointer"
-                  onClick={onClickDelete}
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-white">
+              <div className="w-5 h-5 bg-gray-600 rounded flex items-center justify-center">
+                <Icon
+                  icon="material-symbols:stacked-line-chart"
+                  className="w-3 h-3"
                 />
               </div>
-            )} */}
+              <span className="text-sm">Sets: {sets}</span>
+            </div>
+
+            <div className="flex items-center gap-2 text-white">
+              <div className="w-5 h-5 bg-gray-600 rounded-full flex items-center justify-center">
+                <span className="text-xs font-semibold">10</span>
+              </div>
+              <span className="text-sm">Reps: {reps}</span>
+            </div>
+
+            <div className="flex items-center gap-2 text-white">
+              <img src={IMAGES.clock} alt="Clock" className="w-4 h-4" />
+              <span className="text-sm">Rest/Set: {rest}</span>
+            </div>
           </div>
-          <p className="text-xs text-white flex gap-1 items-center text-left">
-            <img
-              src={IMAGES.exercise1}
-              alt="Sets"
-              className="w-4 h-4 flex-shrink-0"
-            />{" "}
-            Sets: {sets}
-          </p>
-          <p className="text-xs text-white flex gap-1 items-center text-left">
-            <img
-              src={IMAGES.exercise2}
-              alt="Sets"
-              className="w-4 h-4 flex-shrink-0"
-            />{" "}
-            Reps: {reps}
-          </p>
-          <p className="text-xs text-white flex gap-1 items-center text-left">
-            <img
-              src={IMAGES.exercise3}
-              alt="Sets"
-              className="w-4 h-4 flex-shrink-0"
-            />{" "}
-            Rest/Set: {rest}
-          </p>
         </div>
       </div>
 

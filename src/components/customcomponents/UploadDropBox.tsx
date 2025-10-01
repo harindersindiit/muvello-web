@@ -3,11 +3,13 @@ import { UploadCloud } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-toastify";
 
-const UploadDropBox = ({ onFileSelect, preview, type = "img" }) => {
+const UploadDropBox = ({ onFileSelect, preview, disabled = false }) => {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const onDrop = useCallback(
     (files: File[]) => {
+      if (disabled) return;
+
       const file = files[0];
       if (!file) return;
 
@@ -25,12 +27,13 @@ const UploadDropBox = ({ onFileSelect, preview, type = "img" }) => {
         fileRef.current.value = ""; // <-- crucial line
       }
     },
-    [onFileSelect]
+    [onFileSelect, disabled]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     multiple: false,
+    disabled,
     accept: {
       "image/png": [".png"],
       "image/jpeg": [".jpg", ".jpeg"],
@@ -40,20 +43,23 @@ const UploadDropBox = ({ onFileSelect, preview, type = "img" }) => {
 
   return (
     <div
-      {...getRootProps()}
-      className={`border border-dashed relative uploadinner border-blue-500 rounded-lg bg-[#1f1f1f] p-8 text-center space-y-3 cursor-pointer transition-colors ${
-        isDragActive ? "bg-[#2a2a2a]" : ""
-      }`}
+      {...(!disabled ? getRootProps() : {})}
+      className={`border border-dashed relative uploadinner border-blue-500 rounded-lg bg-[#1f1f1f] p-8 text-center space-y-3 transition-colors ${
+        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+      } ${isDragActive ? "bg-[#2a2a2a]" : ""}`}
     >
       <input
         accept="image/*"
-        {...getInputProps()}
+        {...(!disabled ? getInputProps() : {})}
         ref={fileRef}
         className="absolute w-full h-full top-0 left-0 bottom-0 right-0"
+        disabled={disabled}
       />
       <UploadCloud className="mx-auto text-blue-500" size={40} />
       <p className="text-white font-medium text-md">
-        {isDragActive
+        {disabled
+          ? "Upload in progress..."
+          : isDragActive
           ? "Drop or select your .png or .jpg or .webp image here"
           : "Drag & drop or select a .png or.jpg or .webp image here"}
       </p>
@@ -65,7 +71,8 @@ const UploadDropBox = ({ onFileSelect, preview, type = "img" }) => {
       <button
         type="button"
         className="text-[#94eb00] font-medium underline"
-        onClick={() => fileRef.current?.click()}
+        onClick={() => !disabled && fileRef.current?.click()}
+        disabled={disabled}
       >
         Browse Files
       </button>

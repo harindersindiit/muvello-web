@@ -594,11 +594,13 @@ const PostDetails = () => {
                 <button
                   disabled={commentSubmitLoading || !commentInput.trim()}
                   onClick={handleAddComment}
-                  className={`ml-2 text-sm ${
-                    commentInput.trim() ? "text-primary" : "text-gray-500"
+                  className={`ml-2 text-sm px-3 py-1 rounded transition-all duration-200 ${
+                    commentSubmitLoading || !commentInput.trim()
+                      ? "text-gray-500 cursor-not-allowed opacity-50"
+                      : "text-primary hover:text-blue-400 hover:bg-primary/10 cursor-pointer"
                   }`}
                 >
-                  Post
+                  {commentSubmitLoading ? "Posting..." : "Post"}
                 </button>
               </div>
             </div>
@@ -649,7 +651,14 @@ const PostDetails = () => {
             <h6 className="text-white text-m font-medium">
               Select Groups {groups.length > 0 && `(${groups.length})`}
             </h6>
-            <button className="text-primary text-sm" onClick={toggleSelectAll}>
+            <button
+              className={`text-primary text-sm transition-colors duration-200 rounded px-2 py-1 ${
+                allSelected
+                  ? "hover:bg-red-500/20 hover:text-red-400"
+                  : "hover:bg-[#94eb00]/20 hover:text-[#94eb00]"
+              }`}
+              onClick={toggleSelectAll}
+            >
               {allSelected ? "Deselect All" : "Select All"}
             </button>
           </div>

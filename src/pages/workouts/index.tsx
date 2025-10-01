@@ -21,6 +21,7 @@ import { getMaxWeek } from "@/utils/sec";
 import NoDataPlaceholder from "@/components/ui/nodata";
 import { CustomModal } from "@/components/customcomponents/CustomModal";
 import { useInView } from "react-intersection-observer";
+import { totalWorkoutDuration } from "@/lib/utils";
 
 const Workouts = () => {
   const navigate = useNavigate();
@@ -251,10 +252,7 @@ const Workouts = () => {
                   image={workout.thumbnail}
                   title={workout.title}
                   price={workout.fees > 0 ? `$${workout.fees}` : ""}
-                  duration={workout?.exercises.reduce(
-                    (acc, curr) => acc + (curr.workout_duration || 0),
-                    0
-                  )}
+                  duration={totalWorkoutDuration(workout.exercises)}
                   weeks={getMaxWeek(workout?.exercises, "week")}
                   onViewClick={() =>
                     navigate(`/user/workouts/workout-details`, {

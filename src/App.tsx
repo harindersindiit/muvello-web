@@ -14,12 +14,11 @@ import PublicRoutes from "./routes/PublicRoutes";
 import ScrollToTop from "./components/customcomponents/ScrollToTop";
 import UserRoutes from "./routes/UserRoutes";
 import { ToastContainer } from "react-toastify";
-import localStorageService from "@/utils/localStorageService";
 import "react-toastify/dist/ReactToastify.css";
 import CompleteProfileRoutes from "./routes/CompleteProfile";
 import { useUser } from "@/context/UserContext";
 import { getProfileStatus } from "./lib/utils";
-import ProfileCompletionGuard from "./routes/ProfileCompletionGuard";
+
 import NotFound from "@/pages/NotFound";
 
 const LayoutWithHeader = () => {
@@ -37,7 +36,7 @@ const App = () => {
   // const user = localStorageService.getItem("user");
   const { user } = useUser();
   const profileStatus = getProfileStatus(user);
-  console.log(profileStatus);
+  console.log({ profileStatus });
   return (
     <BrowserRouter basename={base}>
       <ToastContainer
@@ -64,6 +63,7 @@ const App = () => {
           "incomplete-basic-info",
           "incomplete-experience",
           "incomplete-picture",
+          "profile-setup-completed",
         ].includes(profileStatus) && (
           <>
             <Route

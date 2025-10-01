@@ -134,9 +134,13 @@ const CommentCard = ({
             <button
               onClick={handleReplySubmit}
               disabled={isReplySubmitting || !replyInput.trim()}
-              className="ml-2 text-xs text-blue-400 cursor-pointer hover:text-primary transition"
+              className={`ml-2 text-xs px-3 py-1 rounded transition-all duration-200 ${
+                isReplySubmitting || !replyInput.trim()
+                  ? "text-gray-500 cursor-not-allowed opacity-50"
+                  : "text-blue-400 hover:text-primary hover:bg-blue-400/10 cursor-pointer"
+              }`}
             >
-              Send
+              {isReplySubmitting ? "Sending..." : "Send"}
             </button>
           </div>
         )}

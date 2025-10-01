@@ -13,6 +13,7 @@ import localStorageService from "@/utils/localStorageService";
 import axios from "axios";
 import FullScreenLoader from "@/components/ui/loader";
 import { useUser } from "@/context/UserContext";
+import { getSocket } from "@/socket";
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 interface LoginValues {
@@ -94,6 +95,17 @@ export function LoginForm() {
 
     if (accessToken && refreshToken && user) {
       localStorageService.setItem("accessToken", accessToken);
+
+      // Establish socket connection after saving access token
+      try {
+        const socket = getSocket();
+        if (socket) {
+          console.log("Socket connection established successfully");
+        }
+      } catch (error) {
+        console.error("Failed to establish socket connection:", error);
+      }
+
       localStorageService.setItem("refreshToken", refreshToken);
       if (!user.email_verification && user.password) {
         localStorageService.setItem("user-temp", user);

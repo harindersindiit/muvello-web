@@ -6,7 +6,7 @@ interface WorkoutComponentProps {
   image: string;
   title: string;
   price: string;
-  duration: string;
+  duration: number;
   weeks: number;
   showEditDelete: boolean;
   visibility: string;
@@ -97,7 +97,7 @@ const WorkoutComponent = ({
               alt="Calendar"
               className="w-4 h-4 ml-2"
             />{" "}
-            {getMinutesFromSeconds(duration)} min/day ({visibility})
+            {duration} min/day ({visibility})
           </p>
         </div>
         <CustomButton

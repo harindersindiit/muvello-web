@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from "react";
+import { useState } from "react";
 import { IMAGES } from "@/contants/images";
 import CustomButton from "@/components/customcomponents/CustomButton";
 import { Progress } from "@/components/ui/progress";
@@ -51,7 +51,6 @@ const UploadProfilePicture = () => {
       setLoading(false);
       console.error("Upload failed", error);
       alert("Failed to upload image.");
-    } finally {
     }
   };
 
@@ -72,9 +71,9 @@ const UploadProfilePicture = () => {
       const { message, success, body } = res.data;
 
       if (message && success && body) {
-        toast.success(message);
+        toast.success("Profile Picture Saved Successfully");
         updateUser(body.user);
-        navigate("/profile/profile-setup-completed", { replace: true });
+        navigate("/user/profile-setup-completed", { replace: true });
       }
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -102,7 +101,11 @@ const UploadProfilePicture = () => {
             photo.
           </p>
           {/* Gender Selection */}
-          <UploadDropBox onFileSelect={handleFileSelect} preview={previewUrl} />
+          <UploadDropBox
+            onFileSelect={handleFileSelect}
+            preview={previewUrl}
+            disabled={loading}
+          />
           <div className="flex justify-end mt-6">
             <CustomButton
               disabled={loading}

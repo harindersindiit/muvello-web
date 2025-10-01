@@ -43,6 +43,7 @@ import { Loader2 } from "lucide-react";
 import NoDataPlaceholder from "@/components/ui/nodata";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { reportUserSchema } from "@/utils/validations";
+import { totalWorkoutDuration } from "@/lib/utils";
 const AddMembersPopup = ({
   open,
   setOpen,
@@ -244,8 +245,15 @@ const ChooseAdmin = ({
 };
 
 const GroupChatUI = () => {
-  const { socket, isConnected } = useSocket();
+  const { socket, isConnected, isAvailable, reconnect } = useSocket();
   const { user } = useUser();
+
+  console.log(
+    "Chat component - socket:",
+    socket ? "present" : "undefined",
+    "isConnected:",
+    isConnected
+  );
 
   const initialValues = {
     reportType: "",
@@ -1052,8 +1060,25 @@ const GroupChatUI = () => {
   useEffect(() => {
     // Connect and listen
     if (!socket) return;
+
+    console.log("Setting up socket event listeners for chat");
+
     socket.on("connect", () => {
-      console.log("Connected to socket server 1", socket.id);
+      console.log("Connected to socket server", socket.id);
+      // When socket reconnects, rejoin current room if any
+      if (selectedGroup?._id) {
+        console.log(
+          "Rejoining group room after reconnection:",
+          selectedGroup._id
+        );
+        joinRoom(selectedGroup._id);
+      } else if (selectedUser?._id) {
+        console.log(
+          "Rejoining direct chat room after reconnection:",
+          selectedUser._id
+        );
+        joinRoom(selectedUser._id);
+      }
     });
 
     socket.on(`${CHAT_EVENTS.GROUP}.receive_message`, (data) => {
@@ -1103,7 +1128,7 @@ const GroupChatUI = () => {
     });
 
     return () => {
-      console.log("disconnected");
+      console.log("Cleaning up socket event listeners");
       socket.off(`${CHAT_EVENTS.GROUP}.receive_message`);
       socket.off(`${CHAT_EVENTS.GROUP}.updated`);
       socket.off("online_users");
@@ -1112,7 +1137,22 @@ const GroupChatUI = () => {
       socket.off("typing");
       socket.off("stop_typing");
     };
-  }, [socket]);
+  }, [socket, selectedGroup, selectedUser]);
+
+  // Handle socket reconnection when component mounts or socket becomes available
+  useEffect(() => {
+    if (socket && socket.connected) {
+      console.log("Socket is connected, ensuring room is joined");
+      // If we have a selected room, make sure we're joined to it
+      if (selectedGroup?._id) {
+        console.log("Ensuring group room is joined:", selectedGroup._id);
+        joinRoom(selectedGroup._id);
+      } else if (selectedUser?._id) {
+        console.log("Ensuring direct chat room is joined:", selectedUser._id);
+        joinRoom(selectedUser._id);
+      }
+    }
+  }, [socket?.connected, selectedGroup, selectedUser]);
 
   useEffect(() => {
     if (messageInputRef.current) {
@@ -1194,7 +1234,14 @@ const GroupChatUI = () => {
       roomId = selectedUser._id;
     }
 
-    console.log("Room ID:", roomId, "Socket connected:", socket?.connected);
+    console.log(
+      "Room ID:",
+      roomId,
+      "Socket:",
+      socket ? "present" : "undefined",
+      "Socket connected:",
+      socket?.connected
+    );
 
     if (roomId && socket?.connected) {
       console.log("Joining room:", roomId);
@@ -1235,6 +1282,8 @@ const GroupChatUI = () => {
       return () => {
         socket.off("connect", handleConnect);
       };
+    } else if (roomId && !socket) {
+      console.log("No socket available, cannot join room");
     }
   }, [selectedGroup, selectedUser, socket]);
 
@@ -1391,9 +1440,65 @@ const GroupChatUI = () => {
     fetchUser();
   }, [selectedUser, user]);
 
-  // Show loader until socket connects
-  if (!isConnected) {
-    return <FullScreenLoader />;
+  // Handle socket connection states more gracefully
+  const [initialLoadTime, setInitialLoadTime] = useState(Date.now());
+  const [showConnectionError, setShowConnectionError] = useState(false);
+
+  useEffect(() => {
+    // Set a timer to show connection error if socket doesn't connect within 10 seconds
+    const timer = setTimeout(() => {
+      if (!isConnected && isAvailable) {
+        setShowConnectionError(true);
+      }
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, [isConnected, isAvailable]);
+
+  // If socket is not available (no token), wait briefly for token to become available
+  if (!isAvailable && Date.now() - initialLoadTime < 3000) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Initializing chat...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // If socket is available but not connected, show a lighter loading state
+  if (isAvailable && !isConnected && !showConnectionError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
+        <div className="flex items-center space-x-2 mb-4">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Connecting to chat server...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // If there's a connection error or socket is not available after waiting
+  if (
+    showConnectionError ||
+    (!isAvailable && Date.now() - initialLoadTime >= 3000)
+  ) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
+        <div className="text-center">
+          <p className="text-red-400 mb-4">Unable to connect to chat server</p>
+          <CustomButton
+            title="Retry Connection"
+            onClick={() => {
+              setShowConnectionError(false);
+              setInitialLoadTime(Date.now());
+              reconnect();
+            }}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -1470,13 +1575,15 @@ const GroupChatUI = () => {
                       return (
                         <div
                           key={i}
-                          className={`flex items-start gap-3  cursor-pointer`}
+                          className={`flex items-start gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-800/50 transition-all duration-200`}
                           onClick={() => {
                             // joinRoom(group._id);
-                            setSelectedGroup(group);
-                            // setSelectedChat(group);
+                            if (selectedGroup?._id !== group._id) {
+                              setSelectedGroup(group);
+                              setNewMessage("");
+                            }
+
                             setActiveTab("groups");
-                            // setChatMessages(messages);
                           }}
                         >
                           <img
@@ -1563,16 +1670,17 @@ const GroupChatUI = () => {
                         <div
                           key={singleChat._id}
                           onClick={() => {
-                            // getSingleChat(singleChat._id);
-                            setSelectedUser(singleChat);
                             setActiveTab("users");
-
+                            if (selectedUser?._id !== singleChat._id) {
+                              setSelectedUser(singleChat);
+                              setNewMessage("");
+                            }
                             // setSelectedChat(singleChat);
                             // setActiveTab("users");
                             // setActiveUserId(singleChat._id);
                             // setChatMessages(messages);
                           }}
-                          className={`flex items-start gap-3  cursor-pointer`}
+                          className={`flex items-start gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-800/50 transition-all duration-200`}
                         >
                           <img
                             src={
@@ -1671,7 +1779,7 @@ const GroupChatUI = () => {
                             // setActiveUserId(request._id);
                             // setChatMessages(messages);
                           }}
-                          className={`flex items-start gap-3  cursor-pointer`}
+                          className={`flex items-start gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-800/50 transition-all duration-200`}
                         >
                           <img
                             src={
@@ -2036,9 +2144,7 @@ const GroupChatUI = () => {
                               ? `$${msg.workout.fees}`
                               : ""
                           }
-                          duration={
-                            msg.workout.average_workout_duration_per_day
-                          }
+                          duration={totalWorkoutDuration(msg.workout.exercises)}
                           weeks={`${msg.workout.max_week} week`}
                           onViewClick={() => {
                             setWorkoutDetails(msg.workout);

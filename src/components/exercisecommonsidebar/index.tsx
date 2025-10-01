@@ -532,7 +532,7 @@ const ExerciseCommonSidebar = ({
               style={{ paddingBottom: 25 }}
               type="button"
               variant="ghost"
-              className="text-primary font-semibold hover:text-white transition-all duration-300 text-sm flex items-center gap-2"
+              className="text-primary font-semibold hover:text-white hitransition-all duration-300 text-sm flex items-center gap-2 cursor-pointer"
               onClick={() =>
                 setFieldValue("sets", [
                   ...values.sets,

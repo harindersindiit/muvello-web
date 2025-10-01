@@ -13,6 +13,7 @@ import localStorageService from "@/utils/localStorageService";
 import axios from "axios";
 import FullScreenLoader from "@/components/ui/loader";
 import { useUser } from "@/context/UserContext";
+import { getSocket } from "@/socket";
 
 export function LoginForm() {
   const navigate = useNavigate();
@@ -71,6 +72,15 @@ export function LoginForm() {
 
       if (accessToken && refreshToken && user) {
         localStorageService.setItem("accessToken", accessToken);
+        // Establish socket connection after saving access token
+        try {
+          const socket = getSocket();
+          if (socket) {
+            console.log("Socket connection established successfully");
+          }
+        } catch (error) {
+          console.error("Failed to establish socket connection:", error);
+        }
         localStorageService.setItem("refreshToken", refreshToken);
         localStorageService.setItem("user-temp", user);
 
@@ -192,6 +202,15 @@ export function LoginForm() {
 
     if (accessToken && refreshToken && user) {
       localStorageService.setItem("accessToken", accessToken);
+      // Establish socket connection after saving access token
+      try {
+        const socket = getSocket();
+        if (socket) {
+          console.log("Socket connection established successfully");
+        }
+      } catch (error) {
+        console.error("Failed to establish socket connection:", error);
+      }
       localStorageService.setItem("refreshToken", refreshToken);
       updateUser(user);
     }

@@ -20,7 +20,7 @@ import FullScreenLoader from "@/components/ui/loader";
 import NoDataPlaceholder from "@/components/ui/nodata";
 import { Loader2 } from "lucide-react";
 import { getMaxWeek } from "@/utils/sec";
-import { capitalize } from "@/lib/utils";
+import { capitalize, totalWorkoutDuration } from "@/lib/utils";
 import { useUser } from "@/context/UserContext";
 
 const UserProfile = () => {
@@ -89,7 +89,11 @@ const UserProfile = () => {
 
   const prepareStats = (data) => {
     const stats = [
-      { id: 1, label: data.gender, icon: "material-symbols-light:female" },
+      {
+        id: 1,
+        label: data.gender,
+        icon: "material-symbols-light:wc",
+      },
       {
         id: 2,
         label: `${data.height_value} ${data.height_unit}`,
@@ -652,10 +656,7 @@ const UserProfile = () => {
                           image={workout.thumbnail}
                           title={workout.title}
                           price={workout.fees > 0 ? `$${workout.fees}` : ""}
-                          duration={workout?.exercises.reduce(
-                            (acc, curr) => acc + (curr.workout_duration || 0),
-                            0
-                          )}
+                          duration={totalWorkoutDuration(workout.exercises)}
                           weeks={getMaxWeek(workout?.exercises, "week")}
                           onViewClick={() => {
                             localStorageService.setItem(
@@ -690,10 +691,7 @@ const UserProfile = () => {
                           image={workout.thumbnail}
                           title={workout.title}
                           price={workout.fees > 0 ? `$${workout.fees}` : ""}
-                          duration={workout?.exercises.reduce(
-                            (acc, curr) => acc + (curr.workout_duration || 0),
-                            0
-                          )}
+                          duration={totalWorkoutDuration(workout.exercises)}
                           weeks={getMaxWeek(workout?.exercises, "week")}
                           onViewClick={() => {
                             localStorageService.setItem(
@@ -791,7 +789,7 @@ const UserProfile = () => {
                         follower_.profile_picture || IMAGES.placeholderAvatar
                       } // ← replace with actual image if available
                       alt={follower_.fullname}
-                      className="w-10 h-10 rounded-full object-cover"
+                      className="w-10 h-10 rounded-full object-cover cursor-pointer transition-all duration-200 hover:scale-105 hover:ring-2 hover:ring-primary/50"
                       onClick={() => {
                         setOpenDrawer(false);
                         navigate("/user/profile/", {
@@ -806,7 +804,17 @@ const UserProfile = () => {
                     <div className="flex items-center justify-between w-full gap-3">
                       {/* Name & Follower Count */}
                       <div>
-                        <p className="text-white text-sm font-medium mb-1">
+                        <p
+                          className="text-white text-sm font-medium mb-1 cursor-pointer transition-all duration-200 hover:text-primary hover:underline"
+                          onClick={() => {
+                            setOpenDrawer(false);
+                            navigate("/user/profile/", {
+                              ...(follower_._id !== loggedUser._id && {
+                                state: { id: follower_._id },
+                              }),
+                            });
+                          }}
+                        >
                           {follower_.fullname}
                         </p>
                         <p className="text-gray-400 text-xs">

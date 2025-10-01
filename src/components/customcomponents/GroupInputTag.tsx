@@ -86,7 +86,7 @@ const GroupInputTag = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between w-full mb-3">
+      <div className="flex items-center gap-3 w-full mb-3">
         <div className="flex items-center gap-2 text-white">
           <img src={IMAGES.people} alt="" className="w-5 h-5" />
           <span className="text-sm font-medium">Also Share on Groups</span>
@@ -174,7 +174,11 @@ const GroupInputTag = ({
               Select Groups {groups.length > 0 && `(${groups.length})`}
             </h6>
             <button
-              className="text-primary text-sm hover:shadow-lg"
+              className={`text-primary text-sm transition-colors duration-200 rounded px-2 py-1 ${
+                allSelected
+                  ? "hover:bg-red-500/20 hover:text-red-400"
+                  : "hover:bg-[#94eb00]/20 hover:text-[#94eb00]"
+              }`}
               onClick={toggleSelectAll}
             >
               {allSelected ? "Deselect All" : "Select All"}

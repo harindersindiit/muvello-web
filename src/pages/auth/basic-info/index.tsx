@@ -61,7 +61,7 @@ const BasicInfo = () => {
       const { message, success, body } = res.data;
 
       if (message && success && body.user) {
-        toast.success(message);
+        toast.success("Basic Info Saved Successfully");
         updateUser(body.user);
         navigate("/profile/experience-level", { replace: true });
       }

@@ -156,7 +156,7 @@ const Exercise = () => {
                 setMode("add");
                 setOpen(true);
               }}
-              className="text-primary font-semibold hover:text-white transition-all duration-300 text-sm flex items-center gap-2"
+              className="text-primary font-semibold hover:text-white transition-all duration-300 text-sm flex items-center gap-2 mb-3"
             >
               <Icon
                 icon="f7:plus-app"
@@ -173,9 +173,13 @@ const Exercise = () => {
                 image={exercise.thumbnail}
                 title={exercise.title}
                 sets={exercise.sets.length}
-                reps={exercise.sets.map((set: any) => set.reps).join(", ")}
+                reps={exercise.sets
+                  .slice(0, 5)
+                  .map((set: (typeof exercise.sets)[0]) => set.reps)
+                  .join(", ")}
                 rest={exercise.sets
-                  .map((set: any) => `${set.rest} Sec`)
+                  .slice(0, 4)
+                  .map((set: (typeof exercise.sets)[0]) => `${set.rest} Sec`)
                   .join(", ")}
                 category={exercise.target_part.name}
                 showEditDelete

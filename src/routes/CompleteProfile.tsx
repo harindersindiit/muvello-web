@@ -23,6 +23,8 @@ function CompleteProfileRoutes({ profileStatus }) {
         return "/profile/experience-level";
       case "incomplete-picture":
         return "/profile/upload-profile-picture";
+      case "profile-setup-completed":
+        return "/profile/profile-setup-completed";
       default:
         return "/profile/basic-info";
     }
@@ -32,6 +34,7 @@ function CompleteProfileRoutes({ profileStatus }) {
   useEffect(() => {
     if (location.pathname === "/profile" || location.pathname === "/profile/") {
       const target = getInitialRedirectPath(profileStatus);
+      console.log({ target });
       navigate(target, { replace: true });
     }
   }, [location.pathname, profileStatus, navigate]);

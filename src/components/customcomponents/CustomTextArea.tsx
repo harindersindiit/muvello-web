@@ -44,7 +44,7 @@ const CustomTextArea = React.forwardRef<
             value={value}
             rows={rows}
             onChange={onChange}
-            className={`${className} resize-y min-h-[100px] py-4 pl-13 focus-visible:outline-none focus-visible:ring-[1px] focus-visible:ring-grey rounded-xl bg-lightdark border border-transparent text-white placeholder:text-grey placeholder:font-light focus:outline-none focus:border-grey`}
+            className={`${className} resize-none min-h-[100px] py-4 pl-13 focus-visible:outline-none focus-visible:ring-[1px] focus-visible:ring-grey rounded-xl bg-lightdark border border-transparent text-white placeholder:text-grey placeholder:font-light focus:outline-none focus:border-grey`}
             maxLength={maxLength}
             autore
           />

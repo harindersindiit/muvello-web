@@ -19,7 +19,7 @@ import { useUser } from "@/context/UserContext";
 const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
   const navigate = useNavigate();
   const [passwordDrawerOpen, setPasswordDrawerOpen] = useState(false);
-  const [toggleNotification, setToggleNotification] = useState(false);
+  const toggleNotification = true; // Always open
   const [showPassword, setShowPassword] = useState(false);
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -75,8 +75,7 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
     {
       label: "Notification Settings",
       onClick: () => {
-        // closePanel();
-        setToggleNotification(!toggleNotification);
+        // No action needed - always open
       },
       icon: "gravity-ui:gear",
     },
@@ -226,14 +225,10 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
                   </p>
                 </div>
 
-                {item.label === "Logout" ? null : (
+                {item.label === "Logout" ||
+                item.label === "Notification Settings" ? null : (
                   <Icon
-                    icon={
-                      item.label === "Notification Settings" &&
-                      toggleNotification
-                        ? "icon-park-outline:down"
-                        : "icon-park-outline:right"
-                    }
+                    icon="icon-park-outline:right"
                     color={"white"}
                     className="w-6 h-6"
                   />

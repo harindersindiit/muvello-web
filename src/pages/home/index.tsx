@@ -21,7 +21,7 @@ import { useUser } from "@/context/UserContext";
 
 import NoDataPlaceholder from "@/components/ui/nodata";
 import { getMaxWeek } from "@/utils/sec";
-import { capitalize } from "@/lib/utils";
+import { capitalize, totalWorkoutDuration } from "@/lib/utils";
 
 import "react-loading-skeleton/dist/skeleton.css";
 import PostCardSkeleton from "@/components/skeletons/PostCardSkeleton";
@@ -467,10 +467,7 @@ const Home = () => {
                         image={workout.thumbnail}
                         title={workout.title}
                         price={workout.fees > 0 ? `$${workout.fees}` : ""}
-                        duration={workout?.exercises.reduce(
-                          (acc, curr) => acc + (curr.workout_duration || 0),
-                          0
-                        )}
+                        duration={totalWorkoutDuration(workout.exercises)}
                         weeks={
                           getMaxWeek(workout?.exercises, "week") || "0 weeks"
                         }
@@ -505,10 +502,10 @@ const Home = () => {
                         getExercises(tag._id);
                         setSelectedTab(tag._id);
                       }}
-                      className={`px-4 py-1 cursor-pointer flex-shrink-0 border rounded-full text-xs transition-all ${
+                      className={`mt-1 mb-3 px-4 py-1 cursor-pointer flex-shrink-0 border rounded-full text-xs transition-all ${
                         selectedTab === tag._id
-                          ? "border-[#94eb00] text-primary"
-                          : "border-[#2a2a2a] text-white"
+                          ? "border-[#94eb00] text-primary hover:bg-[#94eb00]/10"
+                          : "border-[#2a2a2a] text-white hover:bg-[#2a2a2a]/50 hover:border-[#3a3a3a]"
                       }`}
                     >
                       {tag.name}
@@ -547,9 +544,11 @@ const Home = () => {
                       title={exercise.title}
                       sets={exercise.sets.length}
                       reps={exercise.sets
+                        .slice(0, 5)
                         .map((set: any) => set.reps)
                         .join(", ")}
                       rest={exercise.sets
+                        .slice(0, 4)
                         .map((set: any) => `${set.rest} Sec`)
                         .join(", ")}
                       category={exercise.target_part.name}

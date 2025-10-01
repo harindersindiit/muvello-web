@@ -438,9 +438,13 @@ const PostCard: React.FC<PostCardProps> = ({
           <Loader2 className="animate-spin w-5 h-5 mr-2" />
         ) : (
           <button
-            className={`text-sm ml-2 ${
-              commentInput.trim() ? "text-primary" : "text-gray-400"
-            }`}
+            className={`text-sm ml-2 transition-colors duration-200 rounded-full px-3 py-1
+              ${
+                commentInput.trim()
+                  ? "text-primary hover:bg-[#94eb00]/10 hover:text-white cursor-pointer"
+                  : "text-gray-400 cursor-not-allowed"
+              }
+            `}
             onClick={handleAddComment}
             disabled={!commentInput.trim()}
           >

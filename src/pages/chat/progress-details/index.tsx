@@ -187,14 +187,18 @@ const ProgressDetails = () => {
                           reps={
                             exercise?.sets
                               ? exercise?.sets
-                                  .map((set: any) => set.reps)
+                                  .slice(0, 5)
+                                  .map((set: { reps: number }) => set.reps)
                                   .join(", ")
                               : 0
                           }
                           rest={
                             exercise?.sets
                               ? exercise?.sets
-                                  .map((set: any) => `${set.rest} Sec`)
+                                  .slice(0, 4)
+                                  .map(
+                                    (set: { rest: number }) => `${set.rest} Sec`
+                                  )
                                   .join(", ")
                               : 0
                           }
@@ -207,23 +211,6 @@ const ProgressDetails = () => {
                           }
                         />
                       ))}
-
-                  {/* {exerciseData.map((exercise, index) => (
-                  <ExerciseComponent
-                    key={index}
-                    image={exercise.image}
-                    title={exercise.title}
-                    sets={exercise.sets}
-                    reps={exercise.reps}
-                    rest={exercise.rest}
-                    modified={exercise.modified}
-                    className="mb-3 cursor-pointer"
-                    progressShow={true}
-                    progress={exercise.progress}
-                    label={exercise.label}
-                    onClick={() => navigate(`/user/chat/exercise-details`)}
-                  />
-                ))} */}
                 </div>
               </div>
             </div>
