@@ -29,6 +29,7 @@ jobs:
           echo "VITE_GOOGLE_API=${{ secrets.VITE_GOOGLE_API }}" >> .env
           echo "VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}" >> .env
           echo "VITE_SOCKET_API_BASE_URL=${{ secrets.VITE_SOCKET_API_BASE_URL }}" >> .env
+          echo "VITE_STRIPE_KEY_PUBLISH=${{ secrets.VITE_STRIPE_KEY_PUBLISH }}" >> .env
 
       - name: Build React app
         run: npm run build
