@@ -51,7 +51,10 @@ const SelectExercisePopup = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-[#2b2a2a] text-white border-transparent">
+      <DialogContent
+        className="bg-[#2b2a2a] text-white border-transparent"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Select Exercise</DialogTitle>
           <DialogDescription className="text-white/60">
@@ -718,6 +721,7 @@ const CreateWorkout = () => {
                           ...workoutCategories.map((item) => ({
                             label: item.title,
                             value: item._id,
+                            icon: item.icon,
                           })),
                         ]}
                       />

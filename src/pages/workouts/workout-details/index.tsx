@@ -23,7 +23,7 @@ import moment from "moment";
 const WorkoutDetails = () => {
   const { user } = useUser();
   const { state } = useLocation();
-  console.log("state", state);
+
   const navigate = useNavigate();
   const [week, setWeek] = useState(1);
   const [day, setDay] = useState(1);
@@ -106,27 +106,27 @@ const WorkoutDetails = () => {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
 
-  const handleDeleteExercise = async () => {
-    setDeleteLoader(true);
+  // const handleDeleteExercise = async () => {
+  //   setDeleteLoader(true);
 
-    try {
-      const token = localStorageService.getItem("accessToken");
+  //   try {
+  //     const token = localStorageService.getItem("accessToken");
 
-      const resExe = await axiosInstance.delete(`/exercise/${state?._id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  //     const resExe = await axiosInstance.delete(`/exercise/${state?._id}`, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
 
-      toast.success(resExe.data.message);
-    } catch (error: any) {
-      const message = error?.response?.data?.error || "Internal Server Error.";
-      toast.error(message);
-    } finally {
-      setDeleteExercise(false);
-      setDeleteLoader(false);
-    }
-  };
+  //     toast.success(resExe.data.message);
+  //   } catch (error: any) {
+  //     const message = error?.response?.data?.error || "Internal Server Error.";
+  //     toast.error(message);
+  //   } finally {
+  //     setDeleteExercise(false);
+  //     setDeleteLoader(false);
+  //   }
+  // };
 
   const getProgress = async () => {
     setDeleteLoader(true);
@@ -371,7 +371,7 @@ const WorkoutDetails = () => {
                     (acc, curr) => acc + (curr.workout_duration || 0),
                     0
                   )}{" "}
-                  min/day
+                  min
                   <img
                     src={IMAGES.editiconimg}
                     alt="Calendar"

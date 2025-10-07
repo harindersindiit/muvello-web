@@ -58,12 +58,10 @@ const ExerciseComponent = ({
   return (
     <div
       className={`bg-gray-800/30 rounded-xl p-4 border border-gray-700/50 ${className}`}
+      onClick={onClick}
     >
       <div className={`text-white items-center flex gap-4`}>
-        <div
-          className="w-2/5 relative overflow-hidden hover:scale-105 transition-all duration-300 hover:cursor-pointer"
-          onClick={onClick}
-        >
+        <div className="w-2/5 relative overflow-hidden hover:scale-105 transition-all duration-300 hover:cursor-pointer">
           <img
             src={image}
             alt={title}

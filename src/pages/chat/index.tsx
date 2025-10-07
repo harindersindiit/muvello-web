@@ -263,6 +263,11 @@ const GroupChatUI = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [searchText, setSearchText] = useState("");
 
+  // Participant search state
+  const [showParticipantSearch, setShowParticipantSearch] = useState(false);
+  const [participantSearchText, setParticipantSearchText] = useState("");
+  const [filteredWorkoutProgress, setFilteredWorkoutProgress] = useState([]);
+
   const messageInputRef = useRef<HTMLInputElement>(null);
 
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -643,6 +648,7 @@ const GroupChatUI = () => {
   };
 
   const [deleteGroupLoader, setDeleteGroupLoader] = useState(false);
+
   const handleDeleteGroup = async () => {
     setDeleteGroupLoader(true);
     try {
@@ -662,6 +668,10 @@ const GroupChatUI = () => {
         },
       });
 
+      setSelectedGroup(null);
+      setLeaveGroup(false);
+      setDeleteGroup(false);
+      setDeleteGroupLoader(false);
       getMyGroups();
       toast.success(res.data.message);
     } catch (error: any) {
@@ -697,6 +707,25 @@ const GroupChatUI = () => {
       // setDeleteLoader(false);
     }
   };
+
+  // Filter workout participants based on search text
+  const filterWorkoutParticipants = (searchTerm) => {
+    if (!searchTerm.trim()) {
+      setFilteredWorkoutProgress(workoutProgress);
+    } else {
+      const filtered = workoutProgress.filter((participant) =>
+        participant.user.fullname
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      );
+      setFilteredWorkoutProgress(filtered);
+    }
+  };
+
+  // Initialize filtered workout progress when workoutProgress changes
+  useEffect(() => {
+    setFilteredWorkoutProgress(workoutProgress);
+  }, [workoutProgress]);
 
   /// ==== DIRECT CHAT ====///
 
@@ -2195,6 +2224,9 @@ const GroupChatUI = () => {
                           duration={totalWorkoutDuration(msg.workout.exercises)}
                           weeks={`${msg.workout.max_week} week`}
                           onViewClick={() => {
+                            // navigate(`/user/workouts/workout-details`, {
+                            //   state: msg.workout,
+                            // });
                             setWorkoutDetails(msg.workout);
                             getWorkoutProgress(msg.workout._id);
                             setWorkoutOpen(true);
@@ -2700,21 +2732,58 @@ const GroupChatUI = () => {
           <p className="text-white text-sm font-normal mb-4">
             {workoutDetails?.caption}
           </p>
-          <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center justify-between gap-2 mb-2 w-full">
             <h2 className="text-white font-semibold text-sm">
               Participant{" "}
-              <span className="text-xs font-normal">
-                ({workoutProgress.length})
+              <span>
+                (
+                {showParticipantSearch
+                  ? filteredWorkoutProgress.length
+                  : workoutProgress.length}
+                )
               </span>
             </h2>
-            <button className="text-lime-400 text-sm font-medium hover:underline cursor-pointer">
-              <Icon icon="uil:search" color="white" className="w-4 h-4" />
+            <button
+              onClick={() => {
+                setShowParticipantSearch(!showParticipantSearch);
+                if (showParticipantSearch) {
+                  setParticipantSearchText("");
+                  setFilteredWorkoutProgress(workoutProgress);
+                }
+              }}
+              className="text-lime-400 text-sm font-medium hover:underline cursor-pointer"
+              style={{ width: "auto" }}
+            >
+              <Icon
+                icon={showParticipantSearch ? "ic:round-close" : "uil:search"}
+                color="white"
+                className="w-4 h-4"
+              />
             </button>
           </div>
 
+          {showParticipantSearch && (
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search participants..."
+                value={participantSearchText}
+                onChange={(e) => {
+                  setParticipantSearchText(e.target.value);
+                  filterWorkoutParticipants(e.target.value);
+                }}
+                className="w-full bg-lightdark border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-lime-400"
+              />
+            </div>
+          )}
+
           <div className="mt-4 text-white">
-            {workoutProgress.map((user) => {
-              const progress = user.progress_percent;
+            {(showParticipantSearch
+              ? filteredWorkoutProgress
+              : workoutProgress
+            ).map((user) => {
+              const progress =
+                (user.completed_exercises / user.total_exercises) * 100;
               const progressColor =
                 progress === 100
                   ? "text-lime-400 border-lime-400"

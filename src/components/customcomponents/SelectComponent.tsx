@@ -10,7 +10,7 @@ interface SelectComponentProps {
   value?: string | "";
   onChange?: (value: string) => void;
   placeholder?: string;
-  options?: { value: string; label: string }[];
+  options?: { value: string; label: string; icon?: string }[];
   className?: string;
   icon?: string;
   iconAlt?: string;
@@ -87,8 +87,15 @@ const SelectComponent: React.FC<SelectComponentProps> = ({
             <SelectItem
               key={option.value}
               value={option.value}
-              className="cursor-pointer hover:text-primary text-white data-[highlighted]:text-white data-[state=checked]:text-white focus:text-white"
+              className="cursor-pointer hover:text-primary text-white data-[highlighted]:text-white data-[state=checked]:text-white focus:text-white flex items-center gap-2"
             >
+              {option.icon && (
+                <img
+                  src={option.icon}
+                  alt={option.iconAlt || option.label}
+                  className="w-5 h-5"
+                />
+              )}
               {option.label}
             </SelectItem>
           ))}

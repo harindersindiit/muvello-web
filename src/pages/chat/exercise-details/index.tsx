@@ -61,7 +61,7 @@ const ExerciseDetails = () => {
                   alt="arrowLeft"
                   className="w-6 h-6 cursor-pointer"
                 />
-                <span className="text-white">{state.exercise_info.title}</span>
+                {/* <span className="text-white">{state.exercise_info.title}</span> */}
               </h2>
             </div>
             <div className="relative mb-4">
@@ -76,7 +76,7 @@ const ExerciseDetails = () => {
             </div>
             {/* <h4 className="font-semibold text-sm mb-2">Bench Press</h4> */}
 
-            <p className="text-sm text-white">{state.exercise_info.title}</p>
+            <p className="text-lg text-white">{state.exercise_info.title}</p>
           </div>
 
           {/* Sidebar - 4 columns */}
