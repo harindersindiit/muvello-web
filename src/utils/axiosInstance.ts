@@ -28,16 +28,16 @@ axiosInstance.interceptors.response.use(
   (response: any) => response,
   (error: any) => {
     const { config, response } = error;
-
+    console.log(error);
     if (
       response &&
-      [400, 401, 419].includes(response.status) &&
+      [401, 419].includes(response.status) &&
       !config?.url?.includes("/auth")
     ) {
       console.log("Redirecting to login due to expired or invalid token");
 
-      localStorage.clear();
-      window.location.href = "/auth"; // or "/login" based on your route
+      // localStorage.clear();
+      // window.location.href = "/auth"; // or "/login" based on your route
     }
 
     return Promise.reject(error);

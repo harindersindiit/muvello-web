@@ -10,11 +10,12 @@ import { Icon } from "@iconify/react";
 import { Switch } from "@/components/ui/switch";
 import TextInput from "./TextInput";
 import { Formik, Form } from "formik";
-import { changepasswordSchema } from "@/utils/validations";
+import { changepasswordSchema, contactUsSchema } from "@/utils/validations";
 import axiosInstance from "@/utils/axiosInstance";
 import localStorageService from "@/utils/localStorageService";
 import { toast } from "react-toastify";
 import { useUser } from "@/context/UserContext";
+import { contactService } from "@/services/contactService";
 
 const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
   const navigate = useNavigate();
@@ -28,6 +29,36 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
 
   const { updateUser, user } = useUser();
   const [pushNotification, setPushNotification] = useState(false);
+
+  // Contact form initial values
+  const contactInitialValues = {
+    fullname: "",
+    email: "",
+    message: "",
+  };
+
+  // Contact form submit handler
+  const handleContactSubmit = async (
+    values: typeof contactInitialValues,
+    {
+      setSubmitting,
+      resetForm,
+    }: { setSubmitting: (isSubmitting: boolean) => void; resetForm: () => void }
+  ) => {
+    try {
+      const res = await contactService.submitContactForm(values);
+      toast.success(res.message);
+
+      resetForm();
+      setContactDrawerOpen(false);
+    } catch (error: unknown) {
+      toast.error(
+        (error as Error).message || "Failed to send message. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
   const [emailNotification, setEmailNotification] = useState(false);
   useEffect(() => {
     if (user) {
@@ -123,7 +154,14 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
     },
   ];
 
-  const submitChangePassword = async (values: any, { setSubmitting }) => {
+  const submitChangePassword = async (
+    values: {
+      old_password: string;
+      new_password: string;
+      confirm_password: string;
+    },
+    { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void }
+  ) => {
     try {
       const token = localStorageService.getItem("accessToken");
 
@@ -332,7 +370,11 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
                         />
                       }
                       style={{ paddingRight: "50px" }}
-                      error={touched.old_password && errors.old_password}
+                      error={
+                        touched.old_password && errors.old_password
+                          ? String(errors.old_password)
+                          : ""
+                      }
                     />
                     <div
                       className="absolute inset-y-0 right-5 flex items-center cursor-pointer h-[59px]"
@@ -362,7 +404,11 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
                         />
                       }
                       style={{ paddingRight: "50px" }}
-                      error={touched.new_password && errors.new_password}
+                      error={
+                        touched.new_password && errors.new_password
+                          ? String(errors.new_password)
+                          : ""
+                      }
                     />
                     <div
                       className="absolute inset-y-0 right-5 flex items-center cursor-pointer h-[59px]"
@@ -394,6 +440,8 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
                       style={{ paddingRight: "50px" }}
                       error={
                         touched.confirm_password && errors.confirm_password
+                          ? String(errors.confirm_password)
+                          : ""
                       }
                     />
                     <div
@@ -434,60 +482,89 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
         className="drawer-override"
       >
         <div className="p-6">
-          <form className="space-y-6">
-            <img
-              src={IMAGES.contactPic}
-              alt="contact"
-              className="w-65 mx-auto"
-            />
+          <Formik
+            initialValues={contactInitialValues}
+            validationSchema={contactUsSchema}
+            onSubmit={handleContactSubmit}
+          >
+            {({ values, errors, touched, handleChange, isSubmitting }) => (
+              <Form className="space-y-6">
+                <img
+                  src={IMAGES.contactPic}
+                  alt="contact"
+                  className="w-65 mx-auto"
+                />
 
-            <div className="space-y-1 gap-y-2 flex flex-col space-y-3">
-              <TextInput
-                placeholder="Full Name"
-                type="text"
-                value=""
-                onChange={() => {}}
-                icon={
-                  <Icon icon="solar:user-linear" color="white" fontSize={23} />
-                }
-                error=""
-              />
-
-              <TextInput
-                placeholder="Email"
-                type="text"
-                value=""
-                onChange={() => {}}
-                icon={<Icon icon="mage:email" color="white" fontSize={23} />}
-                error=""
-              />
-
-              <CustomTextArea
-                placeholder="Write your message..."
-                value=""
-                onChange={() => {}}
-                rows={5}
-                className="h-[140px] rounded-xl resize-none"
-                icon={
-                  <Icon
-                    icon="si:align-justify-line"
-                    color="white"
-                    fontSize={23}
+                <div className="gap-y-2 flex flex-col space-y-3">
+                  <TextInput
+                    placeholder="Full Name"
+                    type="text"
+                    name="fullname"
+                    value={values.fullname}
+                    onChange={handleChange}
+                    icon={
+                      <Icon
+                        icon="solar:user-linear"
+                        color="white"
+                        fontSize={23}
+                      />
+                    }
+                    error={
+                      touched.fullname && errors.fullname
+                        ? String(errors.fullname)
+                        : ""
+                    }
                   />
-                }
-              />
-              <p className="text-white text-sm mb-5">
-                We always try our best to respond to each member within 48
-                business hours. We appreciate your patience.
-              </p>
 
-              <CustomButton
-                text="Submit"
-                type="button"
-                onClick={() => console.log("Change Password")}
-              />
-            </div>
-          </form>
+                  <TextInput
+                    placeholder="Email"
+                    type="email"
+                    name="email"
+                    value={values.email}
+                    onChange={handleChange}
+                    icon={
+                      <Icon icon="mage:email" color="white" fontSize={23} />
+                    }
+                    error={
+                      touched.email && errors.email ? String(errors.email) : ""
+                    }
+                  />
+
+                  <CustomTextArea
+                    placeholder="Write your message..."
+                    name="message"
+                    value={values.message}
+                    onChange={handleChange}
+                    rows={5}
+                    className="h-[140px] rounded-xl resize-none"
+                    icon={
+                      <Icon
+                        icon="si:align-justify-line"
+                        color="white"
+                        fontSize={23}
+                      />
+                    }
+                    error={
+                      touched.message && errors.message
+                        ? String(errors.message)
+                        : ""
+                    }
+                  />
+                  <p className="text-white text-sm mb-5">
+                    We always try our best to respond to each member within 48
+                    business hours. We appreciate your patience.
+                  </p>
+
+                  <CustomButton
+                    text={isSubmitting ? "Sending..." : "Submit"}
+                    type="submit"
+                    disabled={isSubmitting}
+                    onClick={() => {}}
+                  />
+                </div>
+              </Form>
+            )}
+          </Formik>
         </div>
       </DrawerSidebar>
 

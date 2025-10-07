@@ -163,6 +163,23 @@ export const addPostSchema = Yup.object().shape({
     .required("Media is required"),
 });
 
+export const contactUsSchema = Yup.object().shape({
+  fullname: Yup.string()
+    .matches(/^\S.*$/, "Cannot start with a whitespace")
+    .min(2, "Full name must be at least 2 characters")
+    .max(50, "Full name must be less than 50 characters")
+    .required("Full name is required"),
+  email: Yup.string()
+    .matches(/^\S.*$/, "Cannot start with a whitespace")
+    .email("Invalid email address")
+    .required("Email is required"),
+  message: Yup.string()
+    .matches(/^\S.*$/, "Cannot start with a whitespace")
+    .min(10, "Message must be at least 10 characters")
+    .max(500, "Message must be less than 500 characters")
+    .required("Message is required"),
+});
+
 export const addWorkoutSchema = Yup.object().shape({
   is_draft: Yup.boolean().required(),
   title: Yup.string().required("Title is required"),
