@@ -630,6 +630,8 @@ const GroupChatUI = () => {
         },
       });
 
+      setSelectedGroup(null);
+      setLeaveGroup(false);
       getMyGroups();
       toast.success(res.data.message);
     } catch (error: any) {
