@@ -539,13 +539,9 @@ const SavedCards = () => {
                   onClick={(e) => {
                     if (!stripeSetupStatus.isActive) {
                       e.preventDefault();
-                      if (
-                        confirm(
-                          "You need to complete your Stripe Connect account setup before you can add bank accounts. Bank accounts must be connected to Stripe for withdrawals.\n\nWould you like to set up Stripe Connect now?"
-                        )
-                      ) {
-                        navigate("/stripe-setup");
-                      }
+                      alert(
+                        "You need to complete your Stripe Connect account setup before you can add bank accounts. Bank accounts must be connected to Stripe for withdrawals.\n\nPlease complete your Stripe Connect setup on the mobile app to enable this feature."
+                      );
                     }
                   }}
                 >

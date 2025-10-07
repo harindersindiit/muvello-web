@@ -288,7 +288,7 @@ const StripeSetup = () => {
             </Button>
             <Button
               variant="outline"
-              onClick={() => navigate("/my-wallet")}
+              onClick={() => navigate("/user/my-wallet")}
               className="flex-1 border-gray-600 text-white hover:bg-gray-800"
             >
               Back to Wallet

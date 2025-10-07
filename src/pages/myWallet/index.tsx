@@ -227,7 +227,8 @@ const UserWallet = () => {
       return;
     }
 
-    let message = "To withdraw funds, you need to complete the following:\n\n";
+    let message =
+      "To withdraw funds, you need to complete the following on Mobile App:\n\n";
     let needsStripeSetup = false;
     let needsBankAccount = false;
 
@@ -252,14 +253,13 @@ const UserWallet = () => {
 
     // Determine action based on what's needed
     if (needsStripeSetup) {
-      if (
-        confirm(message + "\n\nWould you like to set up Stripe Connect now?")
-      ) {
-        window.location.href = "/stripe-setup";
-      }
+      alert(
+        message +
+          "\n\nPlease complete your Stripe Connect setup on the mobile app to enable withdrawals."
+      );
     } else if (needsBankAccount) {
       if (confirm(message + "\n\nWould you like to add a bank account now?")) {
-        window.location.href = "/saved-cards";
+        window.location.href = "/user/saved-cards";
       }
     } else {
       alert(message);
@@ -370,7 +370,7 @@ const UserWallet = () => {
         </div>
         <Dialog
           open={withdrawalModalOpen}
-          onOpenChange={setWithdrawalModalOpen}
+          // onOpenChange={setWithdrawalModalOpen}
         >
           <DialogTrigger asChild>
             <button
@@ -382,11 +382,12 @@ const UserWallet = () => {
                   ? "bg-gray-600 text-white opacity-60"
                   : "bg-gray-600 text-white"
               }`}
-              disabled={
-                !walletBalance || (walletBalance.pending_payouts || 0) <= 0
-              }
+              // disabled={
+              //   !walletBalance || (walletBalance.pending_payouts || 0) <= 0
+              // }
               onClick={() => {
                 if (withdrawalEligibility.canWithdraw) {
+                  setWithdrawalModalOpen(true);
                   // Button will open modal via DialogTrigger
                 } else if (
                   withdrawalEligibility.stripeSetupComplete &&
