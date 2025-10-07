@@ -303,11 +303,11 @@ class PaymentService {
 
   // Save payment method after successful setup intent
   async savePaymentMethod(
-    setupIntent: Record<string, unknown>
+    paymentMethodId: string
   ): Promise<PaymentServiceResponse> {
     try {
       const response = await axiosInstance.post("/payments/payment-methods", {
-        setupIntent,
+        payment_method_id: paymentMethodId,
       });
       return {
         success: true,
@@ -318,8 +318,7 @@ class PaymentService {
       console.error("Error saving payment method:", error);
       return {
         success: false,
-        message:
-          error.response?.data?.message || "Failed to save payment method",
+        message: error.response?.data?.error || "Failed to save payment method",
         error: (error as ApiError)?.message,
       };
     }

@@ -100,7 +100,7 @@ const StripeCardInput: React.FC<StripeCardInputProps> = ({
       if (setupIntent?.status === "succeeded") {
         // Step 3: Save payment method to backend
         const saveResponse = await paymentService.savePaymentMethod(
-          setupIntent
+          setupIntent.payment_method
         );
 
         if (saveResponse.success) {
@@ -110,7 +110,16 @@ const StripeCardInput: React.FC<StripeCardInputProps> = ({
           cardElement.clear();
           onSuccess();
         } else {
-          toast.error(saveResponse.message || "Failed to save payment method");
+          // Check if it's a duplicate card error
+          if (saveResponse.body?.duplicate) {
+            toast.error(
+              "This card is already added to your account. Please use a different card or edit the existing one."
+            );
+          } else {
+            toast.error(
+              saveResponse.message || "Failed to save payment method"
+            );
+          }
         }
       } else {
         toast.error("Setup intent was not successful");

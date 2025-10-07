@@ -29,6 +29,203 @@ import SavedCardsSkeleton from "@/components/skeletons/SavedCardsSkeleton";
 import StripeProviderWrapper from "@/components/payment/StripeProvider";
 import StripeCardInput from "@/components/payment/StripeCardInput";
 
+// Country list for dropdown
+const countries = [
+  { label: "United States", value: "US" },
+  { label: "Canada", value: "CA" },
+  { label: "United Kingdom", value: "GB" },
+  { label: "Australia", value: "AU" },
+  { label: "Germany", value: "DE" },
+  { label: "France", value: "FR" },
+  { label: "Italy", value: "IT" },
+  { label: "Spain", value: "ES" },
+  { label: "Netherlands", value: "NL" },
+  { label: "Sweden", value: "SE" },
+  { label: "Norway", value: "NO" },
+  { label: "Denmark", value: "DK" },
+  { label: "Finland", value: "FI" },
+  { label: "Switzerland", value: "CH" },
+  { label: "Austria", value: "AT" },
+  { label: "Belgium", value: "BE" },
+  { label: "Ireland", value: "IE" },
+  { label: "Portugal", value: "PT" },
+  { label: "Greece", value: "GR" },
+  { label: "Poland", value: "PL" },
+  { label: "Czech Republic", value: "CZ" },
+  { label: "Hungary", value: "HU" },
+  { label: "Slovakia", value: "SK" },
+  { label: "Slovenia", value: "SI" },
+  { label: "Croatia", value: "HR" },
+  { label: "Romania", value: "RO" },
+  { label: "Bulgaria", value: "BG" },
+  { label: "Estonia", value: "EE" },
+  { label: "Latvia", value: "LV" },
+  { label: "Lithuania", value: "LT" },
+  { label: "Luxembourg", value: "LU" },
+  { label: "Malta", value: "MT" },
+  { label: "Cyprus", value: "CY" },
+  { label: "Japan", value: "JP" },
+  { label: "South Korea", value: "KR" },
+  { label: "China", value: "CN" },
+  { label: "India", value: "IN" },
+  { label: "Singapore", value: "SG" },
+  { label: "Hong Kong", value: "HK" },
+  { label: "Taiwan", value: "TW" },
+  { label: "Thailand", value: "TH" },
+  { label: "Malaysia", value: "MY" },
+  { label: "Indonesia", value: "ID" },
+  { label: "Philippines", value: "PH" },
+  { label: "Vietnam", value: "VN" },
+  { label: "New Zealand", value: "NZ" },
+  { label: "South Africa", value: "ZA" },
+  { label: "Brazil", value: "BR" },
+  { label: "Argentina", value: "AR" },
+  { label: "Chile", value: "CL" },
+  { label: "Mexico", value: "MX" },
+  { label: "Colombia", value: "CO" },
+  { label: "Peru", value: "PE" },
+  { label: "Uruguay", value: "UY" },
+  { label: "Ecuador", value: "EC" },
+  { label: "Venezuela", value: "VE" },
+  { label: "Bolivia", value: "BO" },
+  { label: "Paraguay", value: "PY" },
+  { label: "Guyana", value: "GY" },
+  { label: "Suriname", value: "SR" },
+  { label: "Israel", value: "IL" },
+  { label: "United Arab Emirates", value: "AE" },
+  { label: "Saudi Arabia", value: "SA" },
+  { label: "Qatar", value: "QA" },
+  { label: "Kuwait", value: "KW" },
+  { label: "Bahrain", value: "BH" },
+  { label: "Oman", value: "OM" },
+  { label: "Jordan", value: "JO" },
+  { label: "Lebanon", value: "LB" },
+  { label: "Turkey", value: "TR" },
+  { label: "Russia", value: "RU" },
+  { label: "Ukraine", value: "UA" },
+  { label: "Belarus", value: "BY" },
+  { label: "Moldova", value: "MD" },
+  { label: "Georgia", value: "GE" },
+  { label: "Armenia", value: "AM" },
+  { label: "Azerbaijan", value: "AZ" },
+  { label: "Kazakhstan", value: "KZ" },
+  { label: "Uzbekistan", value: "UZ" },
+  { label: "Kyrgyzstan", value: "KG" },
+  { label: "Tajikistan", value: "TJ" },
+  { label: "Turkmenistan", value: "TM" },
+  { label: "Afghanistan", value: "AF" },
+  { label: "Pakistan", value: "PK" },
+  { label: "Bangladesh", value: "BD" },
+  { label: "Sri Lanka", value: "LK" },
+  { label: "Nepal", value: "NP" },
+  { label: "Bhutan", value: "BT" },
+  { label: "Myanmar", value: "MM" },
+  { label: "Cambodia", value: "KH" },
+  { label: "Laos", value: "LA" },
+  { label: "Mongolia", value: "MN" },
+  { label: "North Korea", value: "KP" },
+  { label: "Iceland", value: "IS" },
+  { label: "Greenland", value: "GL" },
+  { label: "Faroe Islands", value: "FO" },
+  { label: "Albania", value: "AL" },
+  { label: "Bosnia and Herzegovina", value: "BA" },
+  { label: "Serbia", value: "RS" },
+  { label: "Montenegro", value: "ME" },
+  { label: "North Macedonia", value: "MK" },
+  { label: "Kosovo", value: "XK" },
+  { label: "Andorra", value: "AD" },
+  { label: "Monaco", value: "MC" },
+  { label: "San Marino", value: "SM" },
+  { label: "Vatican City", value: "VA" },
+  { label: "Liechtenstein", value: "LI" },
+  { label: "Gibraltar", value: "GI" },
+  { label: "Jersey", value: "JE" },
+  { label: "Guernsey", value: "GG" },
+  { label: "Isle of Man", value: "IM" },
+  { label: "Falkland Islands", value: "FK" },
+  { label: "Bermuda", value: "BM" },
+  { label: "Cayman Islands", value: "KY" },
+  { label: "British Virgin Islands", value: "VG" },
+  { label: "Anguilla", value: "AI" },
+  { label: "Montserrat", value: "MS" },
+  { label: "Turks and Caicos Islands", value: "TC" },
+  { label: "Bahamas", value: "BS" },
+  { label: "Barbados", value: "BB" },
+  { label: "Trinidad and Tobago", value: "TT" },
+  { label: "Jamaica", value: "JM" },
+  { label: "Dominican Republic", value: "DO" },
+  { label: "Haiti", value: "HT" },
+  { label: "Cuba", value: "CU" },
+  { label: "Puerto Rico", value: "PR" },
+  { label: "Virgin Islands", value: "VI" },
+  { label: "Antigua and Barbuda", value: "AG" },
+  { label: "Saint Kitts and Nevis", value: "KN" },
+  { label: "Saint Lucia", value: "LC" },
+  { label: "Saint Vincent and the Grenadines", value: "VC" },
+  { label: "Grenada", value: "GD" },
+  { label: "Dominica", value: "DM" },
+  { label: "Belize", value: "BZ" },
+  { label: "Costa Rica", value: "CR" },
+  { label: "Panama", value: "PA" },
+  { label: "Nicaragua", value: "NI" },
+  { label: "Honduras", value: "HN" },
+  { label: "El Salvador", value: "SV" },
+  { label: "Guatemala", value: "GT" },
+  { label: "Morocco", value: "MA" },
+  { label: "Algeria", value: "DZ" },
+  { label: "Tunisia", value: "TN" },
+  { label: "Libya", value: "LY" },
+  { label: "Egypt", value: "EG" },
+  { label: "Sudan", value: "SD" },
+  { label: "South Sudan", value: "SS" },
+  { label: "Ethiopia", value: "ET" },
+  { label: "Eritrea", value: "ER" },
+  { label: "Djibouti", value: "DJ" },
+  { label: "Somalia", value: "SO" },
+  { label: "Kenya", value: "KE" },
+  { label: "Uganda", value: "UG" },
+  { label: "Tanzania", value: "TZ" },
+  { label: "Rwanda", value: "RW" },
+  { label: "Burundi", value: "BI" },
+  { label: "Democratic Republic of the Congo", value: "CD" },
+  { label: "Republic of the Congo", value: "CG" },
+  { label: "Central African Republic", value: "CF" },
+  { label: "Chad", value: "TD" },
+  { label: "Cameroon", value: "CM" },
+  { label: "Nigeria", value: "NG" },
+  { label: "Niger", value: "NE" },
+  { label: "Mali", value: "ML" },
+  { label: "Burkina Faso", value: "BF" },
+  { label: "Ghana", value: "GH" },
+  { label: "Togo", value: "TG" },
+  { label: "Benin", value: "BJ" },
+  { label: "Ivory Coast", value: "CI" },
+  { label: "Liberia", value: "LR" },
+  { label: "Sierra Leone", value: "SL" },
+  { label: "Guinea", value: "GN" },
+  { label: "Guinea-Bissau", value: "GW" },
+  { label: "Senegal", value: "SN" },
+  { label: "Gambia", value: "GM" },
+  { label: "Mauritania", value: "MR" },
+  { label: "Cape Verde", value: "CV" },
+  { label: "São Tomé and Príncipe", value: "ST" },
+  { label: "Equatorial Guinea", value: "GQ" },
+  { label: "Gabon", value: "GA" },
+  { label: "Angola", value: "AO" },
+  { label: "Zambia", value: "ZM" },
+  { label: "Zimbabwe", value: "ZW" },
+  { label: "Botswana", value: "BW" },
+  { label: "Namibia", value: "NA" },
+  { label: "Lesotho", value: "LS" },
+  { label: "Swaziland", value: "SZ" },
+  { label: "Madagascar", value: "MG" },
+  { label: "Mauritius", value: "MU" },
+  { label: "Seychelles", value: "SC" },
+  { label: "Comoros", value: "KM" },
+  { label: "Malawi", value: "MW" },
+  { label: "Mozambique", value: "MZ" },
+];
+
 const SavedCards = () => {
   const navigate = useNavigate();
 
@@ -67,12 +264,125 @@ const SavedCards = () => {
     phone: "",
     address: {
       line1: "",
+      line2: "",
       city: "",
       state: "",
       postal_code: "",
       country: "US",
     },
   });
+
+  const [editFormErrors, setEditFormErrors] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: {
+      line1: "",
+      line2: "",
+      city: "",
+      state: "",
+      postal_code: "",
+      country: "",
+    },
+  });
+
+  // Validation helper functions
+  const validateEmail = (email: string): string => {
+    if (!email.trim()) {
+      return "";
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email) ? "" : "Please enter a valid email address";
+  };
+
+  const validatePhone = (phone: string): string => {
+    if (!phone.trim()) {
+      return "";
+    }
+    const phoneRegex = /^[+]?[1-9][\d]{0,15}$/;
+    const cleanPhone = phone.replace(/[\s\-()]/g, "");
+    return phoneRegex.test(cleanPhone)
+      ? ""
+      : "Please enter a valid phone number";
+  };
+
+  const validatePostalCode = (postalCode: string): string => {
+    if (!postalCode.trim()) {
+      return "";
+    }
+    const postalRegex = /^[0-9]{5}(-[0-9]{4})?$/;
+    return postalRegex.test(postalCode)
+      ? ""
+      : "Please enter a valid postal code (12345 or 12345-6789)";
+  };
+
+  const validateRequired = (value: string, fieldName: string): string => {
+    return value.trim() ? "" : `${fieldName} is required`;
+  };
+
+  const validateEditForm = (): boolean => {
+    const errors = {
+      name: validateRequired(editCardForm.name, "Cardholder name"),
+      email: validateEmail(editCardForm.email),
+      phone: validatePhone(editCardForm.phone),
+      address: {
+        line1: validateRequired(editCardForm.address.line1, "Address line 1"),
+        line2: "",
+        city: validateRequired(editCardForm.address.city, "City"),
+        state: validateRequired(editCardForm.address.state, "State"),
+        postal_code: validatePostalCode(editCardForm.address.postal_code),
+        country: validateRequired(editCardForm.address.country, "Country"),
+      },
+    };
+
+    setEditFormErrors(errors);
+
+    // Check if there are any errors
+    const hasErrors =
+      errors.name ||
+      errors.email ||
+      errors.phone ||
+      errors.address.line1 ||
+      errors.address.city ||
+      errors.address.state ||
+      errors.address.postal_code ||
+      errors.address.country;
+
+    return !hasErrors;
+  };
+
+  const updateEditForm = (field: string, value: string) => {
+    if (field.includes(".")) {
+      const [parent, child] = field.split(".");
+      if (parent === "address") {
+        setEditCardForm((prev) => ({
+          ...prev,
+          address: {
+            ...prev.address,
+            [child]: value,
+          },
+        }));
+        // Clear validation error for this field
+        setEditFormErrors((prev) => ({
+          ...prev,
+          address: {
+            ...prev.address,
+            [child]: "",
+          },
+        }));
+      }
+    } else {
+      setEditCardForm((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+      // Clear validation error for this field
+      setEditFormErrors((prev) => ({
+        ...prev,
+        [field]: "",
+      }));
+    }
+  };
 
   // Check Stripe setup status
   const checkStripeSetupStatus = useCallback(async () => {
@@ -188,16 +498,28 @@ const SavedCards = () => {
 
   const handleCardEdit = (card: PaymentMethod) => {
     setSelectedCard(card);
+
+    // Convert country name to country code if needed
+    const existingCountry = card.billing_details?.address?.country || "";
+    const countryCode =
+      countries.find(
+        (country) =>
+          country.label === existingCountry || country.value === existingCountry
+      )?.value ||
+      existingCountry ||
+      "US";
+
     setEditCardForm({
       name: card.billing_details?.name || "",
       email: card.billing_details?.email || "",
       phone: card.billing_details?.phone || "",
       address: {
         line1: card.billing_details?.address?.line1 || "",
+        line2: card.billing_details?.address?.line2 || "",
         city: card.billing_details?.address?.city || "",
         state: card.billing_details?.address?.state || "",
         postal_code: card.billing_details?.address?.postal_code || "",
-        country: card.billing_details?.address?.country || "US",
+        country: countryCode,
       },
     });
     setEditCardModalOpen(true);
@@ -205,6 +527,12 @@ const SavedCards = () => {
 
   const handleUpdateCard = async () => {
     if (!selectedCard) return;
+
+    // Validate form before proceeding
+    if (!validateEditForm()) {
+      toast.error("Please fix the validation errors before saving");
+      return;
+    }
 
     try {
       const response = await paymentService.updatePaymentMethod(
@@ -214,6 +542,34 @@ const SavedCards = () => {
       if (response.success) {
         toast.success("Card updated successfully");
         setEditCardModalOpen(false);
+        setSelectedCard(null);
+        // Clear form and errors
+        setEditCardForm({
+          name: "",
+          email: "",
+          phone: "",
+          address: {
+            line1: "",
+            line2: "",
+            city: "",
+            state: "",
+            postal_code: "",
+            country: "US",
+          },
+        });
+        setEditFormErrors({
+          name: "",
+          email: "",
+          phone: "",
+          address: {
+            line1: "",
+            line2: "",
+            city: "",
+            state: "",
+            postal_code: "",
+            country: "",
+          },
+        });
         loadSavedCards();
       } else {
         toast.error(response.message);
@@ -783,105 +1139,206 @@ const SavedCards = () => {
 
       {/* Edit Card Modal */}
       <Dialog open={editCardModalOpen} onOpenChange={setEditCardModalOpen}>
-        <DialogContent className="bg-black border-gray-700 text-white max-w-md">
+        <DialogContent className="bg-black border-gray-700 text-white max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Card Details</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {selectedCard && (
+              <div className="text-center mb-4 p-3 bg-gray-800 rounded-lg">
+                <p className="text-sm text-gray-300">
+                  {selectedCard.card?.brand?.toUpperCase()} ••••{" "}
+                  {selectedCard.card?.last4}
+                </p>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium mb-2">
-                Cardholder Name
+                Cardholder Name *
               </label>
               <Input
                 value={editCardForm.name}
-                onChange={(e) =>
-                  setEditCardForm((prev) => ({ ...prev, name: e.target.value }))
-                }
+                onChange={(e) => updateEditForm("name", e.target.value)}
                 placeholder="Name on card"
-                className="bg-gray-800 border-gray-700 text-white"
+                className={`bg-gray-800 border-gray-700 text-white ${
+                  editFormErrors.name ? "border-red-500" : ""
+                }`}
               />
+              {editFormErrors.name && (
+                <p className="text-red-500 text-xs mt-1">
+                  {editFormErrors.name}
+                </p>
+              )}
             </div>
+
             <div>
               <label className="block text-sm font-medium mb-2">Email</label>
               <Input
                 value={editCardForm.email}
-                onChange={(e) =>
-                  setEditCardForm((prev) => ({
-                    ...prev,
-                    email: e.target.value,
-                  }))
-                }
+                onChange={(e) => updateEditForm("email", e.target.value)}
                 placeholder="Email address"
                 type="email"
-                className="bg-gray-800 border-gray-700 text-white"
+                className={`bg-gray-800 border-gray-700 text-white ${
+                  editFormErrors.email ? "border-red-500" : ""
+                }`}
               />
+              {editFormErrors.email && (
+                <p className="text-red-500 text-xs mt-1">
+                  {editFormErrors.email}
+                </p>
+              )}
             </div>
+
             <div>
               <label className="block text-sm font-medium mb-2">Phone</label>
               <Input
                 value={editCardForm.phone}
-                onChange={(e) =>
-                  setEditCardForm((prev) => ({
-                    ...prev,
-                    phone: e.target.value,
-                  }))
-                }
+                onChange={(e) => updateEditForm("phone", e.target.value)}
                 placeholder="Phone number"
-                className="bg-gray-800 border-gray-700 text-white"
+                className={`bg-gray-800 border-gray-700 text-white ${
+                  editFormErrors.phone ? "border-red-500" : ""
+                }`}
               />
+              {editFormErrors.phone && (
+                <p className="text-red-500 text-xs mt-1">
+                  {editFormErrors.phone}
+                </p>
+              )}
             </div>
+
             <div>
               <label className="block text-sm font-medium mb-2">Address</label>
               <Input
                 value={editCardForm.address.line1}
                 onChange={(e) =>
-                  setEditCardForm((prev) => ({
-                    ...prev,
-                    address: { ...prev.address, line1: e.target.value },
-                  }))
+                  updateEditForm("address.line1", e.target.value)
                 }
-                placeholder="Street address"
+                placeholder="Address Line 1 *"
+                className={`bg-gray-800 border-gray-700 text-white mb-2 ${
+                  editFormErrors.address.line1 ? "border-red-500" : ""
+                }`}
+              />
+              {editFormErrors.address.line1 && (
+                <p className="text-red-500 text-xs mt-1 mb-2">
+                  {editFormErrors.address.line1}
+                </p>
+              )}
+
+              <Input
+                value={editCardForm.address.line2}
+                onChange={(e) =>
+                  updateEditForm("address.line2", e.target.value)
+                }
+                placeholder="Address Line 2 (Optional)"
                 className="bg-gray-800 border-gray-700 text-white mb-2"
               />
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  value={editCardForm.address.city}
-                  onChange={(e) =>
-                    setEditCardForm((prev) => ({
-                      ...prev,
-                      address: { ...prev.address, city: e.target.value },
-                    }))
-                  }
-                  placeholder="City"
-                  className="bg-gray-800 border-gray-700 text-white"
-                />
-                <Input
-                  value={editCardForm.address.state}
-                  onChange={(e) =>
-                    setEditCardForm((prev) => ({
-                      ...prev,
-                      address: { ...prev.address, state: e.target.value },
-                    }))
-                  }
-                  placeholder="State"
-                  className="bg-gray-800 border-gray-700 text-white"
-                />
+
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <div>
+                  <Input
+                    value={editCardForm.address.city}
+                    onChange={(e) =>
+                      updateEditForm("address.city", e.target.value)
+                    }
+                    placeholder="City *"
+                    className={`bg-gray-800 border-gray-700 text-white ${
+                      editFormErrors.address.city ? "border-red-500" : ""
+                    }`}
+                  />
+                  {editFormErrors.address.city && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {editFormErrors.address.city}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Input
+                    value={editCardForm.address.state}
+                    onChange={(e) =>
+                      updateEditForm("address.state", e.target.value)
+                    }
+                    placeholder="State *"
+                    className={`bg-gray-800 border-gray-700 text-white ${
+                      editFormErrors.address.state ? "border-red-500" : ""
+                    }`}
+                  />
+                  {editFormErrors.address.state && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {editFormErrors.address.state}
+                    </p>
+                  )}
+                </div>
               </div>
-              <Input
-                value={editCardForm.address.postal_code}
-                onChange={(e) =>
-                  setEditCardForm((prev) => ({
-                    ...prev,
-                    address: { ...prev.address, postal_code: e.target.value },
-                  }))
-                }
-                placeholder="ZIP code"
-                className="bg-gray-800 border-gray-700 text-white mt-2"
-              />
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Input
+                    value={editCardForm.address.postal_code}
+                    onChange={(e) =>
+                      updateEditForm("address.postal_code", e.target.value)
+                    }
+                    placeholder="ZIP Code"
+                    className={`bg-gray-800 border-gray-700 text-white ${
+                      editFormErrors.address.postal_code ? "border-red-500" : ""
+                    }`}
+                  />
+                  {editFormErrors.address.postal_code && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {editFormErrors.address.postal_code}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Select
+                    value={editCardForm.address.country}
+                    onValueChange={(value) =>
+                      updateEditForm("address.country", value)
+                    }
+                  >
+                    <SelectTrigger
+                      className={`bg-gray-800 border-gray-700 text-white ${
+                        editFormErrors.address.country ? "border-red-500" : ""
+                      }`}
+                    >
+                      <SelectValue placeholder="Country *" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-700 max-h-60">
+                      {countries.map((country) => (
+                        <SelectItem key={country.value} value={country.value}>
+                          {country.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {editFormErrors.address.country && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {editFormErrors.address.country}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
+
             <div className="flex gap-3 pt-4">
               <Button
-                onClick={() => setEditCardModalOpen(false)}
+                onClick={() => {
+                  setEditCardModalOpen(false);
+                  // Clear validation errors when closing modal
+                  setEditFormErrors({
+                    name: "",
+                    email: "",
+                    phone: "",
+                    address: {
+                      line1: "",
+                      line2: "",
+                      city: "",
+                      state: "",
+                      postal_code: "",
+                      country: "",
+                    },
+                  });
+                }}
                 variant="outline"
                 className="flex-1"
               >
