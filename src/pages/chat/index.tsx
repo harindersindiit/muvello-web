@@ -1063,7 +1063,8 @@ const GroupChatUI = () => {
 
     console.log("Setting up socket event listeners for chat");
 
-    socket.on("connect", () => {
+    // Define event handlers
+    const handleConnect = () => {
       console.log("Connected to socket server", socket.id);
       // When socket reconnects, rejoin current room if any
       if (selectedGroup?._id) {
@@ -1079,63 +1080,108 @@ const GroupChatUI = () => {
         );
         joinRoom(selectedUser._id);
       }
-    });
+    };
 
-    socket.on(`${CHAT_EVENTS.GROUP}.receive_message`, (data) => {
+    const handleGroupReceiveMessage = (data) => {
       setChatMessages((prev) => [...prev, data[0]]);
       getMyGroups();
-    });
+    };
 
-    socket.on(`${CHAT_EVENTS.DIRECT}.receive_message`, (data) => {
+    const handleDirectReceiveMessage = (data) => {
       setChatMessages((prev) => [...prev, data]);
       getSingleChats();
-    });
+    };
 
-    socket.on(`${CHAT_EVENTS.GROUP}.updated`, (data) => {
+    const handleGroupUpdated = (data) => {
       console.log("CHAT_EVENTS.GROUP");
       getMyGroups();
-    });
+    };
 
-    socket.on(`${CHAT_EVENTS.DIRECT}.new_request`, (data) => {
+    const handleDirectNewRequest = (data) => {
       getMessageRequests();
-    });
+    };
 
-    socket.on("user_online", (userId) => {
+    const handleUserOnline = (userId) => {
       console.log("User is online", userId);
       setOnlineUsers((prev) => [...new Set([...prev, userId])]);
-    });
+    };
 
-    socket.on("online_users", (users) => {
+    const handleOnlineUsers = (users) => {
       console.log("online_users", users);
       setOnlineUsers(users);
-    });
+    };
 
-    socket.on("user_offline", (userId) => {
+    const handleUserOffline = (userId) => {
       setOnlineUsers((prev) => prev.filter((id) => id !== userId));
-    });
+    };
 
-    socket.on("typing", ({ fromUserId, conversation_id }) => {
+    const handleTyping = ({ fromUserId, conversation_id }) => {
       console.log("Typing", fromUserId, conversation_id);
       if (selectedUser && conversation_id == selectedUser._id) {
         setTypingStatus(fromUserId);
       }
-    });
+    };
 
-    socket.on("stop_typing", ({ fromUserId, conversation_id }) => {
+    const handleStopTyping = ({ fromUserId, conversation_id }) => {
       if (selectedUser && conversation_id == selectedUser._id) {
         setTypingStatus(null);
       }
-    });
+    };
+
+    // Remove all existing listeners first to prevent duplicates
+    socket.off("connect", handleConnect);
+    socket.off(
+      `${CHAT_EVENTS.GROUP}.receive_message`,
+      handleGroupReceiveMessage
+    );
+    socket.off(
+      `${CHAT_EVENTS.DIRECT}.receive_message`,
+      handleDirectReceiveMessage
+    );
+    socket.off(`${CHAT_EVENTS.GROUP}.updated`, handleGroupUpdated);
+    socket.off(`${CHAT_EVENTS.DIRECT}.new_request`, handleDirectNewRequest);
+    socket.off("user_online", handleUserOnline);
+    socket.off("online_users", handleOnlineUsers);
+    socket.off("user_offline", handleUserOffline);
+    socket.off("typing", handleTyping);
+    socket.off("stop_typing", handleStopTyping);
+
+    // Add event listeners
+    socket.on("connect", handleConnect);
+    socket.on(
+      `${CHAT_EVENTS.GROUP}.receive_message`,
+      handleGroupReceiveMessage
+    );
+    socket.on(
+      `${CHAT_EVENTS.DIRECT}.receive_message`,
+      handleDirectReceiveMessage
+    );
+    socket.on(`${CHAT_EVENTS.GROUP}.updated`, handleGroupUpdated);
+    socket.on(`${CHAT_EVENTS.DIRECT}.new_request`, handleDirectNewRequest);
+    socket.on("user_online", handleUserOnline);
+    socket.on("online_users", handleOnlineUsers);
+    socket.on("user_offline", handleUserOffline);
+    socket.on("typing", handleTyping);
+    socket.on("stop_typing", handleStopTyping);
 
     return () => {
       console.log("Cleaning up socket event listeners");
-      socket.off(`${CHAT_EVENTS.GROUP}.receive_message`);
-      socket.off(`${CHAT_EVENTS.GROUP}.updated`);
-      socket.off("online_users");
-      socket.off("user_online");
-      socket.off("user_offline");
-      socket.off("typing");
-      socket.off("stop_typing");
+      socket.off("connect", handleConnect);
+      socket.off(
+        `${CHAT_EVENTS.GROUP}.receive_message`,
+        handleGroupReceiveMessage
+      );
+      socket.off(
+        `${CHAT_EVENTS.DIRECT}.receive_message`,
+        handleDirectReceiveMessage
+      );
+      socket.off(`${CHAT_EVENTS.GROUP}.updated`, handleGroupUpdated);
+      socket.off(`${CHAT_EVENTS.DIRECT}.new_request`, handleDirectNewRequest);
+      socket.off("user_online", handleUserOnline);
+      socket.off("online_users", handleOnlineUsers);
+      socket.off("user_offline", handleUserOffline);
+      socket.off("typing", handleTyping);
+      socket.off("stop_typing", handleStopTyping);
     };
   }, [socket, selectedGroup, selectedUser]);
 
@@ -1473,7 +1519,7 @@ const GroupChatUI = () => {
       <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
         <div className="flex items-center space-x-2 mb-4">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Connecting to chat server...</span>
+          <span>Loading the chats...</span>
         </div>
       </div>
     );
