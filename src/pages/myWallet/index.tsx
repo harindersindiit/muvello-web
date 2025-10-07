@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DrawerSidebar } from "@/components/customcomponents/DrawerSidebar";
+import { CustomModal } from "@/components/customcomponents/CustomModal";
 import { IMAGES } from "@/contants/images";
 import { Icon } from "@iconify/react";
 import { toast } from "react-toastify";
@@ -61,6 +62,11 @@ const UserWallet = () => {
   // Modal states
   const [openDrawer, setOpenDrawer] = useState(false);
   const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
+  const [noPendingPayoutsModal, setNoPendingPayoutsModal] = useState(false);
+  const [stripeSetupModal, setStripeSetupModal] = useState(false);
+  const [bankAccountModal, setBankAccountModal] = useState(false);
+  const [guidanceModal, setGuidanceModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
 
   // Filter states
   const [selectedFilters, setSelectedFilters] = useState({
@@ -221,9 +227,10 @@ const UserWallet = () => {
       withdrawalEligibility.stripeSetupComplete &&
       withdrawalEligibility.hasStripeBankAccounts
     ) {
-      alert(
+      setModalMessage(
         "You have no pending payouts available for withdrawal. You need to earn money from workout sales before you can withdraw funds."
       );
+      setNoPendingPayoutsModal(true);
       return;
     }
 
@@ -253,16 +260,17 @@ const UserWallet = () => {
 
     // Determine action based on what's needed
     if (needsStripeSetup) {
-      alert(
+      setModalMessage(
         message +
           "\n\nPlease complete your Stripe Connect setup on the mobile app to enable withdrawals."
       );
+      setStripeSetupModal(true);
     } else if (needsBankAccount) {
-      if (confirm(message + "\n\nWould you like to add a bank account now?")) {
-        window.location.href = "/user/saved-cards";
-      }
+      setModalMessage(message);
+      setBankAccountModal(true);
     } else {
-      alert(message);
+      setModalMessage(message);
+      setGuidanceModal(true);
     }
   };
 
@@ -394,7 +402,10 @@ const UserWallet = () => {
                   withdrawalEligibility.hasStripeBankAccounts
                 ) {
                   // User is fully set up but has no funds
-                  toast.error("No pending payouts available for withdrawal");
+                  setModalMessage(
+                    "No pending payouts available for withdrawal"
+                  );
+                  setNoPendingPayoutsModal(true);
                 } else {
                   showWithdrawalGuidance();
                 }
@@ -686,6 +697,79 @@ const UserWallet = () => {
           )}
         </div>
       </div>
+
+      {/* Custom Modals */}
+      <CustomModal
+        title="No Pending Payouts"
+        open={noPendingPayoutsModal}
+        setOpen={setNoPendingPayoutsModal}
+        onSubmit={() => setNoPendingPayoutsModal(false)}
+        submitText="OK"
+        dialogHeader={true}
+        showCancelButton={false}
+      >
+        <div className="text-white text-center mb-3">
+          <p className="text-grey text-sm">{modalMessage}</p>
+        </div>
+      </CustomModal>
+
+      <CustomModal
+        title="Stripe Setup Required"
+        open={stripeSetupModal}
+        setOpen={setStripeSetupModal}
+        onSubmit={() => setStripeSetupModal(false)}
+        submitText="OK"
+        dialogHeader={true}
+        showCancelButton={false}
+        // disabled={true}
+      >
+        <div className="text-white text-center mb-3">
+          <p className="text-grey text-sm whitespace-pre-line">
+            {modalMessage}
+          </p>
+        </div>
+      </CustomModal>
+
+      <CustomModal
+        title="Add Bank Account"
+        open={bankAccountModal}
+        setOpen={setBankAccountModal}
+        onCancel={() => setBankAccountModal(false)}
+        onSubmit={() => {
+          setBankAccountModal(false);
+          window.location.href = "/user/saved-cards";
+        }}
+        cancelText="No"
+        submitText="Yes"
+        dialogHeader={true}
+        showCancelButton={false}
+      >
+        <div className="text-white text-center mb-3">
+          <p className="text-grey text-sm whitespace-pre-line">
+            {modalMessage}
+          </p>
+          <p className="text-white text-sm mt-2">
+            Would you like to add a bank account now?
+          </p>
+        </div>
+      </CustomModal>
+
+      <CustomModal
+        title="Withdrawal Guidance"
+        open={guidanceModal}
+        setOpen={setGuidanceModal}
+        onSubmit={() => setGuidanceModal(false)}
+        submitText="OK"
+        dialogHeader={true}
+        showCancelButton={false}
+        // disabled={true}
+      >
+        <div className="text-white text-center mb-3">
+          <p className="text-grey text-sm whitespace-pre-line">
+            {modalMessage}
+          </p>
+        </div>
+      </CustomModal>
 
       <DrawerSidebar
         openDrawer={openDrawer}

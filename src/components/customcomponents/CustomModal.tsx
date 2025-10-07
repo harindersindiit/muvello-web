@@ -25,6 +25,7 @@ interface CustomModalProps {
   onCancel?: () => void;
   customButtonClass?: string;
   disabled?: boolean;
+  showCancelButton?: boolean;
 }
 
 export function CustomModal({
@@ -41,6 +42,7 @@ export function CustomModal({
   onCancel,
   customButtonClass,
   disabled,
+  showCancelButton = true,
 }: CustomModalProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -60,7 +62,7 @@ export function CustomModal({
         )}
         <div className="relative">{children}</div>
         <DialogFooter>
-          {!disabled && (
+          {!disabled && showCancelButton && (
             <CustomButton
               type="submit"
               className={`w-auto py-4  flex-1 border-1 border-grey bg-transparent text-grey ${customButtonClass}`}
