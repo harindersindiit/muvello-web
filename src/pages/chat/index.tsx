@@ -2118,7 +2118,7 @@ const GroupChatUI = () => {
                     msg.sender_id == user._id ? "justify-end" : "justify-start"
                   }`}
                 >
-                  {msg.text && (
+                  {msg && msg.text && (
                     <div className="flex items-end gap-3">
                       {activeTab === "groups" && (
                         <>
@@ -2131,7 +2131,7 @@ const GroupChatUI = () => {
                                 }
                               />
                               <AvatarFallback>
-                                {msg.sender.fullname}
+                                {msg?.sender?.fullname}
                               </AvatarFallback>
                             </Avatar>
                           )}
@@ -2150,7 +2150,7 @@ const GroupChatUI = () => {
                             <>
                               {msg.sender_id != user._id && (
                                 <h3 className="text-sm font-semibold mb-2 text-green">
-                                  {msg.sender.fullname}
+                                  {msg?.sender?.fullname}
                                 </h3>
                               )}
                               <p className="text-sm mb-0 break-words overflow-wrap-anywhere">
