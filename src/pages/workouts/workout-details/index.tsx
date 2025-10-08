@@ -178,7 +178,7 @@ const WorkoutDetails = () => {
 
       // For paid workouts, check if user has purchased
       const res = await axiosInstance.get(
-        `/payment/workout-access/${state?._id}`,
+        `/payments/workout-access/${state?._id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -419,7 +419,7 @@ const AthletesComparison = () => {
             <ResponsiveContainer width="100%" height={400}>
               <LineChart
                 data={exerciseProgressData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 50 }} // Add margin for better spacing
+                margin={{ top: 20, right: 30, left: 20, bottom: 70 }} // Add margin for better spacing
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                 <XAxis

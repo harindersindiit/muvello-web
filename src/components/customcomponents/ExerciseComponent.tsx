@@ -144,7 +144,7 @@ const ExerciseComponent = ({
           <span
             className={`ml-3 flex-shrink-0 text-xs font-medium ${getTextColor()}`}
           >
-            {label || `${progPercentage}%`}
+            {`${Math.round(progPercentage)}%`}
           </span>
         </div>
       )}

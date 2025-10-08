@@ -422,7 +422,7 @@ export default function Header() {
                             className="flex items-center justify-between hover:bg-white/10 p-2 rounded-lg"
                           >
                             <div
-                              className="flex items-center gap-3"
+                              className="flex items-center gap-3 w-full mr-1"
                               onClick={() =>
                                 saveSearch(user.user_id || user._id)
                               }
@@ -433,9 +433,9 @@ export default function Header() {
                                   IMAGES.placeholderAvatar
                                 }
                                 alt={user.fullname}
-                                className="w-9 h-9 rounded-full object-cover"
+                                className="max-w-9 w-full h-9 rounded-full object-cover"
                               />
-                              <div>
+                              <div className="w-fit">
                                 <p className="text-white text-xs font-medium">
                                   {user.fullname}
                                 </p>
@@ -609,66 +609,68 @@ export default function Header() {
                   </div>
                 )}
 
-                {notifications.map((notif, index) => (
-                  <div
-                    key={notif._id || index}
-                    className={`flex items-start gap-3 mb-4 w-full ${
-                      notif.type === "follow_reject" ? "opacity-50" : ""
-                    } cursor-pointer hover:scale-105 transition-all duration-300 ease-in-out`}
-                  >
-                    <img
-                      src={
-                        notif?.sender_id?.profile_picture ||
-                        IMAGES.placeholderAvatar
-                      }
-                      alt="Notification"
-                      className="w-12 h-12 rounded-full shrink-0 hover:scale-105 transition-all duration-300 ease-in-out"
-                      onClick={() => {
-                        if (notif?.sender_id) {
-                          navigate(`/user/profile`, {
-                            state: { id: notif.sender_id._id },
-                          });
-                          setOpen(false);
+                <div className="h-[calc(100vh-145px)] overflow-y-auto">
+                  {notifications.map((notif, index) => (
+                    <div
+                      key={notif._id || index}
+                      className={`flex items-start gap-3 mb-4 w-full ${
+                        notif.type === "follow_reject" ? "opacity-50" : ""
+                      } cursor-pointer hover:opacity-70 transition-all duration-300 ease-in-out`}
+                    >
+                      <img
+                        src={
+                          notif?.sender_id?.profile_picture ||
+                          IMAGES.placeholderAvatar
                         }
-                      }}
-                    />
-                    <div className="border-b border-gray-600 pb-4 w-full overflow-hidden">
-                      <p className="text-white text-sm leading-snug break-words line-clamp-2">
-                        {notif.message}
-                      </p>
-                      <p className="text-gray-400 text-xs mt-1">
-                        {moment(notif.created_at).fromNow()}
-                      </p>
+                        alt="Notification"
+                        className="w-12 h-12 rounded-full shrink-0 hover:scale-105 transition-all duration-300 ease-in-out"
+                        onClick={() => {
+                          if (notif?.sender_id) {
+                            navigate(`/user/profile`, {
+                              state: { id: notif.sender_id._id },
+                            });
+                            setOpen(false);
+                          }
+                        }}
+                      />
+                      <div className="border-b border-gray-600 pb-4 w-full overflow-hidden">
+                        <p className="text-white text-sm leading-snug break-words line-clamp-2">
+                          {notif.message}
+                        </p>
+                        <p className="text-gray-400 text-xs mt-1">
+                          {moment(notif.created_at).fromNow()}
+                        </p>
 
-                      {notif.type === "follow_request" && (
-                        <div className="flex items-center gap-2 mt-3 justify-end">
-                          <CustomButton
-                            type="button"
-                            text="Decline"
-                            onClick={() =>
-                              handleFollowRequest(
-                                notif.data.request_id,
-                                "reject"
-                              )
-                            }
-                            className="w-[90px] h-[35px] font-medium rounded-[10px] text-red p-0 bg-transparent border border-transparent"
-                          />
-                          <CustomButton
-                            type="button"
-                            text="Accept"
-                            onClick={() =>
-                              handleFollowRequest(
-                                notif.data.request_id,
-                                "accept"
-                              )
-                            }
-                            className="w-[90px] h-[35px] font-medium rounded-[10px] bg-primary text-black border-none p-0"
-                          />
-                        </div>
-                      )}
+                        {notif.type === "follow_request" && (
+                          <div className="flex items-center gap-2 mt-3 justify-end">
+                            <CustomButton
+                              type="button"
+                              text="Decline"
+                              onClick={() =>
+                                handleFollowRequest(
+                                  notif.data.request_id,
+                                  "reject"
+                                )
+                              }
+                              className="w-[90px] h-[35px] font-medium rounded-[10px] text-red p-0 bg-transparent border border-transparent"
+                            />
+                            <CustomButton
+                              type="button"
+                              text="Accept"
+                              onClick={() =>
+                                handleFollowRequest(
+                                  notif.data.request_id,
+                                  "accept"
+                                )
+                              }
+                              className="w-[90px] h-[35px] font-medium rounded-[10px] bg-primary text-black border-none p-0"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
 
                 {notifications.length < total && (
                   <div className="text-center mt-4">
@@ -676,7 +678,7 @@ export default function Header() {
                       type="button"
                       text="Load More"
                       onClick={loadMore}
-                      className="text-white border border-gray-500 px-4 py-1 rounded-md"
+                      className="text-white h-[50px] border border-gray-500 px-4 py-1 rounded-md"
                     />
                   </div>
                 )}

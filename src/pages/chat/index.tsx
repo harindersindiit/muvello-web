@@ -1684,7 +1684,7 @@ const GroupChatUI = () => {
                       return (
                         <div
                           key={i}
-                          className={`flex items-start gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-800/50 transition-all duration-200`}
+                          className={`flex border-b border-gray-700  items-start gap-3 cursor-pointer p-2 py-5 rounded-none hover:bg-gray-800/50 transition-all duration-200`}
                           onClick={() => {
                             // joinRoom(group._id);
                             if (selectedGroup?._id !== group._id) {
@@ -1703,7 +1703,7 @@ const GroupChatUI = () => {
                             className="w-12 h-12 rounded-full object-cover"
                           />
 
-                          <div className="flex-1 border-b border-gray-700 pb-3 mb-7">
+                          <div className="flex-1">
                             <div className="flex justify-between items-center">
                               <h3
                                 className={`font-normal mb-1 text-sm ${
@@ -1789,7 +1789,7 @@ const GroupChatUI = () => {
                             // setActiveUserId(singleChat._id);
                             // setChatMessages(messages);
                           }}
-                          className={`flex items-start gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-800/50 transition-all duration-200`}
+                          className={`flex border-b border-gray-700 items-start gap-3 cursor-pointer p-2 py-5 rounded-none hover:bg-gray-800/50 transition-all duration-200`}
                         >
                           <img
                             src={
@@ -1799,7 +1799,7 @@ const GroupChatUI = () => {
                             alt={getOtherUser.fullname}
                             className="w-12 h-12 rounded-full object-cover"
                           />
-                          <div className="flex-1 border-b border-gray-700 pb-3 mb-7">
+                          <div className="flex-1">
                             <div className="flex justify-between items-center">
                               <h3
                                 className={`font-semibold mb-1 text-sm flex-1 pr-2 ${
@@ -1888,7 +1888,7 @@ const GroupChatUI = () => {
                             // setActiveUserId(request._id);
                             // setChatMessages(messages);
                           }}
-                          className={`flex items-start gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-800/50 transition-all duration-200`}
+                          className={`flex border-b border-gray-700 items-start gap-3 cursor-pointer p-2 py-5 rounded-none hover:bg-gray-800/50 transition-all duration-200`}
                         >
                           <img
                             src={
@@ -1898,7 +1898,7 @@ const GroupChatUI = () => {
                             alt={request.initiatorDetails.fullname}
                             className="w-12 h-12 rounded-full object-cover"
                           />
-                          <div className="flex-1 border-b border-gray-700 pb-3 mb-7">
+                          <div className="flex-1">
                             <div className="flex justify-between items-center">
                               <h3
                                 className={`font-semibold mb-1 text-sm ${
