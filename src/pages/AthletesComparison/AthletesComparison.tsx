@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   LineChart,
   Line,
@@ -12,7 +12,7 @@ import {
   Legend,
 } from "recharts";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { IMAGES } from "@/contants/images";
 import { useLocation, useNavigate } from "react-router-dom";
 import localStorageService from "@/utils/localStorageService";
@@ -51,11 +51,40 @@ const AthletesComparison = () => {
   const [selectedAthletes, setSelectedAthletes] = useState([]);
   const navigate = useNavigate();
   const { state } = useLocation();
+
+  /////// ==== progress === ///
+  const [allAthletesData, setAllAthletesData] = useState([]);
+
+  const getProgress = useCallback(async () => {
+    try {
+      setLoading(true);
+      const token = localStorageService.getItem("accessToken");
+
+      const res = await axiosInstance.get(
+        `/workout/progress/${state?.workout_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setAllAthletesData(res.data.body);
+    } catch (error: unknown) {
+      const message =
+        (error as any)?.response?.data?.error || "Internal Server Error.";
+      toast.error(message);
+    } finally {
+      setShowPopup(true);
+      setLoading(false);
+    }
+  }, [state?.workout_id]);
+
   useEffect(() => {
     getProgress();
     document.body.classList.add("custom-override");
     return () => document.body.classList.remove("custom-override");
-  }, []);
+  }, [getProgress]);
 
   const handleCheckboxChange = (athleteId: number) => {
     if (selectedAthletesTemp.includes(athleteId)) {
@@ -79,33 +108,6 @@ const AthletesComparison = () => {
     setSearchText("");
   };
 
-  /////// ==== progress === ///
-  const [allAthletesData, setAllAthletesData] = useState([]);
-
-  const getProgress = async () => {
-    try {
-      setLoading(true);
-      const token = localStorageService.getItem("accessToken");
-
-      const res = await axiosInstance.get(
-        `/workout/progress/${state?.workout_id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setAllAthletesData(res.data.body);
-    } catch (error: any) {
-      const message = error?.response?.data?.error || "Internal Server Error.";
-      toast.error(message);
-    } finally {
-      setShowPopup(true);
-      setLoading(false);
-    }
-  };
-
   const [exerciseWeek, setExerciseWeek] = useState(1);
   const [weightWeek, setWeightWeek] = useState(1);
 
@@ -115,6 +117,66 @@ const AthletesComparison = () => {
 
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
+
+  // Process chart data from the new API structure
+  const processChartData = useCallback(
+    (apiData: any, exerciseWeekNum: number) => {
+      if (!apiData || Object.keys(apiData).length === 0) return;
+
+      // Process exercise progress data
+      const exerciseData: any[] = [];
+      const weightData: any[] = [];
+
+      // Get all unique days for the selected week across all users
+      const allDays = new Set();
+      Object.values(apiData).forEach((userData: any) => {
+        const weekData = userData.find(
+          (week: any) => week.week === exerciseWeekNum
+        );
+        if (weekData) {
+          weekData.days.forEach((day: any) => allDays.add(day.day));
+        }
+      });
+
+      // Create data points for each day
+      Array.from(allDays)
+        .sort()
+        .forEach((dayNum) => {
+          const exerciseDayData = { name: `Day ${dayNum}` };
+          const weightDayData = { name: `Day ${dayNum}` };
+
+          // Add data for each selected athlete
+          selectedAthletes.forEach((userId) => {
+            const userData = apiData[userId];
+            if (userData) {
+              const weekData = userData.find(
+                (week) => week.week === exerciseWeekNum
+              );
+              if (weekData) {
+                const dayData = weekData.days.find((day) => day.day === dayNum);
+                if (dayData) {
+                  exerciseDayData[userId] = dayData.completed_exercises || 0;
+                  weightDayData[userId] = parseFloat(dayData.weight_value) || 0;
+                } else {
+                  exerciseDayData[userId] = 0;
+                  weightDayData[userId] = 0;
+                }
+              } else {
+                exerciseDayData[userId] = 0;
+                weightDayData[userId] = 0;
+              }
+            }
+          });
+
+          exerciseData.push(exerciseDayData);
+          weightData.push(weightDayData);
+        });
+
+      setExerciseProgressData(exerciseData);
+      setWeightProgressData(weightData);
+    },
+    [selectedAthletes]
+  );
 
   const getStatistics = async (selectedAthletesTemp) => {
     if (selectedAthletesTemp.length < 2)
@@ -141,23 +203,28 @@ const AthletesComparison = () => {
       const apiData_ = res.data.body.data;
       setApiData(apiData_);
 
-      const options_ = Array.from(
-        { length: apiData_.completedExercises.length },
-        (_, index) => ({
-          label: `Week ${index + 1}`,
-          value: index + 1,
-        })
+      // Get the maximum number of weeks from all users
+      const maxWeeks = Math.max(
+        ...Object.values(apiData_).map((userData: any) =>
+          userData.length > 0
+            ? Math.max(...userData.map((week: any) => week.week))
+            : 0
+        )
       );
+
+      const options_ = Array.from({ length: maxWeeks }, (_, index) => ({
+        label: `Week ${index + 1}`,
+        value: index + 1,
+      }));
 
       setOptions(options_);
 
-      setExerciseProgressData(
-        apiData_.completedExercises[exerciseWeek - 1].days
-      );
-
-      setWeightProgressData(apiData_.weightComparison[weightWeek - 1].days);
-    } catch (error: any) {
-      const message = error?.response?.data?.error || "Internal Server Error.";
+      // Process data for charts
+      processChartData(apiData_, exerciseWeek);
+    } catch (error: unknown) {
+      console.log(error);
+      const message =
+        (error as any)?.response?.data?.error || "Internal Server Error.";
       toast.error(message);
     } finally {
       setSearchText("");
@@ -167,18 +234,10 @@ const AthletesComparison = () => {
   };
 
   useEffect(() => {
-    if (apiData.completedExercises?.length) {
-      setExerciseProgressData(
-        apiData.completedExercises[exerciseWeek - 1].days
-      );
+    if (apiData && Object.keys(apiData).length > 0) {
+      processChartData(apiData, exerciseWeek);
     }
-  }, [exerciseWeek, apiData]);
-
-  useEffect(() => {
-    if (apiData.weightComparison?.length) {
-      setWeightProgressData(apiData.weightComparison[exerciseWeek - 1].days);
-    }
-  }, [weightWeek, apiData]);
+  }, [exerciseWeek, weightWeek, apiData, selectedAthletes, processChartData]);
 
   const filteredFollowers = allAthletesData.filter((item) =>
     item.user.fullname.toLowerCase().includes(searchText.toLowerCase())
@@ -208,7 +267,7 @@ const AthletesComparison = () => {
               <TextInput
                 placeholder="Search by name..."
                 value={searchText}
-                onChange={(e: any) => {
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   setSearchText(e.target.value);
                 }}
                 type="text"
