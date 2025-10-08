@@ -375,7 +375,7 @@ const WorkoutDetails = () => {
                   <img
                     src={IMAGES.editiconimg}
                     alt="Calendar"
-                    className="w-7 h-7 ml-2"
+                    className="w-7 h-7 ml-2 mr-[-6px]"
                   />{" "}
                   {state.updated_at
                     ? moment(state.updated_at).fromNow()

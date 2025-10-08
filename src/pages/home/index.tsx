@@ -342,9 +342,9 @@ const Home = () => {
 
   const onViewProfile = (id) => {
     navigate("/user/profile", {
-      state: {
-        id,
-      },
+      ...(id !== user._id && {
+        state: { id },
+      }),
     });
   };
 
@@ -619,7 +619,7 @@ const Home = () => {
 
                   {/* End of posts message */}
                   {!hasMore && posts.length > 0 && !isFetchingMore && (
-                    <div className="col-span-full flex flex-col items-center justify-center px-4 text-center mt-[-27px] mb-16">
+                    <div className="col-span-full flex flex-col items-center justify-center px-4 text-center mb-16">
                       <div className="w-16 h-16 bg-[#2a2a2a] rounded-full flex items-center justify-center mb-4">
                         <Icon
                           icon="material-symbols:check-circle-outline"

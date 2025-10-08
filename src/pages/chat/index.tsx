@@ -44,6 +44,7 @@ import NoDataPlaceholder from "@/components/ui/nodata";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { reportUserSchema } from "@/utils/validations";
 import { totalWorkoutDuration } from "@/lib/utils";
+
 const AddMembersPopup = ({
   open,
   setOpen,
@@ -69,8 +70,15 @@ const AddMembersPopup = ({
     (follower) => !memberUserIds.includes(follower._id)
   );
 
+  const handleOpenChange = (isOpen) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setSearchText("");
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="bg-[#1f1f1f] border-0 text-white">
         <DialogHeader>
           <DialogTitle>Select New Members</DialogTitle>
@@ -449,6 +457,21 @@ const GroupChatUI = () => {
       toast.success("The member has been added successfully");
       setEditProfile(false);
       setEditErrors({});
+
+      // Update local state immediately for better UX
+      const newMemberObjects = followers
+        .filter((follower) => selectedMembers.includes(follower._id))
+        .map((follower) => ({
+          user_id: follower._id,
+          user: follower,
+          is_admin: false,
+        }));
+
+      setSelectedGroup((prevGroup) => ({
+        ...prevGroup,
+        members: [...prevGroup.members, ...newMemberObjects],
+      }));
+
       getMyGroups(); // Refresh list
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Failed to update group");
@@ -488,6 +511,15 @@ const GroupChatUI = () => {
       toast.success("The member has been removed successfully");
       setEditProfile(false);
       setEditErrors({});
+
+      // Update local state immediately for better UX
+      setSelectedGroup((prevGroup) => ({
+        ...prevGroup,
+        members: prevGroup.members.filter(
+          (member) => member.user_id !== removeMemberId
+        ),
+      }));
+
       getMyGroups(); // Refresh list
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Failed to update group");
@@ -1770,13 +1802,13 @@ const GroupChatUI = () => {
                           <div className="flex-1 border-b border-gray-700 pb-3 mb-7">
                             <div className="flex justify-between items-center">
                               <h3
-                                className={`font-semibold mb-1 text-sm ${
+                                className={`font-semibold mb-1 text-sm flex-1 pr-2 ${
                                   isActive ? "text-lime-400" : "text-white"
                                 }`}
                               >
                                 {truncateText(getOtherUser.fullname)}{" "}
                               </h3>
-                              <span className="text-xs text-grey">
+                              <span className="text-xs text-grey flex-shrink-0">
                                 {singleChat.last_message &&
                                   moment(
                                     singleChat.last_message.created_at

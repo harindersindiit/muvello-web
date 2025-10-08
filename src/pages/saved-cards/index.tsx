@@ -28,6 +28,7 @@ import { Loader2 } from "lucide-react";
 import SavedCardsSkeleton from "@/components/skeletons/SavedCardsSkeleton";
 import StripeProviderWrapper from "@/components/payment/StripeProvider";
 import StripeCardInput from "@/components/payment/StripeCardInput";
+import { CustomModal } from "@/components/customcomponents/CustomModal";
 
 // Country list for dropdown
 const countries = [
@@ -245,6 +246,10 @@ const SavedCards = () => {
   const [addAccountModalOpen, setAddAccountModalOpen] = useState(false);
   const [editCardModalOpen, setEditCardModalOpen] = useState(false);
   const [editAccountModalOpen, setEditAccountModalOpen] = useState(false);
+  const [deleteCardModalOpen, setDeleteCardModalOpen] = useState(false);
+  const [deleteAccountModalOpen, setDeleteAccountModalOpen] = useState(false);
+  const [cardToDelete, setCardToDelete] = useState<string | null>(null);
+  const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
 
   // Form states
   const [selectedCard, setSelectedCard] = useState<PaymentMethod | null>(null);
@@ -464,14 +469,21 @@ const SavedCards = () => {
   };
 
   // Card operations
-  const handleCardDelete = async (cardId: string) => {
-    if (!confirm("Are you sure you want to delete this card?")) return;
+  const handleCardDeleteClick = (cardId: string) => {
+    setCardToDelete(cardId);
+    setDeleteCardModalOpen(true);
+  };
+
+  const handleCardDelete = async () => {
+    if (!cardToDelete) return;
 
     try {
-      const response = await paymentService.deleteCard(cardId);
+      const response = await paymentService.deleteCard(cardToDelete);
       if (response.success) {
         toast.success("Card deleted successfully");
         loadSavedCards();
+        setDeleteCardModalOpen(false);
+        setCardToDelete(null);
       } else {
         toast.error(response.message);
       }
@@ -581,14 +593,21 @@ const SavedCards = () => {
   };
 
   // Bank account operations
-  const handleBankAccountDelete = async (accountId: string) => {
-    if (!confirm("Are you sure you want to delete this bank account?")) return;
+  const handleBankAccountDeleteClick = (accountId: string) => {
+    setAccountToDelete(accountId);
+    setDeleteAccountModalOpen(true);
+  };
+
+  const handleBankAccountDelete = async () => {
+    if (!accountToDelete) return;
 
     try {
-      const response = await paymentService.deleteBankAccount(accountId);
+      const response = await paymentService.deleteBankAccount(accountToDelete);
       if (response.success) {
         toast.success("Bank account deleted successfully");
         loadSavedAccounts();
+        setDeleteAccountModalOpen(false);
+        setAccountToDelete(null);
       } else {
         toast.error(response.message);
       }
@@ -867,7 +886,7 @@ const SavedCards = () => {
                       <Icon
                         icon="ph:trash"
                         className="w-5 h-5 cursor-pointer hover:text-red-500 transition-colors"
-                        onClick={() => handleCardDelete(card.id)}
+                        onClick={() => handleCardDeleteClick(card.id)}
                       />
                     </div>
                   </div>
@@ -1128,7 +1147,7 @@ const SavedCards = () => {
                   <Icon
                     icon="ph:trash"
                     className="w-5 h-5 cursor-pointer hover:text-red-500 transition-colors"
-                    onClick={() => handleBankAccountDelete(account._id)}
+                    onClick={() => handleBankAccountDeleteClick(account._id)}
                   />
                 </div>
               </div>
@@ -1305,7 +1324,11 @@ const SavedCards = () => {
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700 max-h-60">
                       {countries.map((country) => (
-                        <SelectItem key={country.value} value={country.value}>
+                        <SelectItem
+                          key={country.value}
+                          value={country.value}
+                          className="text-white"
+                        >
                           {country.label}
                         </SelectItem>
                       ))}
@@ -1435,6 +1458,73 @@ const SavedCards = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Card Modal */}
+      <CustomModal
+        title="Delete Card"
+        open={deleteCardModalOpen}
+        setOpen={setDeleteCardModalOpen}
+        onCancel={() => {
+          setDeleteCardModalOpen(false);
+          setCardToDelete(null);
+        }}
+        onSubmit={handleCardDelete}
+        submitText="Delete Card"
+        cancelText="Cancel"
+        customButtonClass="!py-6"
+        children={
+          <div className="text-white text-center mb-3">
+            <h3 className="font-semibold text-lg mb-1">Delete Card?</h3>
+            <p className="text-grey text-sm">
+              Are you sure you want to delete this card? This action cannot be
+              undone.
+            </p>
+          </div>
+        }
+      />
+
+      {/* Delete Bank Account Modal */}
+      <CustomModal
+        title="Delete Bank Account"
+        open={deleteAccountModalOpen}
+        setOpen={setDeleteAccountModalOpen}
+        onCancel={() => {
+          setDeleteAccountModalOpen(false);
+          setAccountToDelete(null);
+        }}
+        onSubmit={handleBankAccountDelete}
+        submitText="Delete Account"
+        cancelText="Cancel"
+        customButtonClass="!py-6"
+        children={
+          <div className="text-white text-center mb-3">
+            <h3 className="font-semibold text-lg mb-1">Delete Bank Account?</h3>
+            <p className="text-grey text-sm">
+              Are you sure you want to delete this bank account? This action
+              cannot be undone.
+            </p>
+          </div>
+        }
+      />
+      {/* 
+<CustomModal
+        title=""
+        submitText={deleteLoader ? "Deleting..." : "Yes I’m Sure"}
+        open={deleteExercise}
+        setOpen={setDeleteExercise}
+        onCancel={() => !deleteLoader && setDeleteExercise(false)}
+        onSubmit={() => !deleteLoader && handleDeleteExercise()}
+        customButtonClass="!py-6"
+        children={
+          <div className="text-white text-center mb-3">
+            <h3 className="font-semibold text-lg mb-1">Delete Workout?</h3>
+            <p className="text-grey text-sm">
+              Are you sure you want to delete{" "}
+              <span className="text-white">{editExercise?.title}</span> workout?
+            </p>
+          </div>
+        }
+      /> */}
     </div>
   );
 };

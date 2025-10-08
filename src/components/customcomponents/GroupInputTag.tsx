@@ -200,7 +200,17 @@ const GroupInputTag = ({
             filteredGroups.map((group) => (
               <div
                 key={group._id}
-                className="flex items-center justify-between gap-4 mb-0"
+                className={`flex items-center justify-between gap-4 mb-0 cursor-pointer group-hover:bg-gray-800/40 transition-colors`}
+                onClick={() => toggleGroup(group)}
+                tabIndex={0}
+                role="button"
+                aria-pressed={selectedGroups.some((g) => g._id === group._id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleGroup(group);
+                  }
+                }}
               >
                 <img
                   src={group.group_picture_url || IMAGES.groupPlaceholder}
@@ -219,6 +229,8 @@ const GroupInputTag = ({
                     className="cursor-pointer text-black border-grey hover:border-primary transition-colors"
                     checked={selectedGroups.some((g) => g._id === group._id)}
                     onCheckedChange={() => toggleGroup(group)}
+                    tabIndex={-1} // Prevent double focus
+                    onClick={(e) => e.stopPropagation()} // Prevent parent click
                   />
                 </div>
               </div>

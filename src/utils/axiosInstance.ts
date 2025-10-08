@@ -36,8 +36,8 @@ axiosInstance.interceptors.response.use(
     ) {
       console.log("Redirecting to login due to expired or invalid token");
 
-      // localStorage.clear();
-      // window.location.href = "/auth"; // or "/login" based on your route
+      localStorage.clear();
+      window.location.href = "/auth"; // or "/login" based on your route
     }
 
     return Promise.reject(error);

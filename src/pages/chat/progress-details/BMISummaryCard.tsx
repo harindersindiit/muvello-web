@@ -49,7 +49,17 @@ export default function BMISummaryCard({ state, title, statistics }) {
             <h2 className="font-semibold text-lg leading-5 mb-2">
               {state?.user?.fullname}
             </h2>
-            <p className="text-gray-400 text-sm">{title}</p>
+            <p
+              className="text-gray-400 text-sm break-words whitespace-pre-line"
+              style={{
+                wordBreak: "break-word",
+                maxWidth: 220,
+                maxHeight: 80,
+                overflowY: "auto",
+              }}
+            >
+              {title}
+            </p>
           </div>
           <Button
             className="ml-4 cursor-pointer bg-lime-400 text-black rounded-full px-4 py-1 text-sm font-semibold hover:bg-lime-500 transition"

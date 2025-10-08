@@ -20,7 +20,7 @@ import { contactService } from "@/services/contactService";
 const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
   const navigate = useNavigate();
   const [passwordDrawerOpen, setPasswordDrawerOpen] = useState(false);
-  const toggleNotification = true; // Always open
+  const [toggleNotification, setToggleNotification] = useState(false); // Always open
   const [showPassword, setShowPassword] = useState(false);
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -106,9 +106,17 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
     {
       label: "Notification Settings",
       onClick: () => {
-        // No action needed - always open
+        setToggleNotification(!toggleNotification);
       },
       icon: "gravity-ui:gear",
+    },
+
+    {
+      label: "Contact Us",
+      onClick: () => {
+        setContactDrawerOpen(true);
+      },
+      icon: "flowbite:messages-outline",
     },
     {
       label: "About Us",
@@ -117,13 +125,6 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
         navigate("/public/about-muvello");
       },
       icon: "si:info-line",
-    },
-    {
-      label: "Contact Us",
-      onClick: () => {
-        setContactDrawerOpen(true);
-      },
-      icon: "flowbite:messages-outline",
     },
     {
       label: "Terms and Conditions",
@@ -263,10 +264,14 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
                   </p>
                 </div>
 
-                {item.label === "Logout" ||
-                item.label === "Notification Settings" ? null : (
+                {item.label === "Logout" ? null : (
                   <Icon
-                    icon="icon-park-outline:right"
+                    icon={
+                      item.label === "Notification Settings" &&
+                      toggleNotification
+                        ? "icon-park-outline:down"
+                        : "icon-park-outline:right"
+                    }
                     color={"white"}
                     className="w-6 h-6"
                   />
@@ -276,7 +281,8 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
               {item.label === "Notification Settings" && toggleNotification && (
                 <div className="bg-white/10 rounded-xl mt-6">
                   <div
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setPushNotification(!pushNotification);
                       setTimeout(() => {
                         updateInfo("push", !pushNotification);
@@ -299,7 +305,8 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
                     />
                   </div>
                   <div
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setEmailNotification(!emailNotification);
                       updateInfo("email", !emailNotification);
                     }}

@@ -436,6 +436,7 @@ const CreateWorkout = () => {
       }
 
       console.log(payload);
+      // return;
 
       if (editingWorkout) {
         const res = await axiosInstance.put(

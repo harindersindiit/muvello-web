@@ -15,12 +15,10 @@ const TermsAndConditions = () => {
     setLoader(true);
 
     try {
-      const res = await axiosInstance.get(
-        `cms/terms-conditions`
-      );
+      const res = await axiosInstance.get(`cms/terms-conditions`);
 
       const cms = res.data.body;
-      setData(cms)
+      setData(cms);
     } catch (error: any) {
       toast.error(error?.response?.data?.error || "Failed to fetch posts.");
     } finally {
@@ -29,8 +27,8 @@ const TermsAndConditions = () => {
   };
   useEffect(() => {
     getCms();
-  }, [])
-  if(loader) return <FullScreenLoader/>
+  }, []);
+  if (loader) return <FullScreenLoader />;
   return (
     <div className="text-white my-6 mb-0 pb-9 px-1">
       <div className="w-full mb-4 grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 grid-rows-[auto] gap-4">
@@ -49,11 +47,10 @@ const TermsAndConditions = () => {
         </div>
       </div>
 
-      <h6 className="text-white text-2xl font-bold mb-2">
-        Nemo enim ipsam voluptatem
-      </h6>
-      <div className="policy-content" dangerouslySetInnerHTML={{ __html: data?.content }} />
-  
+      <div
+        className="policy-content"
+        dangerouslySetInnerHTML={{ __html: data?.content }}
+      />
     </div>
   );
 };

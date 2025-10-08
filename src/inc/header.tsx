@@ -491,7 +491,7 @@ export default function Header() {
               {/* Avatar */}
               <Avatar
                 onClick={() => setUserPanelOpen(true)}
-                className="cursor-pointer"
+                className="cursor-pointer w-[40px] h-[40px]"
               >
                 <AvatarImage
                   src={user?.profile_picture || IMAGES.placeholderAvatar}
@@ -505,7 +505,7 @@ export default function Header() {
               {/* Avatar */}
               <Avatar
                 onClick={() => setUserPanelOpen(true)}
-                className="cursor-pointer lg:hidden"
+                className="cursor-pointer lg:hidden w-[40px] h-[40px]"
               >
                 <AvatarImage
                   src={user?.profile_picture || IMAGES.placeholderAvatar}

@@ -42,6 +42,7 @@ const COLORS = [
 
 const AthletesComparison = () => {
   const [exerciseProgressData, setExerciseProgressData] = useState([]);
+  const [onceConfirm, setOnceConfirm] = useState(false);
 
   const [weightProgressData, setWeightProgressData] = useState([]);
 
@@ -69,7 +70,7 @@ const AthletesComparison = () => {
   };
 
   const handleCancelSelection = () => {
-    if (selectedAthletesTemp.length === 0) {
+    if (!onceConfirm) {
       navigate(-1);
       return;
     }
@@ -120,6 +121,7 @@ const AthletesComparison = () => {
       return toast.error("Select at least 2 athletes");
     setSelectedAthletes(selectedAthletesTemp);
 
+    setOnceConfirm(true);
     setLoading(true);
     try {
       const token = localStorageService.getItem("accessToken");

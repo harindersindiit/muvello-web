@@ -210,10 +210,9 @@ const PostCard: React.FC<PostCardProps> = ({
       {/* Header */}
       <div className=" relative">
         <div className="flex justify-between items-center absolute top-0 left-0 right-0 p-3 z-10">
-          <Link
-            to="/user/profile"
-            state={{ id: item.user_id }}
-            className="flex items-center gap-3"
+          <div
+            className="flex items-center gap-3 cursor-pointer"
+            onClick={() => onViewProfile(item.user._id)}
           >
             <Avatar className=" w-[50px] h-[50px] overflow-hidden">
               <AvatarImage
@@ -230,7 +229,7 @@ const PostCard: React.FC<PostCardProps> = ({
                 {moment(item.created_at).fromNow()}
               </span>
             </div>
-          </Link>
+          </div>
 
           {item.user_id !== user._id && (
             <>

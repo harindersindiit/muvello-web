@@ -805,7 +805,7 @@ const UserProfile = () => {
                       {/* Name & Follower Count */}
                       <div>
                         <p
-                          className="text-white text-sm font-medium mb-1 cursor-pointer transition-all duration-200 hover:text-primary hover:underline"
+                          className="text-white text-sm font-medium mb-1 cursor-pointer transition-all duration-200 hover:text-primary"
                           onClick={() => {
                             setOpenDrawer(false);
                             navigate("/user/profile/", {

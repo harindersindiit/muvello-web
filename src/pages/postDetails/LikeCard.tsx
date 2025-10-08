@@ -47,7 +47,7 @@ const LikeCard = ({ details }: { details: any }) => {
           </p>
         </Link>
 
-        {user._id !== details?._id && (
+        {user._id !== details?._id && followStatus !== "Follow" && (
           <button
             className={`text-xs font-semibold py-2 mr-5 rounded-full transition-all cursor-pointer 
               ${

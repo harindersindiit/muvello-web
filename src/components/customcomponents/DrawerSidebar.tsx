@@ -50,6 +50,7 @@ export function DrawerSidebar({
         onPointerDownOutside={(event) => {
           event.preventDefault();
         }}
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader className="border-b border-gray-800">
@@ -58,7 +59,10 @@ export function DrawerSidebar({
                 src={IMAGES.arrowLeft}
                 alt="arrowLeft"
                 className="w-6 h-6 cursor-pointer"
-                onClick={() => setOpen?.(false)}
+                onClick={() => {
+                  setOpen?.(false);
+                  onCancel();
+                }}
               />
               {title}
               {showCreateButton && (

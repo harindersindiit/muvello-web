@@ -109,7 +109,7 @@ const CommentCard = ({
 
         {/* Toggle reply box */}
         <p
-          className="text-xs text-gray-400 mt-1 cursor-pointer"
+          className="text-xs text-gray-400 mt-1 cursor-pointer w-fit hover:text-primary"
           onClick={() => setShowReplyBox((prev) => !prev)}
         >
           Reply
@@ -150,7 +150,7 @@ const CommentCard = ({
           <>
             <p
               onClick={toggleReplies}
-              className="text-xs text-grey mt-2 cursor-pointer"
+              className="text-xs text-grey mt-2 cursor-pointer w-fit"
             >
               {showReplies
                 ? "---- Hide replies"

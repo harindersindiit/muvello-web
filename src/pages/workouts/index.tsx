@@ -179,38 +179,93 @@ const Workouts = () => {
                 sideOffset={10}
               >
                 <DropdownMenuItem
-                  className="text-white hover:text-primary mb-2"
+                  className={`text-white hover:text-primary mb-2 ${
+                    selectedFilter === "All" ? "bg-primary/20" : ""
+                  }`}
                   onClick={() => setSelectedFilter("All")}
                 >
-                  <span className="flex items-center gap-2">All</span>
+                  <span className="flex items-center gap-2">
+                    All
+                    {selectedFilter === "All" && (
+                      <Icon
+                        icon="material-symbols:check"
+                        style={{ width: "16px", height: "16px" }}
+                        className="text-primary"
+                      />
+                    )}
+                  </span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
-                  className="text-white hover:text-primary mb-2"
+                  className={`text-white hover:text-primary mb-2 ${
+                    selectedFilter === "Free" ? "bg-primary/20" : ""
+                  }`}
                   onClick={() => setSelectedFilter("Free")}
                 >
-                  <span className="flex items-center gap-2">Free</span>
+                  <span className="flex items-center gap-2">
+                    Free
+                    {selectedFilter === "Free" && (
+                      <Icon
+                        icon="material-symbols:check"
+                        style={{ width: "16px", height: "16px" }}
+                        className="text-primary"
+                      />
+                    )}
+                  </span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
-                  className="text-white hover:text-primary mb-2"
+                  className={`text-white hover:text-primary mb-2 ${
+                    selectedFilter === "Paid" ? "bg-primary/20" : ""
+                  }`}
                   onClick={() => setSelectedFilter("Paid")}
                 >
-                  <span className="flex items-center gap-2">Paid</span>
+                  <span className="flex items-center gap-2">
+                    Paid
+                    {selectedFilter === "Paid" && (
+                      <Icon
+                        icon="material-symbols:check"
+                        style={{ width: "16px", height: "16px" }}
+                        className="text-primary"
+                      />
+                    )}
+                  </span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
-                  className="text-white hover:text-primary mb-2"
+                  className={`text-white hover:text-primary mb-2 ${
+                    selectedFilter === "Private" ? "bg-primary/20" : ""
+                  }`}
                   onClick={() => setSelectedFilter("Private")}
                 >
-                  <span className="flex items-center gap-2">Private</span>
+                  <span className="flex items-center gap-2">
+                    Private
+                    {selectedFilter === "Private" && (
+                      <Icon
+                        icon="material-symbols:check"
+                        style={{ width: "16px", height: "16px" }}
+                        className="text-primary"
+                      />
+                    )}
+                  </span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
-                  className="text-white hover:text-primary"
+                  className={`text-white hover:text-primary ${
+                    selectedFilter === "Draft" ? "bg-primary/20" : ""
+                  }`}
                   onClick={() => setSelectedFilter("Draft")}
                 >
-                  <span className="flex items-center gap-2">Draft</span>
+                  <span className="flex items-center gap-2">
+                    Draft
+                    {selectedFilter === "Draft" && (
+                      <Icon
+                        icon="material-symbols:check"
+                        style={{ width: "16px", height: "16px" }}
+                        className="text-primary"
+                      />
+                    )}
+                  </span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

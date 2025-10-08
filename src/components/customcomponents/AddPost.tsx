@@ -86,6 +86,7 @@ const AddPost = ({
         },
       });
 
+      console.log(res.data.body.workoutCategories);
       setPrefernces(res.data.body.workoutCategories);
     } catch (error: any) {
       const message = error?.response?.data?.error || "Internal Server Error.";
@@ -402,6 +403,7 @@ const AddPost = ({
                 options={preferences.map((item) => ({
                   label: item.title,
                   value: item._id,
+                  icon: item.icon,
                 }))}
               />
               {errors.workout_category && touched.workout_category && (

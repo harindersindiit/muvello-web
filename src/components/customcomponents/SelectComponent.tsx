@@ -61,9 +61,41 @@ const SelectComponent: React.FC<SelectComponentProps> = ({
           disabled ? "opacity-50 cursor-not-allowed" : ""
         }`}
       >
-        <div className="flex items-center gap-[16px] text-white w-full">
-          {icon && <img src={icon} alt={iconAlt} className="relative left-1" />}
-          <SelectValue placeholder={placeholder} className="text-white" />
+        <div className="flex items-center gap-2 text-white w-full">
+          {value ? (
+            <>
+              {(() => {
+                const selectedOption = options.find(
+                  (option) => option.value === value
+                );
+                return (
+                  <>
+                    {selectedOption?.icon && (
+                      <img
+                        src={selectedOption.icon}
+                        alt={selectedOption.iconAlt || selectedOption.label}
+                        className="w-5 h-5 flex-shrink-0"
+                      />
+                    )}
+                    <span className="text-white">
+                      {selectedOption?.label || value}
+                    </span>
+                  </>
+                );
+              })()}
+            </>
+          ) : (
+            <>
+              {icon && (
+                <img
+                  src={icon}
+                  alt={iconAlt}
+                  className="w-5 h-5 flex-shrink-0"
+                />
+              )}
+              <SelectValue placeholder={placeholder} className="text-white" />
+            </>
+          )}
         </div>
       </SelectTrigger>
 
@@ -93,10 +125,10 @@ const SelectComponent: React.FC<SelectComponentProps> = ({
                 <img
                   src={option.icon}
                   alt={option.iconAlt || option.label}
-                  className="w-5 h-5"
+                  className="w-5 h-5 flex-shrink-0 self-center"
                 />
               )}
-              {option.label}
+              <span className="self-center">{option.label}</span>
             </SelectItem>
           ))}
       </SelectContent>
