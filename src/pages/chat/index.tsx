@@ -2254,7 +2254,11 @@ const GroupChatUI = () => {
                               : ""
                           }
                           duration={totalWorkoutDuration(msg.workout.exercises)}
-                          weeks={`${msg.workout.max_week} week`}
+                          weeks={
+                            msg.workout.max_week === 1
+                              ? "1 week"
+                              : `${msg.workout.max_week} weeks`
+                          }
                           onViewClick={() => {
                             // navigate(`/user/workouts/workout-details`, {
                             //   state: msg.workout,
@@ -2756,7 +2760,8 @@ const GroupChatUI = () => {
 
           <p className="text-sm text-white font-normal text-xs flex gap-1 items-center mb-4">
             <img src={IMAGES.calendar} alt="Calendar" className="w-4 h-5" />{" "}
-            {workoutDetails?.max_week} weeks
+            {workoutDetails?.max_week}{" "}
+            {workoutDetails?.max_week === 1 ? "week" : "weeks"}
             <img src={IMAGES.clock} alt="Calendar" className="w-4 h-4 ml-2" />
             {workoutDetails?.average_workout_duration_per_day} min{" "}
           </p>
