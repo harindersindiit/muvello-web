@@ -10,7 +10,7 @@ import axiosInstance from "@/utils/axiosInstance";
 import localStorageService from "@/utils/localStorageService";
 import { getMaxWeek } from "@/utils/sec";
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useUser } from "@/context/UserContext";
@@ -32,6 +32,12 @@ const WorkoutDetails = () => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [loader, setLoader] = useState(false);
   const [progress, setProgress] = useState([]);
+  const [workoutAccess, setWorkoutAccess] = useState({
+    isPurchased: false,
+    isLoading: true,
+    isPaidWorkout: false,
+  });
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
   const [openShare, setOpenShare] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState<any[]>([]);
@@ -97,12 +103,6 @@ const WorkoutDetails = () => {
     }
   };
 
-  useEffect(() => {
-    getProgress();
-    document.body.classList.add("custom-override");
-    return () => document.body.classList.remove("custom-override");
-  }, []);
-
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
 
@@ -128,7 +128,7 @@ const WorkoutDetails = () => {
   //   }
   // };
 
-  const getProgress = async () => {
+  const getProgress = useCallback(async () => {
     setDeleteLoader(true);
 
     try {
@@ -148,7 +148,65 @@ const WorkoutDetails = () => {
       setDeleteExercise(false);
       setDeleteLoader(false);
     }
-  };
+  }, [state?._id]);
+
+  const checkWorkoutAccess = useCallback(async () => {
+    try {
+      const token = localStorageService.getItem("accessToken");
+
+      // Check if workout is paid
+      const isPaidWorkout = state?.fees && state.fees > 0;
+
+      // If user is the creator of the workout, grant access by default
+      if (user._id === state?.user_id) {
+        setWorkoutAccess({
+          isPurchased: true,
+          isLoading: false,
+          isPaidWorkout: isPaidWorkout,
+        });
+        return;
+      }
+
+      if (!isPaidWorkout) {
+        setWorkoutAccess({
+          isPurchased: true,
+          isLoading: false,
+          isPaidWorkout: false,
+        });
+        return;
+      }
+
+      // For paid workouts, check if user has purchased
+      const res = await axiosInstance.get(
+        `/payment/workout-access/${state?._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setWorkoutAccess({
+        isPurchased: res.data.body.isPurchased,
+        isLoading: false,
+        isPaidWorkout: true,
+      });
+    } catch (error: any) {
+      console.error("Error checking workout access:", error);
+      setWorkoutAccess({
+        isPurchased: false,
+        isLoading: false,
+        isPaidWorkout: state?.fees && state.fees > 0,
+      });
+    }
+  }, [state?._id, state?.fees, state?.user_id, user._id]);
+
+  useEffect(() => {
+    getProgress();
+    checkWorkoutAccess();
+    document.body.classList.add("custom-override");
+    return () => document.body.classList.remove("custom-override");
+  }, [getProgress, checkWorkoutAccess]);
 
   const handlePinWorkout = async () => {
     try {
@@ -400,17 +458,31 @@ const WorkoutDetails = () => {
               {progress.length > 1 && (
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() =>
+                    onClick={() => {
+                      if (
+                        workoutAccess.isPaidWorkout &&
+                        !workoutAccess.isPurchased
+                      ) {
+                        setShowPurchaseModal(true);
+                        return;
+                      }
                       navigate("/user/athletes-comparison", {
                         state: {
                           workout_title: state.title,
                           workout_id: state._id.toString(),
                           weeks: state.exercises,
                         },
-                      })
-                    }
-                    className="flex items-center gap-2 cursor-pointer"
+                      });
+                    }}
+                    className={`flex items-center gap-2 ${
+                      workoutAccess.isPaidWorkout && !workoutAccess.isPurchased
+                        ? "cursor-not-allowed opacity-60"
+                        : "cursor-pointer"
+                    }`}
                     style={{ color: "#94eb00" }}
+                    disabled={
+                      workoutAccess.isPaidWorkout && !workoutAccess.isPurchased
+                    }
                   >
                     <img
                       src={IMAGES.compareAthletes}
@@ -444,9 +516,17 @@ const WorkoutDetails = () => {
                   Math.max(0, calculatedProgress)
                 );
 
+                const isLocked =
+                  workoutAccess.isPaidWorkout && !workoutAccess.isPurchased;
+
                 return (
                   <div
-                    onClick={() =>
+                    key={item.user._id}
+                    onClick={() => {
+                      if (isLocked) {
+                        setShowPurchaseModal(true);
+                        return;
+                      }
                       navigate("/user/chat/progress-details", {
                         state: {
                           ...item,
@@ -454,9 +534,13 @@ const WorkoutDetails = () => {
                           workout_id: state._id.toString(),
                           exercises: state.exercises,
                         },
-                      })
-                    }
-                    className="bg-black cursor-pointer text-white rounded-[10px] border border-white/10 p-3 flex items-center justify-between"
+                      });
+                    }}
+                    className={`bg-black text-white rounded-[10px] border border-white/10 p-3 flex items-center justify-between relative ${
+                      isLocked
+                        ? "cursor-not-allowed opacity-60"
+                        : "cursor-pointer"
+                    }`}
                   >
                     {/* Avatar and Info */}
                     <div className="flex items-center gap-4">
@@ -549,6 +633,17 @@ const WorkoutDetails = () => {
                         {finalProgress}%
                       </span>
                     </div>
+
+                    {/* Lock icon for locked participants */}
+                    {isLocked && (
+                      <div className="absolute top-2 right-2 bg-black/70 rounded-full p-1">
+                        <Icon
+                          icon="material-symbols:lock"
+                          fontSize={16}
+                          className="text-primary"
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -597,41 +692,63 @@ const WorkoutDetails = () => {
               </div>
               <div className="text-xl font-semibold mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-4">
                 {selectedExerciseDay.exercises.length > 0 ? (
-                  selectedExerciseDay.exercises.map((exercise, index) => (
-                    <ExerciseComponent
-                      key={exercise._id + index}
-                      image={exercise.exercise_info.thumbnail}
-                      title={exercise.exercise_info.title}
-                      sets={exercise.sets ? exercise.sets.length : 0}
-                      reps={
-                        exercise.sets
-                          ? exercise.sets
-                              .slice(0, 5)
-                              .map((set: any) => set.reps)
-                              .join(", ")
-                          : 0
-                      }
-                      rest={
-                        exercise.sets
-                          ? exercise.sets
-                              .slice(0, 4)
-                              .map((set: any) => `${set.rest} Sec`)
-                              .join(", ")
-                          : 0
-                      }
-                      className="mb-0 cursor-pointer"
-                      onClick={() =>
-                        navigate("/user/chat/exercise-details", {
-                          state: {
-                            ...exercise,
-                            workout_id: state._id.toString(),
-                            day,
-                            week,
-                          },
-                        })
-                      }
-                    />
-                  ))
+                  selectedExerciseDay.exercises.map((exercise, index) => {
+                    const isLocked =
+                      workoutAccess.isPaidWorkout && !workoutAccess.isPurchased;
+                    return (
+                      <div key={exercise._id + index} className="relative">
+                        <ExerciseComponent
+                          image={exercise.exercise_info.thumbnail}
+                          title={exercise.exercise_info.title}
+                          sets={exercise.sets ? exercise.sets.length : 0}
+                          reps={
+                            exercise.sets
+                              ? exercise.sets
+                                  .slice(0, 5)
+                                  .map((set: any) => set.reps)
+                                  .join(", ")
+                              : 0
+                          }
+                          rest={
+                            exercise.sets
+                              ? exercise.sets
+                                  .slice(0, 4)
+                                  .map((set: any) => `${set.rest} Sec`)
+                                  .join(", ")
+                              : 0
+                          }
+                          className={`mb-0 ${
+                            isLocked
+                              ? "cursor-not-allowed opacity-60"
+                              : "cursor-pointer"
+                          }`}
+                          onClick={() => {
+                            if (isLocked) {
+                              setShowPurchaseModal(true);
+                              return;
+                            }
+                            navigate("/user/chat/exercise-details", {
+                              state: {
+                                ...exercise,
+                                workout_id: state._id.toString(),
+                                day,
+                                week,
+                              },
+                            });
+                          }}
+                        />
+                        {isLocked && (
+                          <div className="absolute top-2 right-2 bg-black/70 rounded-full p-1">
+                            <Icon
+                              icon="material-symbols:lock"
+                              fontSize={16}
+                              className="text-primary"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                 ) : (
                   <p className="text-white text-sm">
                     No exercises available for this day.
@@ -745,6 +862,49 @@ const WorkoutDetails = () => {
           )}
         </div>
       </DrawerSidebar>
+
+      {/* Purchase Modal */}
+      <CustomModal
+        disabled={false}
+        title="Purchase Required"
+        submitText="Download Mobile App"
+        open={showPurchaseModal}
+        setOpen={setShowPurchaseModal}
+        onCancel={() => setShowPurchaseModal(false)}
+        onSubmit={() => {
+          // Redirect to mobile app download or app store
+          window.open("https://apps.apple.com/app/muvello", "_blank");
+          setShowPurchaseModal(false);
+        }}
+        customButtonClass="!py-6"
+        children={
+          <div className="text-white text-center mb-3">
+            <div className="mb-4">
+              <Icon
+                icon="material-symbols:lock"
+                fontSize={48}
+                className="text-primary mx-auto mb-2"
+              />
+            </div>
+            <h3 className="font-semibold text-lg mb-2">Premium Workout</h3>
+            <p className="text-grey text-sm mb-4">
+              This workout requires a purchase. Please download our mobile app
+              to purchase and access this premium workout.
+            </p>
+            <div className="bg-gray-800 rounded-lg p-3 mb-4">
+              <p className="text-sm text-gray-300">
+                <strong>Workout:</strong> {state.title}
+              </p>
+              <p className="text-sm text-gray-300">
+                <strong>Price:</strong> ${state.fees}
+              </p>
+            </div>
+            <p className="text-xs text-gray-400">
+              Purchase and access all premium features through our mobile app
+            </p>
+          </div>
+        }
+      />
     </div>
   );
 };
