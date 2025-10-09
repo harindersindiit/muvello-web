@@ -732,7 +732,7 @@ const UserProfile = () => {
         cancelText="Cancel"
         onSubmit={() => console.log("Notification Submitted")}
         open={openDrawer}
-        setOpen={handleDrawerClose}
+        setOpen={setOpenDrawer}
         showFooter={false}
         className="drawer-override"
       >

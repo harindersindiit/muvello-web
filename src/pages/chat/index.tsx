@@ -2610,7 +2610,7 @@ const GroupChatUI = () => {
             <TextInput
               placeholder="Search by name..."
               value={searchGroups}
-              onChange={(value: string) => setSearchGroups(value)}
+              onChange={(e: string) => setSearchGroups(e.target.value)}
               type="text"
               icon={
                 <Icon icon="uil:search" color="white" className="w-5 h-5" />
