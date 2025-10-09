@@ -22,7 +22,7 @@ const OtpVerification = () => {
 
   const [otp, setOtp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [resendTimer, setResendTimer] = useState(3);
+  const [resendTimer, setResendTimer] = useState(30);
   const [otpError, setOtpError] = useState("");
 
   const handleOtpComplete = (value: string) => {
@@ -89,7 +89,7 @@ const OtpVerification = () => {
       const { success, statusCode, message } = res.data;
 
       toast.success(message);
-      setResendTimer(4);
+      setResendTimer(30);
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Failed to resend OTP");
     }
