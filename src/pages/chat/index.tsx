@@ -2564,7 +2564,7 @@ const GroupChatUI = () => {
                   <img
                     src={user.profile_picture || IMAGES.placeholderAvatar}
                     alt={user.fullname}
-                    className="w-12 h-12 rounded-full"
+                    className="max-w-12 min-w-12 h-12 rounded-full object-cover"
                   />
                   <div className="border-b border-gray-600 pb-4 w-full">
                     <div className="flex justify-between items-center w-full gap-5">
@@ -2676,7 +2676,7 @@ const GroupChatUI = () => {
                         member.user.profile_picture || IMAGES.placeholderAvatar
                       }
                       alt={member.user.fullname}
-                      className="w-12 h-12 rounded-full object-cover"
+                      className="max-w-12 min-w-12 h-12 rounded-full object-cover"
                       onClick={() => {
                         navigate("/user/profile/", {
                           ...(member.user._id !== user._id && {
@@ -2929,7 +2929,7 @@ const GroupChatUI = () => {
                         user.user.profile_picture || IMAGES.placeholderAvatar
                       }
                       alt={user.user.fullname}
-                      className="w-12 h-12 rounded-full object-cover"
+                      className="max-w-12 min-w-12 h-12 rounded-full object-cover"
                     />
                     <div>
                       <h3 className="text-white font-semibold text-sm">
