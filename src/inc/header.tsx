@@ -292,7 +292,7 @@ export default function Header() {
         <img
           src={IMAGES.logoHome}
           alt="Muvello Logo"
-          className="h-8 cursor-pointer"
+          className="h-8 cursor-pointer ml-3"
           onClick={() => navigate("/user/home")}
         />
 

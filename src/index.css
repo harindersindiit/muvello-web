@@ -42,6 +42,10 @@ html {
   scroll-padding-top: 57px; /* height of your fixed header */
 }
 
+#root {
+  background-color: #000000;
+}
+
 body {
   padding-top: 57px !important;
   background-color: #000000;

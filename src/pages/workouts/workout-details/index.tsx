@@ -20,9 +20,28 @@ import TextInput from "@/components/customcomponents/TextInput";
 import { Checkbox } from "@/components/ui/checkbox";
 import moment from "moment";
 
+interface WorkoutDetailsType {
+  _id?: string;
+  title?: string;
+  caption?: string;
+  thumbnail?: string;
+  fees?: number;
+  user_id?: string;
+  is_draft?: boolean;
+  is_pinned?: boolean;
+  totalParticipants?: number;
+  updated_at?: string;
+  created_at?: string;
+  exercises?: any[];
+}
+
 const WorkoutDetails = () => {
   const { user } = useUser();
   const { state } = useLocation();
+  const workoutId = state?._id; // Only get _id from state
+  const [workoutDetails, setWorkoutDetails] = useState<WorkoutDetailsType>({});
+  const [workoutLoader, setWorkoutLoader] = useState(false);
+  const [workoutAccessLoader, setWorkoutAccessLoader] = useState(false);
 
   const navigate = useNavigate();
   const [week, setWeek] = useState(1);
@@ -63,6 +82,30 @@ const WorkoutDetails = () => {
     }
   };
 
+  const getWorkoutDetails = useCallback(async () => {
+    try {
+      setWorkoutLoader(true);
+      const token = localStorageService.getItem("accessToken");
+      const res = await axiosInstance.get(
+        `workout?id=${workoutId}&user_id=${user._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const details = res.data.body.workouts;
+      setWorkoutDetails(details[0]);
+
+      console.log(details);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || "Failed to fetch posts.");
+    } finally {
+      setWorkoutLoader(false);
+    }
+  }, [workoutId, user._id]);
+
   const fetchGroups = async () => {
     // setIsLoading(true);
     try {
@@ -80,7 +123,95 @@ const WorkoutDetails = () => {
     }
   };
 
+  const getProgress = useCallback(async () => {
+    setDeleteLoader(true);
+
+    try {
+      const token = localStorageService.getItem("accessToken");
+
+      const res = await axiosInstance.get(`/workout/progress/${workoutId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (user._id != workoutDetails?.user_id) {
+        setProgress(res.data.body.filter((item) => item.user._id === user._id));
+      } else {
+        setProgress(res.data.body);
+      }
+    } catch (error: any) {
+      const message = error?.response?.data?.error || "Internal Server Error.";
+      toast.error(message);
+    } finally {
+      setDeleteExercise(false);
+      setDeleteLoader(false);
+    }
+  }, [workoutId]);
+
+  const checkWorkoutAccess = useCallback(async () => {
+    try {
+      setWorkoutAccessLoader(true);
+      const token = localStorageService.getItem("accessToken");
+
+      // Check if workout is paid
+      const isPaidWorkout = workoutDetails?.fees && workoutDetails.fees > 0;
+
+      // If user is the creator of the workout, grant access by default
+      if (user._id === workoutDetails?.user_id) {
+        setWorkoutAccess({
+          isPurchased: true,
+          isLoading: false,
+          isPaidWorkout: isPaidWorkout,
+        });
+        return;
+      }
+
+      if (!isPaidWorkout) {
+        setWorkoutAccess({
+          isPurchased: true,
+          isLoading: false,
+          isPaidWorkout: false,
+        });
+        return;
+      }
+
+      // For paid workouts, check if user has purchased
+      const res = await axiosInstance.get(
+        `/payments/workout-access/${workoutId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setWorkoutAccess({
+        isPurchased: res.data.body.isPurchased,
+        isLoading: false,
+        isPaidWorkout: true,
+      });
+    } catch (error: any) {
+      console.error("Error checking workout access:", error);
+      setWorkoutAccess({
+        isPurchased: false,
+        isLoading: false,
+        isPaidWorkout: workoutDetails?.fees && workoutDetails.fees > 0,
+      });
+    } finally {
+      setWorkoutAccessLoader(false);
+    }
+  }, [workoutId, workoutDetails?.fees, workoutDetails?.user_id, user._id]);
+
   useEffect(() => {
+    checkWorkoutAccess();
+    getProgress();
+    document.body.classList.add("custom-override");
+    return () => document.body.classList.remove("custom-override");
+  }, [getProgress, checkWorkoutAccess]);
+
+  useEffect(() => {
+    getWorkoutDetails();
     fetchGroups();
   }, []);
 
@@ -128,93 +259,13 @@ const WorkoutDetails = () => {
   //   }
   // };
 
-  const getProgress = useCallback(async () => {
-    setDeleteLoader(true);
-
-    try {
-      const token = localStorageService.getItem("accessToken");
-
-      const res = await axiosInstance.get(`/workout/progress/${state?._id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setProgress(res.data.body);
-    } catch (error: any) {
-      const message = error?.response?.data?.error || "Internal Server Error.";
-      toast.error(message);
-    } finally {
-      setDeleteExercise(false);
-      setDeleteLoader(false);
-    }
-  }, [state?._id]);
-
-  const checkWorkoutAccess = useCallback(async () => {
-    try {
-      const token = localStorageService.getItem("accessToken");
-
-      // Check if workout is paid
-      const isPaidWorkout = state?.fees && state.fees > 0;
-
-      // If user is the creator of the workout, grant access by default
-      if (user._id === state?.user_id) {
-        setWorkoutAccess({
-          isPurchased: true,
-          isLoading: false,
-          isPaidWorkout: isPaidWorkout,
-        });
-        return;
-      }
-
-      if (!isPaidWorkout) {
-        setWorkoutAccess({
-          isPurchased: true,
-          isLoading: false,
-          isPaidWorkout: false,
-        });
-        return;
-      }
-
-      // For paid workouts, check if user has purchased
-      const res = await axiosInstance.get(
-        `/payments/workout-access/${state?._id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setWorkoutAccess({
-        isPurchased: res.data.body.isPurchased,
-        isLoading: false,
-        isPaidWorkout: true,
-      });
-    } catch (error: any) {
-      console.error("Error checking workout access:", error);
-      setWorkoutAccess({
-        isPurchased: false,
-        isLoading: false,
-        isPaidWorkout: state?.fees && state.fees > 0,
-      });
-    }
-  }, [state?._id, state?.fees, state?.user_id, user._id]);
-
-  useEffect(() => {
-    getProgress();
-    checkWorkoutAccess();
-    document.body.classList.add("custom-override");
-    return () => document.body.classList.remove("custom-override");
-  }, [getProgress, checkWorkoutAccess]);
-
   const handlePinWorkout = async () => {
     try {
       const token = localStorageService.getItem("accessToken");
       const resExe = await axiosInstance.put(
-        `/workout/pin/${state?._id}`,
+        `/workout/pin/${workoutId}`,
         {
-          is_pinned: !state?.is_pinned,
+          is_pinned: !workoutDetails?.is_pinned,
         },
         {
           headers: {
@@ -240,7 +291,7 @@ const WorkoutDetails = () => {
     try {
       const token = localStorageService.getItem("accessToken");
 
-      const resExe = await axiosInstance.delete(`/workout/${state?._id}`, {
+      const resExe = await axiosInstance.delete(`/workout/${workoutId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -265,7 +316,7 @@ const WorkoutDetails = () => {
       const token = localStorageService.getItem("accessToken");
       const data = {
         groups: selectedGroups.map((g) => g._id),
-        workout_id: state._id.toString(),
+        workout_id: workoutId.toString(),
       };
       const resExe = await axiosInstance.post(`/group/share-to-groups`, data, {
         headers: {
@@ -287,9 +338,9 @@ const WorkoutDetails = () => {
   };
 
   useEffect(() => {
-    if (state?.exercises?.length) {
+    if (workoutDetails?.exercises?.length) {
       const weeksSet = Array.from(
-        new Set(state.exercises.map((item) => item.week))
+        new Set(workoutDetails.exercises.map((item) => item.week))
       ).sort((a, b) => a - b);
 
       setOption1(
@@ -299,11 +350,11 @@ const WorkoutDetails = () => {
         }))
       );
     }
-  }, [state.exercises, week]);
+  }, [workoutDetails?.exercises, week]);
 
   useEffect(() => {
-    if (state?.exercises?.length && week != null) {
-      const filteredDays = state.exercises
+    if (workoutDetails?.exercises?.length && week != null) {
+      const filteredDays = workoutDetails.exercises
         .filter((item) => item.week === week)
         .map((item) => item.day);
 
@@ -321,15 +372,17 @@ const WorkoutDetails = () => {
         setDay(daysSet[0]);
       }
     }
-  }, [week, state.exercises]);
+  }, [week, workoutDetails?.exercises]);
 
-  const selectedExerciseDay = state.exercises.find(
+  const selectedExerciseDay = workoutDetails?.exercises?.find(
     (item__) => item__.week === week && item__.day === day
   ) || { exercises: [] };
 
   return (
     <div className=" text-white my-6 mb-0 pb-9 px-1">
-      {deleteLoader && <FullScreenLoader />}
+      {(deleteLoader || workoutLoader || workoutAccessLoader) && (
+        <FullScreenLoader />
+      )}
       {/* Workouts */}
       <div className="mt-0 sm:mt-8">
         <div className="grid grid-cols-0 md:grid-cols-1 lg:grid-cols-12 xl:grid-cols-12 gap-6">
@@ -348,16 +401,18 @@ const WorkoutDetails = () => {
                 {/* <span className="text-white">Pre</span> */}
               </h2>
 
-              {user._id == state.user_id && (
+              {user._id == workoutDetails?.user_id && (
                 <div className="flex items-center gap-3 ms-auto">
-                  {!state?.is_draft && (
+                  {!workoutDetails?.is_draft && (
                     <>
                       <Icon
                         onClick={handlePinWorkout}
                         icon="tabler:pin"
                         fontSize={25}
                         className={`${
-                          state?.is_pinned ? "text-primary" : "text-white"
+                          workoutDetails?.is_pinned
+                            ? "text-primary"
+                            : "text-white"
                         } cursor-pointer hover:text-primary transition-all duration-300 ease-in-out`}
                       />
                       <SendIcon
@@ -376,14 +431,14 @@ const WorkoutDetails = () => {
                     fontSize={25}
                     onClick={() => {
                       navigate("/user/edit-workout", {
-                        state: state,
+                        state: workoutDetails,
                       });
                       // setMode("edit");
                       // setOpen(true);
                     }}
                     className="text-white cursor-pointer hover:text-primary transition-all duration-300 ease-in-out"
                   />
-                  {state.totalParticipants == 0 && (
+                  {workoutDetails?.totalParticipants == 0 && (
                     <Icon
                       onClick={() => {
                         setDeleteModal(true);
@@ -398,7 +453,7 @@ const WorkoutDetails = () => {
             </div>
             <div className="relative mb-4">
               <img
-                src={state.thumbnail}
+                src={workoutDetails?.thumbnail}
                 alt="workout"
                 className="w-full h-[400px] object-contain"
               />
@@ -412,20 +467,22 @@ const WorkoutDetails = () => {
             </div>
             <div className="flex justify-between items-center">
               <div className="text-left">
-                <h4 className="font-semibold text-sm mb-1">{state.title}</h4>
+                <h4 className="font-semibold text-sm mb-1">
+                  {workoutDetails?.title}
+                </h4>
                 <p className="text-sm text-gray-400 flex gap-1 items-center">
                   <img
                     src={IMAGES.calendar}
                     alt="Calendar"
                     className="w-4 h-4"
                   />
-                  {getMaxWeek(state?.exercises, "week")}
+                  {getMaxWeek(workoutDetails?.exercises, "week")}
                   <img
                     src={IMAGES.clock}
                     alt="Calendar"
                     className="w-4 h-4 ml-2"
                   />{" "}
-                  {state?.exercises.reduce(
+                  {workoutDetails?.exercises?.reduce(
                     (acc, curr) => acc + (curr.workout_duration || 0),
                     0
                   )}{" "}
@@ -435,219 +492,203 @@ const WorkoutDetails = () => {
                     alt="Calendar"
                     className="w-7 h-7 ml-2 mr-[-6px]"
                   />{" "}
-                  {state.updated_at
-                    ? moment(state.updated_at).fromNow()
-                    : moment(state.created_at).fromNow()}
+                  {workoutDetails?.updated_at
+                    ? moment(workoutDetails.updated_at).fromNow()
+                    : moment(workoutDetails?.created_at).fromNow()}
                 </p>
               </div>
 
               <CustomButton
                 className="w-auto py-5 bg-primary text-black"
-                text={`${state.fees ? `$${state.fees}` : "Free"}`}
+                text={`${
+                  workoutDetails?.fees ? `$${workoutDetails.fees}` : "Free"
+                }`}
                 type="button"
                 disableHover={true}
               />
             </div>
 
-            <p className="text-sm text-white mt-4">{state.caption}</p>
+            <p className="text-sm text-white mt-4">{workoutDetails?.caption}</p>
 
-            <div className="flex items-center gap-2 justify-between w-full flex-1 mt-5 mb-3">
-              <h4 className="font-semibold text-sm mb-1 text-left">
-                Participant ({progress.length})
-              </h4>
-              {progress.length > 1 && (
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      if (
-                        workoutAccess.isPaidWorkout &&
-                        !workoutAccess.isPurchased
-                      ) {
-                        setShowPurchaseModal(true);
-                        return;
-                      }
-                      navigate("/user/athletes-comparison", {
-                        state: {
-                          workout_title: state.title,
-                          workout_id: state._id.toString(),
-                          weeks: state.exercises,
-                        },
-                      });
-                    }}
-                    className={`flex items-center gap-2 ${
-                      workoutAccess.isPaidWorkout && !workoutAccess.isPurchased
-                        ? "cursor-not-allowed opacity-60"
-                        : "cursor-pointer"
-                    }`}
-                    style={{ color: "#94eb00" }}
-                    disabled={
-                      workoutAccess.isPaidWorkout && !workoutAccess.isPurchased
-                    }
-                  >
-                    <img
-                      src={IMAGES.compareAthletes}
-                      alt="compareAthletes"
-                      className="w-5 h-5"
-                    />
-                    Compare Athletes
-                  </button>
-                  {/* <Icon
-                    icon="tabler:search"
-                    fontSize={16}
-                    className="text-white cursor-pointer hover:text-primary transition-all duration-300 ease-in-out"
-                  /> */}
+            {/* Only show Participants and Compare Athletes sections to the workout creator */}
+            {user._id === workoutDetails?.user_id && (
+              <div className="flex items-center gap-2 justify-between w-full flex-1 mt-5 mb-3">
+                <h4 className="font-semibold text-sm mb-1 text-left">
+                  Participant ({progress.length})
+                </h4>
+                {progress.length > 1 && (
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        navigate("/user/athletes-comparison", {
+                          state: {
+                            workout_title: workoutDetails?.title,
+                            workout_id: workoutId.toString(),
+                            weeks: workoutDetails?.exercises,
+                          },
+                        });
+                      }}
+                      className="flex items-center gap-2 cursor-pointer"
+                      style={{ color: "#94eb00" }}
+                    >
+                      <img
+                        src={IMAGES.compareAthletes}
+                        alt="compareAthletes"
+                        className="w-5 h-5"
+                      />
+                      Compare Athletes
+                    </button>
+                    {/* <Icon
+                      icon="tabler:search"
+                      fontSize={16}
+                      className="text-white cursor-pointer hover:text-primary transition-all duration-300 ease-in-out"
+                    /> */}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {user._id != workoutDetails?.user_id &&
+              progress.find((item) => item.user._id === user._id) && (
+                <div className="flex items-center gap-2 justify-between w-full flex-1 mt-5 mb-3">
+                  <h4 className="font-semibold text-sm mb-1 text-left">
+                    Your Progress
+                  </h4>
                 </div>
               )}
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {progress.map((item) => {
-                // Calculate progress percentage based on the formula: (completed_exercises / total_exercises) * 100
-                const calculatedProgress =
-                  item.total_exercises === 0
-                    ? 0
-                    : Math.round(
-                        (item.completed_exercises / item.total_exercises) * 100
-                      );
+            {/* Only show participants grid to the workout creator */}
+            {(user._id === workoutDetails?.user_id ||
+              progress.find((item) => item.user._id === user._id)) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {progress.map((item) => {
+                  // Calculate progress percentage based on the formula: (completed_exercises / total_exercises) * 100
+                  const calculatedProgress =
+                    item.total_exercises === 0
+                      ? 0
+                      : Math.round(
+                          (item.completed_exercises / item.total_exercises) *
+                            100
+                        );
 
-                // Ensure progress is between 0 and 100
-                const finalProgress = Math.min(
-                  100,
-                  Math.max(0, calculatedProgress)
-                );
+                  // Ensure progress is between 0 and 100
+                  const finalProgress = Math.min(
+                    100,
+                    Math.max(0, calculatedProgress)
+                  );
 
-                const isLocked =
-                  workoutAccess.isPaidWorkout && !workoutAccess.isPurchased;
-
-                return (
-                  <div
-                    key={item.user._id}
-                    onClick={() => {
-                      if (isLocked) {
-                        setShowPurchaseModal(true);
-                        return;
-                      }
-                      navigate("/user/chat/progress-details", {
-                        state: {
-                          ...item,
-                          workout_title: state.title,
-                          workout_id: state._id.toString(),
-                          exercises: state.exercises,
-                        },
-                      });
-                    }}
-                    className={`bg-black text-white rounded-[10px] border border-white/10 p-3 flex items-center justify-between relative ${
-                      isLocked
-                        ? "cursor-not-allowed opacity-60"
-                        : "cursor-pointer"
-                    }`}
-                  >
-                    {/* Avatar and Info */}
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={
-                          item.user.profile_picture || IMAGES.placeholderAvatar
-                        } // Replace with actual avatar source
-                        alt="avatar"
-                        className="w-16 h-16 rounded-full"
-                      />
-                      <div className="text-left">
-                        <p className="text-md font-semibold mb-1">
-                          {item.user.fullname}
-                        </p>
-                        <p
-                          className={`${
-                            finalProgress == 100
-                              ? "text-primary"
+                  return (
+                    <div
+                      key={item.user._id}
+                      onClick={() => {
+                        navigate("/user/chat/progress-details", {
+                          state: {
+                            ...item,
+                            workout_title: workoutDetails?.title,
+                            workout_id: workoutId.toString(),
+                            exercises: workoutDetails?.exercises,
+                          },
+                        });
+                      }}
+                      className="bg-black text-white rounded-[10px] border border-white/10 p-3 flex items-center justify-between relative cursor-pointer"
+                    >
+                      {/* Avatar and Info */}
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={
+                            item.user.profile_picture ||
+                            IMAGES.placeholderAvatar
+                          } // Replace with actual avatar source
+                          alt="avatar"
+                          className="w-16 h-16 rounded-full"
+                        />
+                        <div className="text-left">
+                          <p className="text-md font-semibold mb-1">
+                            {item.user.fullname}
+                          </p>
+                          <p
+                            className={`${
+                              finalProgress == 100
+                                ? "text-primary"
+                                : item.total_done_exercises > 0
+                                ? "text-grey"
+                                : "text-red"
+                            } text-sm flex items-center gap-2`}
+                          >
+                            {finalProgress == 100 && (
+                              <div
+                                className={`w-4 h-4 rounded-full border-1 border-primary flex items-center justify-center`}
+                              >
+                                <Icon icon="tabler:check" fontSize={10} />
+                              </div>
+                            )}
+                            {finalProgress == 100
+                              ? "Completed"
                               : item.total_done_exercises > 0
-                              ? "text-grey"
-                              : "text-red"
-                          } text-sm flex items-center gap-2`}
+                              ? "In Progress"
+                              : "Not Started"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Circular Progress */}
+                      <div className="relative w-14 h-14 flex items-center justify-center">
+                        <svg
+                          className="absolute top-0 left-0"
+                          width="56"
+                          height="56"
+                          viewBox="0 0 36 36"
                         >
-                          {finalProgress == 100 && (
-                            <div
-                              className={`w-4 h-4 rounded-full border-1 border-primary flex items-center justify-center`}
-                            >
-                              <Icon icon="tabler:check" fontSize={10} />
-                            </div>
-                          )}
-                          {finalProgress == 100
-                            ? "Completed"
-                            : item.total_done_exercises > 0
-                            ? "In Progress"
-                            : "Not Started"}
-                        </p>
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="16"
+                            stroke="#333333"
+                            strokeWidth="3"
+                            fill="none"
+                          />
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="16"
+                            stroke={
+                              finalProgress >= 80
+                                ? "#A3FF12"
+                                : finalProgress >= 50
+                                ? "#FFA500"
+                                : finalProgress > 0
+                                ? "#3391FF"
+                                : "#666"
+                            }
+                            strokeWidth="3"
+                            fill="none"
+                            strokeLinecap="round"
+                            transform="rotate(-90 18 18)"
+                            strokeDasharray="100"
+                            strokeDashoffset={100 - finalProgress}
+                          />
+                        </svg>
+                        <span
+                          className="text-sm font-semibold"
+                          style={{
+                            color:
+                              finalProgress >= 80
+                                ? "#A3FF12"
+                                : finalProgress >= 50
+                                ? "#FFA500"
+                                : finalProgress > 0
+                                ? "#3391FF"
+                                : "#666",
+                          }}
+                        >
+                          {finalProgress}%
+                        </span>
                       </div>
                     </div>
-
-                    {/* Circular Progress */}
-                    <div className="relative w-14 h-14 flex items-center justify-center">
-                      <svg
-                        className="absolute top-0 left-0"
-                        width="56"
-                        height="56"
-                        viewBox="0 0 36 36"
-                      >
-                        <circle
-                          cx="18"
-                          cy="18"
-                          r="16"
-                          stroke="#333333"
-                          strokeWidth="3"
-                          fill="none"
-                        />
-                        <circle
-                          cx="18"
-                          cy="18"
-                          r="16"
-                          stroke={
-                            finalProgress >= 80
-                              ? "#A3FF12"
-                              : finalProgress >= 50
-                              ? "#FFA500"
-                              : finalProgress > 0
-                              ? "#3391FF"
-                              : "#666"
-                          }
-                          strokeWidth="3"
-                          fill="none"
-                          strokeLinecap="round"
-                          transform="rotate(-90 18 18)"
-                          strokeDasharray="100"
-                          strokeDashoffset={100 - finalProgress}
-                        />
-                      </svg>
-                      <span
-                        className="text-sm font-semibold"
-                        style={{
-                          color:
-                            finalProgress >= 80
-                              ? "#A3FF12"
-                              : finalProgress >= 50
-                              ? "#FFA500"
-                              : finalProgress > 0
-                              ? "#3391FF"
-                              : "#666",
-                        }}
-                      >
-                        {finalProgress}%
-                      </span>
-                    </div>
-
-                    {/* Lock icon for locked participants */}
-                    {isLocked && (
-                      <div className="absolute top-2 right-2 bg-black/70 rounded-full p-1">
-                        <Icon
-                          icon="material-symbols:lock"
-                          fontSize={16}
-                          className="text-primary"
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* <div className="text-primary text-sm  mt-4 cursor-pointer hover:text-primary/80 transition-all duration-300 ease-in-out">
               View More
@@ -730,14 +771,14 @@ const WorkoutDetails = () => {
                             navigate("/user/chat/exercise-details", {
                               state: {
                                 ...exercise,
-                                workout_id: state._id.toString(),
+                                workout_id: workoutId.toString(),
                                 day,
                                 week,
                               },
                             });
                           }}
                         />
-                        {isLocked && (
+                        {isLocked ? (
                           <div className="absolute top-2 right-2 bg-black/70 rounded-full p-1">
                             <Icon
                               icon="material-symbols:lock"
@@ -745,7 +786,7 @@ const WorkoutDetails = () => {
                               className="text-primary"
                             />
                           </div>
-                        )}
+                        ) : null}
                       </div>
                     );
                   })
@@ -755,7 +796,7 @@ const WorkoutDetails = () => {
                   </p>
                 )}
               </div>
-            </div>{" "}
+            </div>
             {/* End of scrollable content */}
           </div>
         </div>
@@ -893,10 +934,10 @@ const WorkoutDetails = () => {
             </p>
             <div className="bg-gray-800 rounded-lg p-3 mb-4">
               <p className="text-sm text-gray-300">
-                <strong>Workout:</strong> {state.title}
+                <strong>Workout:</strong> {workoutDetails?.title}
               </p>
               <p className="text-sm text-gray-300">
-                <strong>Price:</strong> ${state.fees}
+                <strong>Price:</strong> ${workoutDetails?.fees}
               </p>
             </div>
             <p className="text-xs text-gray-400">

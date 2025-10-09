@@ -424,7 +424,12 @@ const Home = () => {
                     >
                       {/* <Icon icon={cat.icon} color="#94eb00" fontSize={23} /> */}
                       {cat._id !== "all" && (
-                        <img src={cat.icon} alt="favourite" width={25} />
+                        <img
+                          src={cat.icon}
+                          alt="favourite"
+                          width={25}
+                          className="h-[25px]"
+                        />
                       )}
                       {cat.title}
                     </button>
@@ -494,7 +499,7 @@ const Home = () => {
                 <h3 className="text-xl font-semibold mb-3 md:mb-0 mr-3">
                   Exercises
                 </h3>
-                <div className="flex gap-1 mr-2 overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-[#3a3a3a] scrollbar-track-[#1a1a1a] hover:scrollbar-thumb-[#4a4a4a]">
+                <div className="flex gap-1 mr-2 overflow-x-auto whitespace-nowrap scrollbar-none">
                   {[{ _id: "all", name: "All" }, ...preferences].map((tag) => (
                     <button
                       key={tag._id}

@@ -13,8 +13,6 @@ import { Icon } from "@iconify/react";
 import LikeCard from "./LikeCard";
 import { MoreHorizontal } from "lucide-react";
 import TextInput from "@/components/customcomponents/TextInput";
-import commentList from "./dummyData/commentList";
-import likeList from "./dummyData/likeList";
 import { useEffect, useState } from "react";
 import localStorageService from "@/utils/localStorageService";
 import axiosInstance from "@/utils/axiosInstance"; // Your axios wrapper with auth
@@ -24,7 +22,6 @@ import { CustomModal } from "@/components/customcomponents/CustomModal";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-import React from "react";
 import Slider from "react-slick";
 import FullScreenLoader from "@/components/ui/loader";
 import { useUser } from "@/context/UserContext";
@@ -59,7 +56,6 @@ const PostDetails = () => {
   const [comments, setComments] = useState([]);
   const [commentPage, setCommentPage] = useState(1);
   const [commentsTotalPages, setTotalPages] = useState(1);
-  const [loadingComments, setLoadingComments] = useState(false);
   const [totalComments, setTotalComments] = useState(0);
 
   const [commentInput, setCommentInput] = useState("");
@@ -68,6 +64,9 @@ const PostDetails = () => {
   const [postDrawer, setPostDrawer] = useState(false);
 
   const [updatedCaption, setUpdatedCaption] = useState("");
+  const [isLiked, setIsLiked] = useState(state?.meLiked || false);
+  const [likeCount, setLikeCount] = useState(state?.likesCount || 0);
+  const [likeLoading, setLikeLoading] = useState(false);
 
   useEffect(() => {
     document.body.classList.add("custom-override");
@@ -141,7 +140,6 @@ const PostDetails = () => {
 
   const getComments = async (page = 1) => {
     try {
-      setLoadingComments(true);
       const token = localStorageService.getItem("accessToken");
 
       const res = await axiosInstance.get(`/post/comments/${state?._id}`, {
@@ -155,10 +153,8 @@ const PostDetails = () => {
       setComments((prev) => (page === 1 ? comments : [...prev, ...comments]));
       setCommentPage(Number(pagination.page));
       setTotalPages(pagination.totalPages);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load comments");
-    } finally {
-      setLoadingComments(false);
     }
   };
 
@@ -256,6 +252,40 @@ const PostDetails = () => {
     }
   };
 
+  const handleLikePost = async () => {
+    if (likeLoading) return;
+
+    setLikeLoading(true);
+    try {
+      const token = localStorageService.getItem("accessToken");
+
+      const res = await axiosInstance.put(
+        `/post/like/${state?._id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Update local state
+      setIsLiked(!isLiked);
+      setLikeCount((prev) => (isLiked ? prev - 1 : prev + 1));
+      setTotalLikes((prev) => (isLiked ? prev - 1 : prev + 1));
+
+      // Refresh likes data to get updated list
+      await getLikes(1);
+
+      toast.success(res.data.message);
+    } catch (error: any) {
+      const message = error?.response?.data?.error || "Internal Server Error.";
+      toast.error(message);
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
   // const LikeCard = ({ comment }) => {
   //   return (
   //     <div className="flex items-center gap-4">
@@ -312,13 +342,9 @@ const PostDetails = () => {
     }
   };
 
-  const [selectedGroupsCopy, setSelectedGroupsCopy] = useState<any[]>([]);
-
-  const [isShared, setIsShared] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [groups, setGroups] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [inputValue, setInputValue] = useState("");
 
   const allSelected =
     selectedGroups.length === groups.length && groups.length > 0;
@@ -492,21 +518,50 @@ const PostDetails = () => {
 
           <div className="mt-4">
             <div className="mb-2">
-              <p className="text-gray-400 text-xs">
-                Posted by{" "}
-                <span className="text-white font-medium">
-                  {state.user?.fullname}
-                </span>
-              </p>
-              <p className="text-gray-400 text-xs">
-                {new Date(state.created_at).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-xs">
+                    Posted by{" "}
+                    <span className="text-white font-medium">
+                      {state.user?.fullname}
+                    </span>
+                  </p>
+                  <p className="text-gray-400 text-xs">
+                    {new Date(state.created_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+
+                {/* Like Button */}
+                <button
+                  onClick={handleLikePost}
+                  disabled={likeLoading}
+                  className={`flex items-center gap-3 px-5 py-3 rounded-full transition-all duration-200 text-lg ${
+                    isLiked
+                      ? "bg-lime-500/20 text-black-400 hover:bg-lime-500/30"
+                      : "bg-gray-700/50 text-black-300 hover:bg-gray-600/50"
+                  } ${
+                    likeLoading
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer"
+                  }`}
+                >
+                  <Icon
+                    icon={isLiked ? "line-md:heart-filled" : "line-md:heart"}
+                    className={`text-2xl ${
+                      isLiked ? "text-lime-400" : "text-gray-400"
+                    }`}
+                  />
+                  <span className="text-lg font-semibold">
+                    {likeLoading ? "..." : likes.length}
+                  </span>
+                </button>
+              </div>
             </div>
             <p className="text-white text-sm font-medium mb-1">
               {updatedCaption || state.caption}
@@ -638,7 +693,6 @@ const PostDetails = () => {
           setOpenShare(false);
         }}
         onCancel={() => {
-          setSelectedGroups(selectedGroupsCopy);
           setOpenShare(false);
         }}
         open={openShare}

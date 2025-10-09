@@ -2260,12 +2260,12 @@ const GroupChatUI = () => {
                               : `${msg.workout.max_week} weeks`
                           }
                           onViewClick={() => {
-                            // navigate(`/user/workouts/workout-details`, {
-                            //   state: msg.workout,
-                            // });
-                            setWorkoutDetails(msg.workout);
-                            getWorkoutProgress(msg.workout._id);
-                            setWorkoutOpen(true);
+                            navigate(`/user/workouts/workout-details`, {
+                              state: msg.workout,
+                            });
+                            // setWorkoutDetails(msg.workout);
+                            // getWorkoutProgress(msg.workout._id);
+                            // setWorkoutOpen(true);
                           }}
                         />
                         {moment(msg.created_at).fromNow()}
