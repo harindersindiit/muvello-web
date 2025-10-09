@@ -344,7 +344,10 @@ const GroupChatUI = () => {
   }, []);
   // const [selectedGroups, setSelectedGroups] = useState<number[]>([]);
   const [selectGroupsOpen, setSelectGroupsOpen] = useState(false);
-  const [searchGroups, setSearchGroups] = useState("");
+  const [searchMembers, setSearchMembers] = useState("");
+  const [searchCurrentMembers, setSearchCurrentMembers] = useState("");
+  const [searchSelectedMembers, setSearchSelectedMembers] = useState("");
+
   const [workoutOpen, setWorkoutOpen] = useState(false);
   const navigate = useNavigate();
   const [groupDetailsOpen, setGroupDetailsOpen] = useState(false);
@@ -1404,7 +1407,9 @@ const GroupChatUI = () => {
     // if (activeTab === "groups") setSelectedUser(null);
 
     setSelectedGroup(null);
-    setSelectedUser(null);
+    if (!localStorageService.getItem("init_chat")) {
+      setSelectedUser(null);
+    }
   }, [activeTab]);
 
   const filterList = (keyword) => {
@@ -1515,7 +1520,9 @@ const GroupChatUI = () => {
           setInitAPILoading(false);
         }
 
-        localStorage.removeItem("init_chat");
+        setTimeout(() => {
+          localStorage.removeItem("init_chat");
+        }, 3000);
       };
 
       loadNewUer();
@@ -2507,50 +2514,56 @@ const GroupChatUI = () => {
           </div>
           <TextInput
             placeholder="Search by name..."
-            value={searchGroups}
-            onChange={(e: any) => setSearchGroups(e.target.value)}
+            value={searchSelectedMembers}
+            onChange={(e: any) => setSearchSelectedMembers(e.target.value)}
             type="text"
             icon={<Icon icon="uil:search" color="white" className="w-5 h-5" />}
             className="mb-3"
           />
           <div className="mt-4 text-white">
-            {followers.map((user) => (
-              <label
-                key={user._id}
-                htmlFor={`group-${user._id}`}
-                className="flex items-start gap-3 mb-4 w-full cursor-pointer relative"
-              >
-                <img
-                  src={user.profile_picture || IMAGES.placeholderAvatar}
-                  alt={user.fullname}
-                  className="w-12 h-12 rounded-full"
-                />
-                <div className="border-b border-gray-600 pb-4 w-full">
-                  <div className="flex justify-between items-center w-full gap-5">
-                    <h3 className="text-white text-base font-semibold">
-                      {user.fullname}
-                    </h3>
-                    <Checkbox
-                      id={`group-${user._id}`}
-                      className="cursor-pointer text-black border-grey hover:border-primary transition-colors"
-                      checked={selectedMembers.includes(user._id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedMembers([...selectedMembers, user._id]);
-                        } else {
-                          setSelectedMembers(
-                            selectedMembers.filter((id) => id !== user._id)
-                          );
-                        }
-                      }}
-                    />
+            {followers
+              .filter((user) =>
+                user.fullname
+                  .toLowerCase()
+                  .includes(searchSelectedMembers.toLowerCase())
+              )
+              .map((user) => (
+                <label
+                  key={user._id}
+                  htmlFor={`group-${user._id}`}
+                  className="flex items-start gap-3 mb-4 w-full cursor-pointer relative"
+                >
+                  <img
+                    src={user.profile_picture || IMAGES.placeholderAvatar}
+                    alt={user.fullname}
+                    className="w-12 h-12 rounded-full"
+                  />
+                  <div className="border-b border-gray-600 pb-4 w-full">
+                    <div className="flex justify-between items-center w-full gap-5">
+                      <h3 className="text-white text-base font-semibold">
+                        {user.fullname}
+                      </h3>
+                      <Checkbox
+                        id={`group-${user._id}`}
+                        className="cursor-pointer text-black border-grey hover:border-primary transition-colors"
+                        checked={selectedMembers.includes(user._id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedMembers([...selectedMembers, user._id]);
+                          } else {
+                            setSelectedMembers(
+                              selectedMembers.filter((id) => id !== user._id)
+                            );
+                          }
+                        }}
+                      />
+                    </div>
+                    <span className="text-grey text-sm font-medium">
+                      {user.followerCount} Followers
+                    </span>
                   </div>
-                  <span className="text-grey text-sm font-medium">
-                    {user.followerCount} Followers
-                  </span>
-                </div>
-              </label>
-            ))}
+                </label>
+              ))}
             {followers.length === 0 && <NoDataPlaceholder />}
           </div>
         </div>
@@ -2609,8 +2622,8 @@ const GroupChatUI = () => {
             </div>
             <TextInput
               placeholder="Search by name..."
-              value={searchGroups}
-              onChange={(e: string) => setSearchGroups(e.target.value)}
+              value={searchCurrentMembers}
+              onChange={(e: string) => setSearchCurrentMembers(e.target.value)}
               type="text"
               icon={
                 <Icon icon="uil:search" color="white" className="w-5 h-5" />
@@ -2618,62 +2631,68 @@ const GroupChatUI = () => {
               className="mb-3"
             />
             <div className="mt-2 text-white">
-              {selectedGroup.members.map((member) => (
-                <div
-                  key={member.user._id}
-                  className="flex items-start  gap-3 w-full  py-2"
-                >
-                  {/* Profile Info */}
-                  <img
-                    src={
-                      member.user.profile_picture || IMAGES.placeholderAvatar
-                    }
-                    alt={member.user.fullname}
-                    className="w-12 h-12 rounded-full object-cover"
-                    onClick={() => {
-                      navigate("/user/profile/", {
-                        ...(member.user._id !== user._id && {
-                          state: { id: member.user._id },
-                        }),
-                      });
-                    }}
-                  />
-                  <div className="flex gap-3 items-start justify-between border-b border-gray-700 pb-4 flex-1">
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-white font-semibold text-sm">
-                          {member.user.fullname}
-                        </h3>
-                        {member.is_admin && (
-                          <span className="text-xs text-lime-400 font-medium">
-                            (Admin)
-                          </span>
-                        )}
+              {selectedGroup.members
+                .filter((member) =>
+                  member.user.fullname
+                    .toLowerCase()
+                    .includes(searchCurrentMembers.toLowerCase())
+                )
+                .map((member) => (
+                  <div
+                    key={member.user._id}
+                    className="flex items-start  gap-3 w-full  py-2"
+                  >
+                    {/* Profile Info */}
+                    <img
+                      src={
+                        member.user.profile_picture || IMAGES.placeholderAvatar
+                      }
+                      alt={member.user.fullname}
+                      className="w-12 h-12 rounded-full object-cover"
+                      onClick={() => {
+                        navigate("/user/profile/", {
+                          ...(member.user._id !== user._id && {
+                            state: { id: member.user._id },
+                          }),
+                        });
+                      }}
+                    />
+                    <div className="flex gap-3 items-start justify-between border-b border-gray-700 pb-4 flex-1">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-white font-semibold text-sm">
+                            {member.user.fullname}
+                          </h3>
+                          {member.is_admin && (
+                            <span className="text-xs text-lime-400 font-medium">
+                              (Admin)
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-400">
+                          {" "}
+                          {member.user.follower_count}{" "}
+                          {member.user.follower_count === 1
+                            ? "Follower"
+                            : "Followers"}
+                        </p>
                       </div>
-                      <p className="text-sm text-gray-400">
-                        {" "}
-                        {member.user.follower_count}{" "}
-                        {member.user.follower_count === 1
-                          ? "Follower"
-                          : "Followers"}
-                      </p>
+                      {!member.is_admin && groupAdmin === user._id && (
+                        <button
+                          className="border border-lime-400 cursor-pointer text-lime-400 text-xs font-normal px-4 py-[6px] rounded-full hover:bg-lime-400 hover:text-black transition"
+                          onClick={() => {
+                            setRemoveMemberId(member.user._id);
+                            setRemoveMemberPopup(true);
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
                     </div>
-                    {!member.is_admin && groupAdmin === user._id && (
-                      <button
-                        className="border border-lime-400 cursor-pointer text-lime-400 text-xs font-normal px-4 py-[6px] rounded-full hover:bg-lime-400 hover:text-black transition"
-                        onClick={() => {
-                          setRemoveMemberId(member.user._id);
-                          setRemoveMemberPopup(true);
-                        }}
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
 
-                  {/* Remove Button (not shown for Admin/You) */}
-                </div>
-              ))}
+                    {/* Remove Button (not shown for Admin/You) */}
+                  </div>
+                ))}
 
               {/* <div className="justify-center flex items-center mt-3">
               <div className="text-lime-400 underline hover:text-white text-center  text-sm font-medium hover:underline cursor-pointer ">
