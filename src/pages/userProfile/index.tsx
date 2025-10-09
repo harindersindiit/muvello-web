@@ -796,7 +796,7 @@ const UserProfile = () => {
                         follower_.profile_picture || IMAGES.placeholderAvatar
                       } // ← replace with actual image if available
                       alt={follower_.fullname}
-                      className="w-10 h-10 rounded-full object-cover cursor-pointer transition-all duration-200 hover:scale-105 hover:ring-2 hover:ring-primary/50"
+                      className="max-w-10 min-w-10 h-10  rounded-full object-cover cursor-pointer transition-all duration-200 hover:scale-105 hover:ring-2 hover:ring-primary/50"
                       onClick={() => {
                         setOpenDrawer(false);
                         navigate("/user/profile/", {
