@@ -458,7 +458,7 @@ const PostDetails = () => {
                       <Link
                         to="javascript:void(0)"
                         onClick={() => handlePinPost()}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 w-full"
                       >
                         <Icon
                           icon="tabler:pin"
@@ -471,7 +471,7 @@ const PostDetails = () => {
                       <Link
                         to="javascript:void(0)"
                         onClick={() => setOpenShare(true)}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 w-full"
                       >
                         <Icon
                           icon="ph:paper-plane-tilt-light"
@@ -486,7 +486,7 @@ const PostDetails = () => {
                         onClick={() => {
                           setPostDrawer(true);
                         }}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 w-full"
                       >
                         <Icon
                           icon="mynaui:edit"
@@ -501,7 +501,7 @@ const PostDetails = () => {
                         onClick={() => {
                           setDeleteModal(true);
                         }}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 w-full"
                       >
                         <Icon
                           icon="hugeicons:delete-03"

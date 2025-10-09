@@ -603,11 +603,13 @@ const WorkoutDetails = () => {
                             IMAGES.placeholderAvatar
                           } // Replace with actual avatar source
                           alt="avatar"
-                          className="w-16 h-16 rounded-full"
+                          className="max-w-16 min-w-16 h-16 rounded-full object-cover"
                         />
                         <div className="text-left">
                           <p className="text-md font-semibold mb-1">
-                            {item.user.fullname}
+                            {item.user.fullname.length > 25
+                              ? item.user.fullname.slice(0, 25) + "..."
+                              : item.user.fullname}
                           </p>
                           <p
                             className={`${

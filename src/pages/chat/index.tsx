@@ -105,7 +105,7 @@ const AddMembersPopup = ({
               <img
                 src={user.profile_picture || IMAGES.placeholderAvatar}
                 alt={user.fullname}
-                className="w-12 h-12 rounded-full"
+                className="min-w-12 max-w-12 h-12 rounded-full object-cover"
               />
               <div className="border-b border-gray-600 pb-4 w-full">
                 <div className="flex justify-between items-center w-full">
@@ -177,8 +177,15 @@ const ChooseAdmin = ({
   //   (follower) => !memberUserIds.includes(follower._id)
   // );
 
+  const handleOpenChange = (isOpen) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setSearchText("");
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="bg-[#1f1f1f] border-0 text-white">
         <DialogHeader>
           <DialogTitle>Select New Admin</DialogTitle>
@@ -347,6 +354,14 @@ const GroupChatUI = () => {
   const [searchMembers, setSearchMembers] = useState("");
   const [searchCurrentMembers, setSearchCurrentMembers] = useState("");
   const [searchSelectedMembers, setSearchSelectedMembers] = useState("");
+
+  // Handle Create Group drawer open/close with search clearing
+  const handleSelectGroupsOpenChange = (isOpen) => {
+    setSelectGroupsOpen(isOpen);
+    if (!isOpen) {
+      setSearchSelectedMembers("");
+    }
+  };
 
   const [workoutOpen, setWorkoutOpen] = useState(false);
   const navigate = useNavigate();
@@ -1531,6 +1546,12 @@ const GroupChatUI = () => {
 
   const [selectedAdminId, setSelectedAdminId] = useState(null);
   const [openNewAdminPopup, setOpenNewAdminPopup] = useState(false);
+
+  // useEffect(() => {
+  //   console.log("openNewAdminPopup", openNewAdminPopup);
+  //   setSearchText("");
+  // }, [openNewAdminPopup]);
+
   const [leaveLoader, setLeaveLoader] = useState(false);
 
   const truncateText = (text, maxLength = 33) => {
@@ -1632,7 +1653,7 @@ const GroupChatUI = () => {
 
           {activeTab === "groups" && !showSearch && (
             <div
-              onClick={() => setSelectGroupsOpen(true)}
+              onClick={() => handleSelectGroupsOpenChange(true)}
               className="text-primary ms-auto mr-3 cursor-pointer font-semibold hover:text-white transition-all duration-300 text-sm flex items-center gap-2"
             >
               <Icon
@@ -2452,10 +2473,17 @@ const GroupChatUI = () => {
         cancelText="Cancel"
         onSubmit={!createGroupLoader && handleCreateGroup}
         open={selectGroupsOpen}
-        setOpen={setSelectGroupsOpen}
+        setOpen={handleSelectGroupsOpenChange}
         className="customWidthDrawer"
         showFooter={false}
         showCreateButton={true}
+        onCancel={() => {
+          setSelectedMembers([]);
+          setGroupImage(null);
+          setNewGroupName("");
+          setSearchSelectedMembers("");
+          setSelectGroupsOpen(false);
+        }}
       >
         <div className="p-4">
           <div className="flex flex-col justify-center items-center mb-4">

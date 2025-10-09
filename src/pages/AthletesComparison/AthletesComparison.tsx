@@ -318,7 +318,7 @@ const AthletesComparison = () => {
                             IMAGES.placeholderAvatar
                           }
                           alt={athlete.user.fullname}
-                          className="w-10 h-10 rounded-full mr-3"
+                          className="max-w-10 min-w-10 h-10 rounded-full mr-3 object-cover"
                         />
                         <div>
                           <h4 className="font-medium">
@@ -626,7 +626,7 @@ const AthletesComparison = () => {
                           IMAGES.placeholderAvatar
                         }
                         alt={athlete.user.fullname}
-                        className="w-12 h-12 rounded-full object-cover"
+                        className="max-w-12 min-w-12 h-12 rounded-full object-cover"
                       />
                     </div>
                     <div>

@@ -1055,16 +1055,16 @@ const CreateWorkout = () => {
                     </span>
                   </div>
                 </div>
-                <div
-                  className={`p-5 rounded-lg ${!canEdit ? "opacity-60" : ""}`}
-                >
-                  <GroupInputTag
-                    onClickGroup={() => {}}
-                    onSelectGroups={
-                      canEdit ? onSelectGroups : (groups: unknown[]) => {}
-                    }
-                  />
-                </div>
+                {canEdit && (
+                  <div
+                    className={`p-5 rounded-lg ${!canEdit ? "opacity-60" : ""}`}
+                  >
+                    <GroupInputTag
+                      onClickGroup={() => {}}
+                      onSelectGroups={onSelectGroups}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
