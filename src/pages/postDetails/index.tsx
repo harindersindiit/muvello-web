@@ -541,7 +541,7 @@ const PostDetails = () => {
                 <button
                   onClick={handleLikePost}
                   disabled={likeLoading}
-                  className={`flex items-center gap-3 px-5 py-3 rounded-full transition-all duration-200 text-lg ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-200 ${
                     isLiked
                       ? "bg-lime-500/20 text-black-400 hover:bg-lime-500/30"
                       : "bg-gray-700/50 text-black-300 hover:bg-gray-600/50"
@@ -553,11 +553,11 @@ const PostDetails = () => {
                 >
                   <Icon
                     icon={isLiked ? "line-md:heart-filled" : "line-md:heart"}
-                    className={`text-2xl ${
+                    className={`text-lg ${
                       isLiked ? "text-lime-400" : "text-gray-400"
                     }`}
                   />
-                  <span className="text-lg font-semibold">
+                  <span className="text-sm font-medium">
                     {likeLoading ? "..." : likes.length}
                   </span>
                 </button>
@@ -630,7 +630,8 @@ const PostDetails = () => {
                 <img
                   src={user?.profile_picture || IMAGES.placeholderAvatar}
                   alt="You"
-                  className="w-6 h-6 rounded-full mr-2"
+                  className="max-w-10 min-w-10 h-10 rounded-full mr-2"
+                  style={{ objectFit: "cover" }}
                 />
                 <input
                   type="text"

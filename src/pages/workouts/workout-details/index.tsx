@@ -38,6 +38,7 @@ interface WorkoutDetailsType {
 const WorkoutDetails = () => {
   const { user } = useUser();
   const { state } = useLocation();
+  console.log(state);
   const workoutId = state?._id; // Only get _id from state
   const [workoutDetails, setWorkoutDetails] = useState<WorkoutDetailsType>({});
   const [workoutLoader, setWorkoutLoader] = useState(false);
@@ -135,7 +136,7 @@ const WorkoutDetails = () => {
         },
       });
 
-      if (user._id != workoutDetails?.user_id) {
+      if (user._id != state?.user_id) {
         setProgress(res.data.body.filter((item) => item.user._id === user._id));
       } else {
         setProgress(res.data.body);

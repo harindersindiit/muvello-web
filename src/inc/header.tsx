@@ -624,6 +624,7 @@ export default function Header() {
                         }
                         alt="Notification"
                         className="w-12 h-12 rounded-full shrink-0 hover:scale-105 transition-all duration-300 ease-in-out"
+                        style={{ objectFit: "cover" }}
                         onClick={() => {
                           if (notif?.sender_id) {
                             navigate(`/user/profile`, {

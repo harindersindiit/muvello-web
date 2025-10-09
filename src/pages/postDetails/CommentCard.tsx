@@ -73,7 +73,7 @@ const CommentCard = ({
       >
         <img
           src={details.user.profile_picture || IMAGES.placeholderAvatar}
-          className="w-9 h-9 rounded-full object-cover"
+          className="max-w-10 min-w-10 h-10 rounded-full object-cover"
           alt={details.user.fullname}
         />
       </Link>
@@ -173,7 +173,7 @@ const CommentCard = ({
                         src={
                           reply.user.profile_picture || IMAGES.placeholderAvatar
                         }
-                        className="w-7 h-7 rounded-full object-cover"
+                        className="max-w-7 min-w-7 h-7 rounded-full object-cover"
                         alt={reply.user.fullname}
                       />
                     </Link>

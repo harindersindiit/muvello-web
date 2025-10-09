@@ -27,7 +27,7 @@ const LikeCard = ({ details }: { details: any }) => {
         <img
           src={details?.profile_picture || IMAGES.placeholderAvatar}
           alt={details?.fullname}
-          className="w-10 h-10 rounded-full object-cover"
+          className="max-w-10 min-w-10 h-10 rounded-full object-cover"
         />
       </Link>
 
