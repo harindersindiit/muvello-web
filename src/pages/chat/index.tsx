@@ -213,7 +213,7 @@ const ChooseAdmin = ({
               <img
                 src={user.user.profile_picture || IMAGES.placeholderAvatar}
                 alt={user.user.fullname}
-                className="w-12 h-12 rounded-full"
+                className="max-w-12 min-w-12 h-12 rounded-full object-cover"
               />
               <div className="border-b border-gray-600 pb-4 w-full">
                 <div className="flex justify-between items-center w-full">
@@ -1829,7 +1829,7 @@ const GroupChatUI = () => {
                               IMAGES.placeholderAvatar
                             }
                             alt={getOtherUser.fullname}
-                            className="w-12 h-12 rounded-full object-cover"
+                            className="max-w-12 min-w-12 h-12 rounded-full object-cover"
                           />
                           <div className="flex-1">
                             <div className="flex justify-between items-center">
@@ -1928,7 +1928,7 @@ const GroupChatUI = () => {
                               IMAGES.placeholderAvatar
                             }
                             alt={request.initiatorDetails.fullname}
-                            className="w-12 h-12 rounded-full object-cover"
+                            className="max-w-12 min-w-12 h-12 rounded-full object-cover"
                           />
                           <div className="flex-1">
                             <div className="flex justify-between items-center">
@@ -2334,7 +2334,7 @@ const GroupChatUI = () => {
             selectedUser?.request === "accept") && (
             <div className="p-4 border-t border-gray-800 flex items-center gap-3">
               <div className="flex items-center flex-1 relative">
-                <Avatar className="w-7 h-7 absolute left-3">
+                <Avatar className="max-w-7 min-w-7 h-7 absolute left-3">
                   <AvatarImage
                     src={user.profile_picture || IMAGES.placeholderAvatar}
                   />
