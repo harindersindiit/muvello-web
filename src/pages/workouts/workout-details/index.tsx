@@ -38,7 +38,7 @@ interface WorkoutDetailsType {
 const WorkoutDetails = () => {
   const { user } = useUser();
   const { state } = useLocation();
-  console.log(state);
+
   const workoutId = state?._id; // Only get _id from state
   const [workoutDetails, setWorkoutDetails] = useState<WorkoutDetailsType>({});
   const [workoutLoader, setWorkoutLoader] = useState(false);
@@ -564,19 +564,21 @@ const WorkoutDetails = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {progress.map((item) => {
                   // Calculate progress percentage based on the formula: (completed_exercises / total_exercises) * 100
-                  const calculatedProgress =
-                    item.total_exercises === 0
-                      ? 0
-                      : Math.round(
-                          (item.completed_exercises / item.total_exercises) *
-                            100
-                        );
+                  // const calculatedProgress =
+                  //   item.total_exercises === 0
+                  //     ? 0
+                  //     : Math.round(
+                  //         (item.completed_exercises / item.total_exercises) *
+                  //           100
+                  //       );
 
-                  // Ensure progress is between 0 and 100
-                  const finalProgress = Math.min(
-                    100,
-                    Math.max(0, calculatedProgress)
-                  );
+                  // // Ensure progress is between 0 and 100
+                  // const finalProgress = Math.min(
+                  //   100,
+                  //   Math.max(0, calculatedProgress)
+                  // );
+
+                  const finalProgress = item.progress_percent;
 
                   return (
                     <div

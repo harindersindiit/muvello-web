@@ -279,21 +279,8 @@ const AthletesComparison = () => {
 
               <div className="space-y-2 max-h-[450px] scrollCustom overflow-y-auto">
                 {filteredFollowers.map((athlete) => {
-                  // Calculate progress percentage based on the formula: (completed_exercises / total_exercises) * 100
-                  const calculatedProgress =
-                    athlete.total_exercises === 0
-                      ? 0
-                      : Math.round(
-                          (athlete.completed_exercises /
-                            athlete.total_exercises) *
-                            100
-                        );
-
                   // Ensure progress is between 0 and 100
-                  const finalProgress = Math.min(
-                    100,
-                    Math.max(0, calculatedProgress)
-                  );
+                  const finalProgress = athlete.progress_percent;
 
                   return (
                     <div
@@ -620,19 +607,7 @@ const AthletesComparison = () => {
           .filter((athlete) => selectedAthletes.includes(athlete.user._id))
           .map((athlete, index) => {
             // Calculate progress percentage based on the formula: (completed_exercises / total_exercises) * 100
-            const calculatedProgress =
-              athlete.total_exercises === 0
-                ? 0
-                : Math.round(
-                    (athlete.completed_exercises / athlete.total_exercises) *
-                      100
-                  );
-
-            // Ensure progress is between 0 and 100
-            const finalProgress = Math.min(
-              100,
-              Math.max(0, calculatedProgress)
-            );
+            const finalProgress = athlete.progress_percent;
 
             return (
               <div

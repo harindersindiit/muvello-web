@@ -17,14 +17,7 @@ export default function BMISummaryCard({ state, title, statistics }) {
     value: index + 1,
   }));
 
-  // Calculate progress percentage based on the formula: (completed_exercises / total_exercises) * 100
-  const calculatedProgress =
-    state.total_exercises === 0
-      ? 0
-      : Math.round((state.completed_exercises / state.total_exercises) * 100);
-
-  // Ensure progress is between 0 and 100
-  const finalProgress = Math.min(100, Math.max(0, calculatedProgress));
+  const finalProgress = state.progress_percent;
 
   useEffect(() => {
     const selectedWeekData = statistics.find((w) => w.week === weekBMI);
