@@ -1399,8 +1399,12 @@ const GroupChatUI = () => {
   ///  ==== SEND MESSAGE ==== ///
 
   useEffect(() => {
-    if (activeTab === "users" || activeTab === "users") setSelectedGroup(null);
-    if (activeTab === "groups") setSelectedUser(null);
+    // if (activeTab === "users" || activeTab === "requests")
+    //   setSelectedGroup(null);
+    // if (activeTab === "groups") setSelectedUser(null);
+
+    setSelectedGroup(null);
+    setSelectedUser(null);
   }, [activeTab]);
 
   const filterList = (keyword) => {

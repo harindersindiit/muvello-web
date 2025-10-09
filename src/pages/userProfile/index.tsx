@@ -34,6 +34,7 @@ const UserProfile = () => {
   const userId = state?.id;
 
   const [openDrawer, setOpenDrawer] = useState(false);
+
   const [activeTab, setActiveTab] = useState("followers");
   const [blockUserModal, setBlockUserModal] = useState(false);
   const [profileStats, setProfileStats] = useState([]);
@@ -46,6 +47,12 @@ const UserProfile = () => {
   const [user, setUser] = useState({});
 
   const [searchText, setSearchText] = useState("");
+
+  useEffect(() => {
+    if (!openDrawer) {
+      setSearchText("");
+    }
+  }, [openDrawer]);
 
   useEffect(() => {
     const init = async () => {
@@ -725,7 +732,7 @@ const UserProfile = () => {
         cancelText="Cancel"
         onSubmit={() => console.log("Notification Submitted")}
         open={openDrawer}
-        setOpen={setOpenDrawer}
+        setOpen={handleDrawerClose}
         showFooter={false}
         className="drawer-override"
       >
