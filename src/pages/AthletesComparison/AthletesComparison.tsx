@@ -113,21 +113,19 @@ const AthletesComparison = () => {
 
   const [apiData, setApiData] = useState([]);
 
-  const [options, setOptions] = useState([]);
+  const [options, setOptions] = useState([{ label: "Week 1", value: "1" }]);
 
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-  // Process chart data from the new API structure
-  const processChartData = useCallback(
+  // Process exercise chart data
+  const processExerciseChartData = useCallback(
     (apiData: any, exerciseWeekNum: number) => {
       if (!apiData || Object.keys(apiData).length === 0) return;
 
-      // Process exercise progress data
       const exerciseData: any[] = [];
-      const weightData: any[] = [];
 
-      // Get all unique days for the selected week across all users
+      // Get all unique days for the selected exercise week across all users
       const allDays = new Set();
       Object.values(apiData).forEach((userData: any) => {
         const weekData = userData.find(
@@ -143,7 +141,6 @@ const AthletesComparison = () => {
         .sort()
         .forEach((dayNum) => {
           const exerciseDayData = { name: `Day ${dayNum}` };
-          const weightDayData = { name: `Day ${dayNum}` };
 
           // Add data for each selected athlete
           selectedAthletes.forEach((userId) => {
@@ -156,23 +153,70 @@ const AthletesComparison = () => {
                 const dayData = weekData.days.find((day) => day.day === dayNum);
                 if (dayData) {
                   exerciseDayData[userId] = dayData.completed_exercises || 0;
-                  weightDayData[userId] = parseFloat(dayData.weight_value) || 0;
                 } else {
                   exerciseDayData[userId] = 0;
-                  weightDayData[userId] = 0;
                 }
               } else {
                 exerciseDayData[userId] = 0;
-                weightDayData[userId] = 0;
               }
             }
           });
 
           exerciseData.push(exerciseDayData);
-          weightData.push(weightDayData);
         });
 
       setExerciseProgressData(exerciseData);
+    },
+    [selectedAthletes]
+  );
+
+  // Process weight chart data
+  const processWeightChartData = useCallback(
+    (apiData: any, weightWeekNum: number) => {
+      if (!apiData || Object.keys(apiData).length === 0) return;
+
+      const weightData: any[] = [];
+
+      // Get all unique days for the selected weight week across all users
+      const allDays = new Set();
+      Object.values(apiData).forEach((userData: any) => {
+        const weekData = userData.find(
+          (week: any) => week.week === weightWeekNum
+        );
+        if (weekData) {
+          weekData.days.forEach((day: any) => allDays.add(day.day));
+        }
+      });
+
+      // Create data points for each day
+      Array.from(allDays)
+        .sort()
+        .forEach((dayNum) => {
+          const weightDayData = { name: `Day ${dayNum}` };
+
+          // Add data for each selected athlete
+          selectedAthletes.forEach((userId) => {
+            const userData = apiData[userId];
+            if (userData) {
+              const weekData = userData.find(
+                (week) => week.week === weightWeekNum
+              );
+              if (weekData) {
+                const dayData = weekData.days.find((day) => day.day === dayNum);
+                if (dayData) {
+                  weightDayData[userId] = parseFloat(dayData.weight_value) || 0;
+                } else {
+                  weightDayData[userId] = 0;
+                }
+              } else {
+                weightDayData[userId] = 0;
+              }
+            }
+          });
+
+          weightData.push(weightDayData);
+        });
+
       setWeightProgressData(weightData);
     },
     [selectedAthletes]
@@ -214,13 +258,14 @@ const AthletesComparison = () => {
 
       const options_ = Array.from({ length: maxWeeks }, (_, index) => ({
         label: `Week ${index + 1}`,
-        value: index + 1,
+        value: (index + 1).toString(),
       }));
 
       setOptions(options_);
 
       // Process data for charts
-      processChartData(apiData_, exerciseWeek);
+      processExerciseChartData(apiData_, exerciseWeek);
+      processWeightChartData(apiData_, weightWeek);
     } catch (error: unknown) {
       console.log(error);
       const message =
@@ -233,11 +278,19 @@ const AthletesComparison = () => {
     }
   };
 
+  // Update exercise chart when exerciseWeek changes
   useEffect(() => {
     if (apiData && Object.keys(apiData).length > 0) {
-      processChartData(apiData, exerciseWeek);
+      processExerciseChartData(apiData, exerciseWeek);
     }
-  }, [exerciseWeek, weightWeek, apiData, selectedAthletes, processChartData]);
+  }, [exerciseWeek, apiData, selectedAthletes, processExerciseChartData]);
+
+  // Update weight chart when weightWeek changes
+  useEffect(() => {
+    if (apiData && Object.keys(apiData).length > 0) {
+      processWeightChartData(apiData, weightWeek);
+    }
+  }, [weightWeek, apiData, selectedAthletes, processWeightChartData]);
 
   const filteredFollowers = allAthletesData.filter((item) =>
     item.user.fullname.toLowerCase().includes(searchText.toLowerCase())
@@ -442,8 +495,8 @@ const AthletesComparison = () => {
             </h3>
 
             <SelectComponent
-              value={exerciseWeek}
-              onChange={setExerciseWeek}
+              value={exerciseWeek.toString()}
+              onChange={(value) => setExerciseWeek(parseInt(value))}
               icon={IMAGES.calendar}
               className="py-2 px-3 w-[120px] cursor-pointer"
               options={options}
@@ -461,7 +514,7 @@ const AthletesComparison = () => {
               {exerciseTimeframe} <ChevronDown className="w-4 h-4 ml-1" />
             </Button> */}
           </div>
-          <div className="h-[360px] bg-[#1f1f1f] rounded-2xl p-4 pl-0 w-full">
+          <div className=" bg-[#1f1f1f] rounded-2xl p-4 pl-0 w-full">
             <ResponsiveContainer width="100%" height={400}>
               <LineChart
                 data={exerciseProgressData}
@@ -533,8 +586,8 @@ const AthletesComparison = () => {
               Body Weight Progress (in Lbs)
             </h3>
             <SelectComponent
-              value={weightWeek}
-              onChange={setWeightWeek}
+              value={weightWeek.toString()}
+              onChange={(value) => setWeightWeek(parseInt(value))}
               icon={IMAGES.calendar}
               className="py-2 px-3 w-[120px] cursor-pointer"
               options={options}
@@ -551,7 +604,7 @@ const AthletesComparison = () => {
               {weightTimeframe} <ChevronDown className="w-4 h-4 ml-1" />
             </Button> */}
           </div>
-          <div className="h-[360px] bg-[#1f1f1f] rounded-2xl p-4 pl-0 w-full">
+          <div className=" bg-[#1f1f1f] rounded-2xl p-4 pl-0 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={weightProgressData}

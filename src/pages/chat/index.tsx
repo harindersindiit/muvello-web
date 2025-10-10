@@ -2275,6 +2275,7 @@ const GroupChatUI = () => {
                     <div className="flex justify-end items-end">
                       <div className="grid grid-cols-1 md:grid-cols-1 xl:grid-cols-1 gap-4">
                         <WorkoutComponent
+                          deleted={msg.workout.deleted_at}
                           visibility={msg.workout.visibility}
                           is_draft={msg.workout.is_draft}
                           key={msg._id}
@@ -2300,7 +2301,15 @@ const GroupChatUI = () => {
                             // setWorkoutOpen(true);
                           }}
                         />
-                        {moment(msg.created_at).fromNow()}
+                        <span
+                          className={`block text-xs mt-1 text-grey font-normal ${
+                            msg.sender_id == user._id
+                              ? "text-right"
+                              : "text-left"
+                          }`}
+                        >
+                          {moment(msg.created_at).fromNow()}
+                        </span>
                       </div>
                     </div>
                   )}
@@ -2309,13 +2318,22 @@ const GroupChatUI = () => {
                     <div className="flex justify-end items-end">
                       <div className="grid grid-cols-1 md:grid-cols-1 xl:grid-cols-1 gap-4">
                         <ProfilePostCard
+                          deleted={msg.post.deleted_at}
                           key={msg._id}
                           item={{
                             ...msg.post,
                           }}
                           to={`/user/profile/${msg.sender_id}/post/${msg.post._id}`}
                         />
-                        {moment(msg.created_at).fromNow()}
+                        <span
+                          className={`block text-xs mt-1 text-grey font-normal ${
+                            msg.sender_id == user._id
+                              ? "text-right"
+                              : "text-left"
+                          }`}
+                        >
+                          {moment(msg.created_at).fromNow()}
+                        </span>
                       </div>
                     </div>
                   )}

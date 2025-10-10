@@ -13,6 +13,7 @@ import localStorageService from "@/utils/localStorageService";
 import axiosInstance from "@/utils/axiosInstance";
 import { toast } from "react-toastify";
 import FullScreenLoader from "../ui/loader";
+import { workerData } from "worker_threads";
 
 let formik: any;
 
@@ -24,6 +25,7 @@ const AddPost = ({
   refreshPosts,
   onSuccess = null,
 }) => {
+  console.log("postDetails", postDetails);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
 
@@ -394,6 +396,7 @@ const AddPost = ({
 
               {/* Dropdown */}
               <SelectComponent
+                fallbackValue={postDetails?.workout_category_details[0].title}
                 placeholder="Select Workout Category"
                 disabled={postDetails}
                 value={values.workout_category}

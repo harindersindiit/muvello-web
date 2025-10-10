@@ -49,11 +49,11 @@ const LikeCard = ({ details }: { details: any }) => {
 
         {user._id !== details?._id && followStatus !== "Follow" && (
           <button
-            className={`text-xs font-semibold py-2 mr-5 rounded-full transition-all cursor-pointer 
+            className={`text-xs font-semibold py-2 mr-5 rounded-full transition-all 
               ${
                 iFollow === "accept"
-                  ? "bg-primary text-black px-6 hover:bg-primary/80"
-                  : "border border-primary px-4 text-primary hover:bg-primary/10"
+                  ? "bg-primary text-black px-6"
+                  : "border border-primary px-4 text-primary"
               }`}
           >
             {followStatus}

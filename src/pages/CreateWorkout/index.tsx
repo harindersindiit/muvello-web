@@ -120,6 +120,7 @@ const SelectExercisePopup = ({
 const CreateWorkout = () => {
   const location = useLocation();
   const editingWorkout = location.state || null;
+  console.log("editingWorkout", editingWorkout);
   const [canEdit, setCanEdit] = useState(true);
 
   useEffect(() => {
@@ -705,6 +706,9 @@ const CreateWorkout = () => {
 
                     <div ref={categoryRef}>
                       <SelectComponent
+                        fallbackValue={
+                          editingWorkout?.workout_category[0]?.title
+                        }
                         placeholder="Select Workout Category"
                         value={values.workout_category}
                         onChange={(value: string) =>

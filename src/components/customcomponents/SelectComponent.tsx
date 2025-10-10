@@ -30,6 +30,7 @@ const SelectComponent: React.FC<SelectComponentProps> = ({
   variant = "default",
   size = "md",
   disabled = false,
+  fallbackValue = "",
 }) => {
   const getVariantClasses = () => {
     switch (variant) {
@@ -78,7 +79,7 @@ const SelectComponent: React.FC<SelectComponentProps> = ({
                       />
                     )}
                     <span className="text-white">
-                      {selectedOption?.label || value}
+                      {selectedOption?.label || fallbackValue || value}
                     </span>
                   </>
                 );
