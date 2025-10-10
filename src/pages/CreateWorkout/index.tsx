@@ -1059,7 +1059,8 @@ const CreateWorkout = () => {
                     </span>
                   </div>
                 </div>
-                {canEdit && (
+
+                {canEdit && canSaveDraft && (
                   <div
                     className={`p-5 rounded-lg ${!canEdit ? "opacity-60" : ""}`}
                   >

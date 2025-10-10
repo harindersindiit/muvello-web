@@ -604,8 +604,8 @@ const AthletesComparison = () => {
               {weightTimeframe} <ChevronDown className="w-4 h-4 ml-1" />
             </Button> */}
           </div>
-          <div className=" bg-[#1f1f1f] rounded-2xl p-4 pl-0 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className=" bg-[#1f1f1f] rounded-2xl p-4 pl-0 w-full min-h-[400px]">
+            <ResponsiveContainer width="100%" height="100%" minHeight={380}>
               <BarChart
                 data={weightProgressData}
                 barGap={0}
