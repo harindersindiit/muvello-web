@@ -92,9 +92,7 @@ const AthletesComparison = () => {
         selectedAthletesTemp.filter((id) => id !== athleteId)
       );
     } else {
-      if (selectedAthletesTemp.length < 10) {
-        setSelectedAthletesTemp([...selectedAthletesTemp, athleteId]);
-      }
+      setSelectedAthletesTemp([...selectedAthletesTemp, athleteId]);
     }
   };
 
@@ -153,11 +151,15 @@ const AthletesComparison = () => {
                 const dayData = weekData.days.find((day) => day.day === dayNum);
                 if (dayData) {
                   exerciseDayData[userId] = dayData.completed_exercises || 0;
+                  exerciseDayData[`${userId}_total`] =
+                    dayData.total_exercises || 0;
                 } else {
                   exerciseDayData[userId] = 0;
+                  exerciseDayData[`${userId}_total`] = 0;
                 }
               } else {
                 exerciseDayData[userId] = 0;
+                exerciseDayData[`${userId}_total`] = 0;
               }
             }
           });
@@ -574,6 +576,20 @@ const AthletesComparison = () => {
                     />
                   );
                 })}
+
+                {/* Total exercises line - same for all users */}
+                {selectedAthletes.length > 0 && (
+                  <Line
+                    key="total_exercises"
+                    type="monotone"
+                    dataKey={`${selectedAthletes[0]}_total`}
+                    stroke="#666"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    activeDot={{ r: 4 }}
+                    name="Total Exercises"
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           </div>

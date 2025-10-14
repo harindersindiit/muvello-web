@@ -12,34 +12,37 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
-import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import SelectComponent from "@/components/customcomponents/SelectComponent";
 import { IMAGES } from "@/contants/images";
 
 export default function ProgressCharts({ statistics }) {
-  const [exerciseWeek, setExerciseWeek] = useState(1);
-  const [weightWeek, setWeightWeek] = useState(1);
+  const [exerciseWeek, setExerciseWeek] = useState("1");
+  const [weightWeek, setWeightWeek] = useState("1");
 
   const options = Array.from({ length: statistics.length }, (_, index) => ({
     label: `Week ${index + 1}`,
-    value: index + 1,
+    value: (index + 1).toString(),
   }));
 
   const exerciseData = useMemo(() => {
-    const selectedWeekData = statistics.find((w) => w.week === exerciseWeek);
+    const selectedWeekData = statistics.find(
+      (w) => w.week === parseInt(exerciseWeek)
+    );
 
     if (!selectedWeekData) return [];
 
     return selectedWeekData.days.map((day) => ({
       name: `Day ${day.day}`,
-      value: day.completed_exercises,
+      completed: day.completed_exercises,
+      total: day.total_exercises,
     }));
   }, [exerciseWeek, statistics]);
 
   const weightData = useMemo(() => {
-    const selectedWeekData = statistics.find((w) => w.week === weightWeek);
+    const selectedWeekData = statistics.find(
+      (w) => w.week === parseInt(weightWeek)
+    );
 
     if (!selectedWeekData) return [];
 
@@ -99,10 +102,20 @@ export default function ProgressCharts({ statistics }) {
               />
               <Line
                 type="monotone"
-                dataKey="value"
+                dataKey="completed"
                 stroke="#A3FF12"
                 strokeWidth={2}
                 dot={false}
+                name="Completed Exercises"
+              />
+              <Line
+                type="monotone"
+                dataKey="total"
+                stroke="#3391FF"
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                dot={false}
+                name="Total Exercises"
               />
             </LineChart>
           </ResponsiveContainer>

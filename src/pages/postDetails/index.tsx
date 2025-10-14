@@ -28,6 +28,7 @@ import { useUser } from "@/context/UserContext";
 import AddPost from "@/components/customcomponents/AddPost";
 import NoDataPlaceholder from "@/components/ui/nodata";
 import { IMAGES } from "@/contants/images";
+import ReportComponent from "@/components/customcomponents/ReportComponent";
 
 const PostDetails = () => {
   const { user } = useUser();
@@ -62,6 +63,7 @@ const PostDetails = () => {
   const [commentSubmitLoading, setCommentSubmitLoading] = useState(false);
 
   const [postDrawer, setPostDrawer] = useState(false);
+  const [reportModal, setReportModal] = useState(false);
 
   const [updatedCaption, setUpdatedCaption] = useState("");
   const [isLiked, setIsLiked] = useState(state?.meLiked || false);
@@ -537,30 +539,46 @@ const PostDetails = () => {
                   </p>
                 </div>
 
-                {/* Like Button */}
-                <button
-                  onClick={handleLikePost}
-                  disabled={likeLoading}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-200 ${
-                    isLiked
-                      ? "bg-lime-500/20 text-black-400 hover:bg-lime-500/30"
-                      : "bg-gray-700/50 text-black-300 hover:bg-gray-600/50"
-                  } ${
-                    likeLoading
-                      ? "opacity-50 cursor-not-allowed"
-                      : "cursor-pointer"
-                  }`}
-                >
-                  <Icon
-                    icon={isLiked ? "line-md:heart-filled" : "line-md:heart"}
-                    className={`text-lg ${
-                      isLiked ? "text-lime-400" : "text-gray-400"
+                {/* Like Button and Report Button */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleLikePost}
+                    disabled={likeLoading}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-200 ${
+                      isLiked
+                        ? "bg-lime-500/20 text-black-400 hover:bg-lime-500/30"
+                        : "bg-gray-700/50 text-black-300 hover:bg-gray-600/50"
+                    } ${
+                      likeLoading
+                        ? "opacity-50 cursor-not-allowed"
+                        : "cursor-pointer"
                     }`}
-                  />
-                  <span className="text-sm font-medium">
-                    {likeLoading ? "..." : likes.length}
-                  </span>
-                </button>
+                  >
+                    <Icon
+                      icon={isLiked ? "line-md:heart-filled" : "line-md:heart"}
+                      className={`text-lg ${
+                        isLiked ? "text-lime-400" : "text-gray-400"
+                      }`}
+                    />
+                    <span className="text-sm font-medium">
+                      {likeLoading ? "..." : likeCount}
+                    </span>
+                  </button>
+
+                  {/* Report Button - Only show if user is not the post author */}
+                  {state?.user_id && user._id !== state?.user_id && (
+                    <button
+                      onClick={() => setReportModal(true)}
+                      className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+                    >
+                      <Icon
+                        icon="mdi:flag-outline"
+                        className="text-lg text-white"
+                      />
+                      <span className="text-sm font-medium">Report</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
             <p className="text-white text-sm font-medium mb-1">
@@ -771,6 +789,19 @@ const PostDetails = () => {
           // navigate(-1);
         }}
         postDetails={{ ...state, caption: updatedCaption || state.caption }}
+      />
+
+      {/* Report Modal */}
+      <ReportComponent
+        open={reportModal}
+        setOpen={setReportModal}
+        reportType="post"
+        reportedItemId={state?._id}
+        reportedUserId={state?.user_id}
+        reportedItemTitle={state?.caption}
+        onReportSuccess={() => {
+          setReportModal(false);
+        }}
       />
     </div>
   );

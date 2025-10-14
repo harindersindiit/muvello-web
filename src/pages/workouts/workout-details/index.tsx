@@ -15,6 +15,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useUser } from "@/context/UserContext";
 import { DrawerSidebar } from "@/components/customcomponents/DrawerSidebar";
+import ReportComponent, {
+  ReportType,
+} from "@/components/customcomponents/ReportComponent";
 
 import TextInput from "@/components/customcomponents/TextInput";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -237,6 +240,7 @@ const WorkoutDetails = () => {
 
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   // const handleDeleteExercise = async () => {
   //   setDeleteLoader(true);
@@ -452,20 +456,22 @@ const WorkoutDetails = () => {
                 </div>
               )}
             </div>
-            <div className="relative mb-4">
-              <img
-                src={workoutDetails?.thumbnail}
-                alt="workout"
-                className="w-full h-[400px] object-contain"
-              />
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(179deg, rgba(0, 0, 0, 0.70) 4.16%, rgba(0, 0, 0, 0.00) 40.1%, rgba(0, 0, 0, 0.70) 90.09%), linear-gradient(0deg, rgba(0, 0, 0, 0.20) 0%, rgba(0, 0, 0, 0.20) 100%)",
-                }}
-              ></div>
-            </div>
+            {workoutDetails?.thumbnail && (
+              <div className="relative mb-4">
+                <img
+                  src={workoutDetails?.thumbnail}
+                  alt="workout"
+                  className="w-full h-[400px] object-contain"
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(179deg, rgba(0, 0, 0, 0.70) 4.16%, rgba(0, 0, 0, 0.00) 40.1%, rgba(0, 0, 0, 0.70) 90.09%), linear-gradient(0deg, rgba(0, 0, 0, 0.20) 0%, rgba(0, 0, 0, 0.20) 100%)",
+                  }}
+                ></div>
+              </div>
+            )}
             <div className="flex justify-between items-center">
               <div className="text-left">
                 <h4 className="font-semibold text-sm mb-1">
@@ -499,14 +505,26 @@ const WorkoutDetails = () => {
                 </p>
               </div>
 
-              <CustomButton
-                className="w-auto py-5 bg-primary text-black"
-                text={`${
-                  workoutDetails?.fees ? `$${workoutDetails.fees}` : "Free"
-                }`}
-                type="button"
-                disableHover={true}
-              />
+              <div className="flex items-center gap-3">
+                <CustomButton
+                  className="w-auto py-5 bg-primary text-black"
+                  text={`${
+                    workoutDetails?.fees ? `$${workoutDetails.fees}` : "Free"
+                  }`}
+                  type="button"
+                  disableHover={true}
+                />
+                {workoutDetails?.user_id &&
+                  workoutDetails?.user_id !== user._id && (
+                    <button
+                      onClick={() => setIsReportOpen(true)}
+                      className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+                    >
+                      <Icon icon="material-symbols:flag" fontSize={16} />
+                      Report
+                    </button>
+                  )}
+              </div>
             </div>
 
             <p className="text-sm text-white mt-4">{workoutDetails?.caption}</p>
@@ -950,6 +968,19 @@ const WorkoutDetails = () => {
             </p>
           </div>
         }
+      />
+
+      {/* Report Component */}
+      <ReportComponent
+        open={isReportOpen}
+        setOpen={setIsReportOpen}
+        reportType="workout"
+        reportedItemId={workoutId}
+        reportedUserId={workoutDetails?.user_id}
+        reportedItemTitle={workoutDetails?.title}
+        onReportSuccess={() => {
+          // Optional: Add any success handling here
+        }}
       />
     </div>
   );

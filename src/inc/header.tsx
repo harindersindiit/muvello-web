@@ -22,12 +22,26 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { capitalize } from "@/lib/utils";
 import { useUser } from "@/context/UserContext";
+import { useSocket } from "@/context/SocketContext";
 import localStorageService from "@/utils/localStorageService";
 import axiosInstance from "@/utils/axiosInstance";
 import { toast } from "react-toastify";
 import moment from "moment";
 import FullScreenLoader from "@/components/ui/loader";
 import NoDataPlaceholder from "@/components/ui/nodata";
+
+interface NotificationCountData {
+  userId: string;
+  unreadCount: number;
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      error?: string;
+    };
+  };
+}
 
 export default function Header() {
   const navigate = useNavigate();
@@ -42,8 +56,8 @@ export default function Header() {
   const [isSearch, setIsSearch] = useState(false);
   // const [user, setUser] = useState({});
   const [keyword, setKeyword] = useState("");
-  const [editLoading, setEditLoading] = useState(false);
   const { user } = useUser();
+  const { socket } = useSocket();
 
   useEffect(() => {
     fetchNotifications();
@@ -66,7 +80,6 @@ export default function Header() {
 
   const getRecentSearch = async () => {
     if (!user._id) return;
-    setEditLoading(true);
     try {
       const token = localStorageService.getItem("accessToken");
       const res = await axiosInstance.get(`/user/recently-searched`, {
@@ -76,18 +89,18 @@ export default function Header() {
       const users = res.data.body.users || [];
       setRecentUsers(users);
       return users;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as ApiError;
       toast.error(
-        err?.response?.data?.error || "Failed to fetch recent searches"
+        error?.response?.data?.error || "Failed to fetch recent searches"
       );
       return [];
     } finally {
-      setEditLoading(false);
+      // Cleanup if needed
     }
   };
 
   const searchUsers = async () => {
-    setEditLoading(true);
     try {
       const token = localStorageService.getItem("accessToken");
 
@@ -99,10 +112,11 @@ export default function Header() {
       setUserList(res.data.body.user);
       setIsSearch(true);
       setShowDropdown(true);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.error || "Failed to search");
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      toast.error(error?.response?.data?.error || "Failed to search");
     } finally {
-      setEditLoading(false);
+      // Cleanup if needed
     }
   };
 
@@ -110,19 +124,19 @@ export default function Header() {
     const newRecentUsers = recentUsers.filter((_, index) => index !== idx);
     setRecentUsers(newRecentUsers);
     setUserList(newRecentUsers);
-    setEditLoading(true);
     try {
       const token = localStorageService.getItem("accessToken");
 
-      const res = await axiosInstance.delete(`recent-search/${id}`, {
+      await axiosInstance.delete(`recent-search/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-    } catch (err: any) {
-      toast.error(err?.response?.data?.error || "Failed to search");
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      toast.error(error?.response?.data?.error || "Failed to search");
     } finally {
-      setEditLoading(false);
+      // Cleanup if needed
     }
   };
 
@@ -142,19 +156,18 @@ export default function Header() {
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Failed to search");
     } finally {
-      setEditLoading(false);
+      // setEditLoading(false);
     }
   };
 
   const saveSearch = async (id) => {
-    setEditLoading(true);
     try {
       const token = localStorageService.getItem("accessToken");
       const reqData = {
         entity_type: "user",
         entity_id: id,
       };
-      const res = await axiosInstance.post(`recent-search`, reqData, {
+      await axiosInstance.post(`recent-search`, reqData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -162,10 +175,11 @@ export default function Header() {
       setKeyword("");
       setShowDropdown(false);
       navigate("/user/profile", { state: { id: id } });
-    } catch (err: any) {
-      toast.error(err?.response?.data?.error || "Failed to search");
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      toast.error(error?.response?.data?.error || "Failed to search");
     } finally {
-      setEditLoading(false);
+      // Cleanup if needed
     }
   };
 
@@ -181,61 +195,78 @@ export default function Header() {
   const [total, setTotal] = useState(0);
   const LIMIT = 10;
 
-  const fetchNotifications = useCallback(async (pageNum = 1) => {
-    if (!user._id) return;
-    setLoading(true);
-    try {
-      const token = localStorageService.getItem("accessToken");
-      const res = await axiosInstance.get(
-        `/notifications?page=${pageNum}&limit=${LIMIT}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
+  const fetchNotifications = useCallback(
+    async (pageNum = 1) => {
+      if (!user._id) return;
+      setLoading(true);
+      try {
+        const token = localStorageService.getItem("accessToken");
+        const res = await axiosInstance.get(
+          `/notifications?page=${pageNum}&limit=${LIMIT}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const newList = res.data.body.notifications || [];
+        if (open) {
+          setUnread(0);
+        } else {
+          setUnread(res.data.body.unreadCount);
         }
-      );
 
-      const newList = res.data.body.notifications || [];
-      setUnread(res.data.body.unreadCount);
-      setNotifications((prev) =>
-        pageNum === 1 ? newList : [...prev, ...newList]
-      );
-      setTotal(res.data.body?.pagination?.total || 0);
-    } catch (error) {
-      const message =
-        error?.response?.data?.error || "Failed to load notifications";
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-
-    // try {
-    //   setLoading(true);
-    //   const res = await getCall(ApiEndpoint.NOTIFICATIONS, {
-    //     page: pageNum,
-    //     limit: LIMIT,
-    //   });
-
-    //   if (res?.success) {
-    //     const newList = res.body?.notifications || [];
-    //     setNotifications(prev =>
-    //       pageNum === 1 ? newList : [...prev, ...newList]
-    //     );
-    //     setTotal(res.body?.pagination?.total || 0);
-    //   } else {
-    //     toast.error(message);
-    //     toastService("error", res?.message || "Failed to load notifications");
-    //   }
-    // } catch (err) {
-    //   console.error("Notification fetch error", err);
-    // } finally {
-    //   setLoading(false);
-    // }
-  }, []);
+        setNotifications((prev) =>
+          pageNum === 1 ? newList : [...prev, ...newList]
+        );
+        setTotal(res.data.body?.pagination?.total || 0);
+      } catch (error) {
+        const message =
+          error?.response?.data?.error || "Failed to load notifications";
+        toast.error(message);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user._id]
+  );
 
   useEffect(() => {
     if (open) {
       fetchNotifications(1);
     }
   }, [open, fetchNotifications]);
+
+  // Socket event listener for notification count updates
+  useEffect(() => {
+    if (!socket || !user._id) return;
+
+    const handleNotificationCountUpdate = (data: NotificationCountData) => {
+      console.log("Notification count update received:", data);
+      setUnread(data.unreadCount);
+      // Check if the count update is for the current user
+      if (data.userId === user._id) {
+        // Update unread count
+
+        // Show toast notification for new notifications
+        if (data.unreadCount > unread) {
+          toast.info("You have new notifications!", {
+            onClick: () => {
+              setOpen(true);
+              fetchNotifications(1);
+            },
+          });
+        }
+      }
+    };
+
+    // Listen for notification count update events
+    socket.on("notification_count_update", handleNotificationCountUpdate);
+
+    // Cleanup listener on unmount or socket change
+    return () => {
+      socket.off("notification_count_update", handleNotificationCountUpdate);
+    };
+  }, [socket, user._id, unread]);
 
   // const handleFollowAction = async (notif, actionType) => {
 
@@ -278,10 +309,13 @@ export default function Header() {
       setPage(1);
       fetchNotifications(1);
       toast.success(resExe.data.message);
-    } catch (error: any) {
-      const message = error?.response?.data?.error || "Internal Server Error.";
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      const message =
+        apiError?.response?.data?.error || "Internal Server Error.";
       toast.error(message);
     } finally {
+      // Cleanup if needed
     }
   };
 
@@ -580,7 +614,7 @@ export default function Header() {
                   type="text"
                   placeholder="Search here..."
                   className="bg-transparent outline-none text-sm w-full placeholder:text-gray-400"
-                  onChange={setKeyword}
+                  onChange={(e) => setKeyword(e.target.value)}
                 />
               </div>
             </div>

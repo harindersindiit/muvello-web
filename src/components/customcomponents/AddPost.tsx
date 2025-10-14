@@ -25,7 +25,6 @@ const AddPost = ({
   refreshPosts,
   onSuccess = null,
 }) => {
-  console.log("postDetails", postDetails);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
 

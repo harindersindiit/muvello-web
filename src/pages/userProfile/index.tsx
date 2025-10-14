@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import CustomButton from "@/components/customcomponents/CustomButton";
 import { CustomModal } from "@/components/customcomponents/CustomModal";
@@ -9,7 +9,7 @@ import { Icon } from "@iconify/react";
 import ProfilePostCard from "@/components/customcomponents/ProfilePostCard";
 import TextInput from "@/components/customcomponents/TextInput";
 import WorkoutComponent from "@/components/customcomponents/WorkoutComponent";
-import likeList from "../postDetails/dummyData/likeList";
+import ReportComponent from "@/components/customcomponents/ReportComponent";
 import { useEffect, useState } from "react";
 import localStorageService from "@/utils/localStorageService";
 import { calculateAge } from "@/utils/age";
@@ -37,6 +37,7 @@ const UserProfile = () => {
 
   const [activeTab, setActiveTab] = useState("followers");
   const [blockUserModal, setBlockUserModal] = useState(false);
+  const [reportUserModal, setReportUserModal] = useState(false);
   const [profileStats, setProfileStats] = useState([]);
 
   const [posts, setPosts] = useState([]);
@@ -432,6 +433,20 @@ const UserProfile = () => {
                   />
 
                   <CustomButton
+                    className="w-auto py-0"
+                    onClick={() => setReportUserModal(true)}
+                    text=""
+                    type="button"
+                    style={{ width: 42, height: 42, borderRadius: 42 }}
+                    icon={
+                      <Icon
+                        icon="material-symbols:report"
+                        style={{ width: "21px", height: "21px" }}
+                      />
+                    }
+                  />
+
+                  <CustomButton
                     className="w-auto py-2 px-5"
                     text={
                       user?.iFollow === "accept"
@@ -542,6 +557,7 @@ const UserProfile = () => {
                       />
                     }
                   />
+
                   <CustomButton
                     className="w-auto py-2 px-5"
                     text={
@@ -555,6 +571,19 @@ const UserProfile = () => {
                     onClick={() => {
                       handleFollow();
                     }}
+                  />
+                  <CustomButton
+                    className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+                    onClick={() => setReportUserModal(true)}
+                    text=""
+                    type="button"
+                    style={{ width: 42, height: 42, borderRadius: 42 }}
+                    icon={
+                      <Icon
+                        icon="mdi:flag-outline"
+                        style={{ width: "21px", height: "21px" }}
+                      />
+                    }
                   />
                 </>
               )}
@@ -895,7 +924,7 @@ const UserProfile = () => {
         onSubmit={() => {
           !blockLoader && handleBlockUser();
         }}
-        submitText={blockLoader ? "Blocking" : "Yes I’m Sure"}
+        submitText={blockLoader ? "Blocking" : "Yes I'm Sure"}
         children={
           <div className="text-white text-center mb-3">
             <h3 className="font-semibold text-lg mb-1">Block User?</h3>
@@ -904,6 +933,18 @@ const UserProfile = () => {
             </p>
           </div>
         }
+      />
+
+      {/* Report User Modal */}
+      <ReportComponent
+        open={reportUserModal}
+        setOpen={setReportUserModal}
+        reportType="user"
+        reportedItemId={user._id}
+        reportedItemTitle={user.fullname}
+        onReportSuccess={() => {
+          setReportUserModal(false);
+        }}
       />
     </div>
   );

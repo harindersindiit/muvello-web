@@ -2,12 +2,9 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import CustomButton from "@/components/customcomponents/CustomButton";
-import CustomTextArea from "@/components/customcomponents/CustomTextArea";
-import { DrawerSidebar } from "@/components/customcomponents/DrawerSidebar";
 import ExerciseComponent from "@/components/customcomponents/ExerciseComponent";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
-import Lines from "@/components/svgcomponents/Lines";
 import PostCard from "@/components/customcomponents/PostComponent";
 
 import WorkoutComponent from "@/components/customcomponents/WorkoutComponent";
@@ -30,29 +27,11 @@ import WorkoutComponentSkeleton from "@/components/skeletons/WorkoutComponentSke
 
 import AddPost from "@/components/customcomponents/AddPost";
 import { useInView } from "react-intersection-observer";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import { reportUserSchema } from "@/utils/validations";
-
-const reportOptions = [
-  "Fake profile/spam",
-  "Inappropriate profile photos",
-  "False Information",
-  "Spam or Promotions",
-  "Offline behavior",
-  "Violates Community Guidelines",
-  "Illegal or Dangerous Activities",
-  "Misleading Purpose",
-  "Other",
-];
+import ReportComponent from "@/components/customcomponents/ReportComponent";
 
 const Home = () => {
   const postContainerRef = useRef(null);
   const [intersectionRoot, setIntersectionRoot] = useState(null);
-
-  const initialValues = {
-    reportType: "",
-    reason: "",
-  };
 
   useEffect(() => {
     if (postContainerRef.current) {
@@ -73,13 +52,9 @@ const Home = () => {
   const [postDrawer, setPostDrawer] = useState(false);
   const [openExercise, setOpenExercise] = useState(false);
 
-  const [caption, setCaption] = useState("");
-  const [isShared, setIsShared] = useState(false);
   const [isReport, setIsReport] = useState(false);
-
-  const [reportType, setReportType] = useState("");
+  const [reportedUser, setReportedUser] = useState(null);
   const [mode, setMode] = useState<"add" | "edit">("add");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   /////
 
@@ -106,56 +81,56 @@ const Home = () => {
 
   /// add post ////
   // const [postDetails, setPostDetails] = useState();
-  const [selectGroupsOpen, setSelectGroupsOpen] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
+  // const [selectGroupsOpen, setSelectGroupsOpen] = useState(false);
+  // const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
+  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = e.target.files;
+  //   if (!files) return;
 
-    const fileArray = Array.from(files).map((file) => ({
-      file,
-      url: URL.createObjectURL(file),
-    }));
+  //   const fileArray = Array.from(files).map((file) => ({
+  //     file,
+  //     url: URL.createObjectURL(file),
+  //   }));
 
-    setUploadedFiles((prev) => [...prev, ...fileArray]);
-  };
+  //   setUploadedFiles((prev) => [...prev, ...fileArray]);
+  // };
 
-  const removeFile = (idx: number) => {
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== idx));
-  };
+  // const removeFile = (idx: number) => {
+  //   setUploadedFiles((prev) => prev.filter((_, i) => i !== idx));
+  // };
 
-  const handleSubmit = () => {
-    console.log(caption, selectedTab);
-    if (!uploadedFiles.length) return alert("Please upload a file");
-    const formData = new FormData();
+  // const handleSubmit = () => {
+  //   console.log(caption, selectedTab);
+  //   if (!uploadedFiles.length) return alert("Please upload a file");
+  //   const formData = new FormData();
 
-    uploadedFiles.forEach(({ file }) => formData.append("files", file));
-    formData.append("caption", caption);
-    formData.append("category", selectedTab);
-    formData.append("shareOnGroups", isShared.toString());
+  //   uploadedFiles.forEach(({ file }) => formData.append("files", file));
+  //   formData.append("caption", caption);
+  //   formData.append("category", selectedTab);
+  //   formData.append("shareOnGroups", isShared.toString());
 
-    // Call your backend API here
-    fetch("/api/posts/upload", {
-      method: "POST",
-      body: formData,
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        console.log("Upload success:", res);
-        setPostDrawer(false);
-        // Reset form
-        setUploadedFiles([]);
-        // setCaption("");
-        setSelectedTab("");
-        setIsShared(false);
-      })
-      .catch((err) => {
-        console.error("Upload error:", err);
-      });
-  };
+  //   // Call your backend API here
+  //   fetch("/api/posts/upload", {
+  //     method: "POST",
+  //     body: formData,
+  //   })
+  //     .then((res) => res.json())
+  //     .then((res) => {
+  //       console.log("Upload success:", res);
+  //       setPostDrawer(false);
+  //       // Reset form
+  //       setUploadedFiles([]);
+  //       // setCaption("");
+  //       setSelectedTab("");
+  //       setIsShared(false);
+  //     })
+  //     .catch((err) => {
+  //       console.error("Upload error:", err);
+  //     });
+  // };
 
   // add post ////
   const getPostsList = useCallback(
@@ -307,38 +282,6 @@ const Home = () => {
   }, [user]);
 
   /////
-
-  const handleReportSubmit = async (values, { setSubmitting, resetForm }) => {
-    try {
-      const token = localStorageService.getItem("accessToken");
-
-      const payload = {
-        reported_user: reportedUser._id,
-        reason:
-          values.reportType === "Other" ? values.caption : values.reportType,
-      };
-
-      await axiosInstance.post("/user-reports", payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      resetForm();
-
-      toast.success("Report submitted successfully.");
-      setIsReport(false);
-      setReportType("");
-      setCaption("");
-    } catch (error) {
-      const message = error?.response?.data?.error || "Reporting user failed.";
-      toast.error(message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const [reportedUser, setReportedUser] = useState(null);
 
   const onViewProfile = (id) => {
     navigate("/user/profile", {
@@ -616,7 +559,7 @@ const Home = () => {
 
                   {isFetchingMore &&
                     Array.from({ length: 2 }).map((_, index) => (
-                      <PostCardSkeleton key={index} />
+                      <PostCardSkeleton key={`skeleton-${index}`} />
                     ))}
 
                   {/* Intersection Observer Anchor */}
@@ -686,103 +629,18 @@ const Home = () => {
       />
       {/* Create Post Drawer */}
 
-      {/* Report Drawer */}
-      <Formik
-        initialValues={initialValues}
-        validationSchema={reportUserSchema}
-        onSubmit={handleReportSubmit}
-      >
-        {({ values, setFieldValue, isSubmitting, handleSubmit, resetForm }) => (
-          <Form>
-            <DrawerSidebar
-              title="Report"
-              submitText={isSubmitting ? "Submitting..." : "Submit"}
-              cancelText="Cancel"
-              onSubmit={() =>
-                document.getElementById("report-form-submit")?.click()
-              }
-              open={isReport}
-              setOpen={setIsReport}
-              onCancel={() => {
-                resetForm();
-                setIsReport(false);
-              }}
-            >
-              <div className="p-4">
-                <h3 className="text-white text-md font-semibold mb-3">
-                  We don’t tell {reportedUser?.fullname}.
-                </h3>
-
-                <div className="flex flex-col">
-                  <div className="space-y-6 mb-3">
-                    {reportOptions.map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => setFieldValue("reportType", option)}
-                        className="flex w-full cursor-pointer items-center justify-between text-left text-white text-sm font-normal focus:outline-none"
-                      >
-                        {option}
-                        <div className="w-5 h-5 ml-4">
-                          <Icon
-                            icon="radix-icons:radiobutton"
-                            fontSize={20}
-                            color={
-                              values.reportType === option ? "#94EB00" : "#666"
-                            }
-                          />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  <ErrorMessage
-                    name="reportType"
-                    component="div"
-                    className="text-red-500 text-xs mb-2"
-                  />
-                </div>
-
-                {values.reportType === "Other" && (
-                  <div className="mt-4">
-                    <Field name="reason">
-                      {({ field }) => (
-                        <CustomTextArea
-                          {...field}
-                          // onChange={(e) =>
-                          //   setFieldValue("caption", e.target.value)
-                          // }
-                          placeholder="Write your reason here..."
-                          icon={<Lines color="white" />}
-                          error={null}
-                          rows={1}
-                          className="resize-none overflow-hidden"
-                        />
-                      )}
-                    </Field>
-                    <ErrorMessage
-                      name="reason"
-                      component="div"
-                      className="text-red-500 text-xs mt-1"
-                    />
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  className="hidden"
-                  id="report-form-submit"
-                  disabled={isSubmitting}
-                  onClick={() => {
-                    handleSubmit();
-                  }}
-                >
-                  Submit
-                </button>
-              </div>
-            </DrawerSidebar>
-          </Form>
-        )}
-      </Formik>
+      {/* Report Component */}
+      <ReportComponent
+        open={isReport}
+        setOpen={setIsReport}
+        reportType="user"
+        reportedItemId={reportedUser?._id}
+        reportedUserId={reportedUser?._id}
+        reportedItemTitle={reportedUser?.fullname}
+        onReportSuccess={() => {
+          // Optional: Add any success handling here
+        }}
+      />
 
       <WorkoutComponentSidebar mode={mode} open={open} setOpen={setOpen} />
       <ExerciseCommonSidebar

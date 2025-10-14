@@ -35,6 +35,25 @@ import walletService, {
   WithdrawalAccount,
 } from "@/services/walletService";
 
+interface WorkoutPurchase {
+  paymentId: string;
+  workout: {
+    _id: string;
+    title: string;
+    thumbnail?: string;
+  };
+  coach: {
+    _id: string;
+    fullname: string;
+    email: string;
+  };
+  purchaseDate: string;
+  amount: number;
+  platformFee: number;
+  coachEarning: number;
+  status: string;
+}
+
 const UserWallet = () => {
   const navigate = useNavigate();
 
@@ -43,6 +62,9 @@ const UserWallet = () => {
     null
   );
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [workoutPurchases, setWorkoutPurchases] = useState<WorkoutPurchase[]>(
+    []
+  );
   const [withdrawalAccounts, setWithdrawalAccounts] = useState<
     WithdrawalAccount[]
   >([]);
@@ -57,6 +79,7 @@ const UserWallet = () => {
   });
   const [loading, setLoading] = useState(true);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [workoutPurchasesLoading, setWorkoutPurchasesLoading] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
 
   // Modal states
@@ -76,6 +99,11 @@ const UserWallet = () => {
     Custom: false,
   });
 
+  // Tab state for switching between transactions and workout purchases
+  const [activeTab, setActiveTab] = useState<"transactions" | "purchases">(
+    "transactions"
+  );
+
   // Withdrawal form state
   const [withdrawalForm, setWithdrawalForm] = useState({
     amount: "",
@@ -86,28 +114,6 @@ const UserWallet = () => {
   // Pagination state
   const [hasMoreTransactions, setHasMoreTransactions] = useState(true);
   const [transactionOffset, setTransactionOffset] = useState(0);
-
-  // Load data on component mount
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  const loadInitialData = useCallback(async () => {
-    setLoading(true);
-    try {
-      await Promise.all([
-        loadWalletBalance(),
-        loadTransactionHistory(),
-        loadWithdrawalAccounts(),
-        loadWithdrawalEligibility(),
-      ]);
-    } catch (error) {
-      console.error("Error loading wallet data:", error);
-      toast.error("Failed to load wallet data");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   const loadWalletBalance = async () => {
     try {
@@ -122,42 +128,85 @@ const UserWallet = () => {
     }
   };
 
-  const loadTransactionHistory = async (offset = 0, filters = {}) => {
-    try {
-      setTransactionsLoading(true);
+  const loadTransactionHistory = useCallback(
+    async (offset = 0, filters = {}) => {
+      try {
+        setTransactionsLoading(true);
 
-      // Determine filter type
-      let filterType = "all";
-      if (selectedFilters.Credit && !selectedFilters.Debit) {
-        filterType = "credit";
-      } else if (selectedFilters.Debit && !selectedFilters.Credit) {
-        filterType = "debit";
+        // Determine filter type
+        let filterType = "all";
+        if (selectedFilters.Credit && !selectedFilters.Debit) {
+          filterType = "credit";
+        } else if (selectedFilters.Debit && !selectedFilters.Credit) {
+          filterType = "debit";
+        }
+
+        const response = await walletService.getTransactionHistory({
+          type: filterType as "all" | "credit" | "debit",
+          limit: 20,
+          offset,
+          ...filters,
+        });
+
+        if (response.success && response.body) {
+          if (offset === 0) {
+            setTransactions(response.body.transactions);
+          } else {
+            setTransactions((prev) => [...prev, ...response.body.transactions]);
+          }
+          setHasMoreTransactions(response.body.pagination.hasMore);
+          setTransactionOffset(offset + response.body.transactions.length);
+        } else {
+          toast.error(response.message);
+        }
+      } catch (error) {
+        console.error("Error loading transactions:", error);
+      } finally {
+        setTransactionsLoading(false);
       }
+    },
+    [selectedFilters.Credit, selectedFilters.Debit]
+  );
 
-      const response = await walletService.getTransactionHistory({
-        type: filterType as "all" | "credit" | "debit",
-        limit: 20,
-        offset,
-        ...filters,
-      });
+  const loadWorkoutPurchases = useCallback(async () => {
+    try {
+      setWorkoutPurchasesLoading(true);
+      const response = await walletService.getWorkoutPurchaseTransactions();
 
       if (response.success && response.body) {
-        if (offset === 0) {
-          setTransactions(response.body.transactions);
-        } else {
-          setTransactions((prev) => [...prev, ...response.body.transactions]);
-        }
-        setHasMoreTransactions(response.body.pagination.hasMore);
-        setTransactionOffset(offset + response.body.transactions.length);
+        setWorkoutPurchases(response.body.workouts);
       } else {
         toast.error(response.message);
       }
     } catch (error) {
-      console.error("Error loading transactions:", error);
+      console.error("Error loading workout purchases:", error);
     } finally {
-      setTransactionsLoading(false);
+      setWorkoutPurchasesLoading(false);
     }
-  };
+  }, []);
+
+  const loadInitialData = useCallback(async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        loadWalletBalance(),
+        loadTransactionHistory(),
+        loadWorkoutPurchases(),
+        loadWithdrawalAccounts(),
+        loadWithdrawalEligibility(),
+      ]);
+    } catch (error) {
+      console.error("Error loading wallet data:", error);
+      toast.error("Failed to load wallet data");
+    } finally {
+      setLoading(false);
+    }
+  }, [loadTransactionHistory, loadWorkoutPurchases]);
+
+  // Load data on component mount
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
   const loadWithdrawalEligibility = async () => {
     try {
@@ -538,160 +587,275 @@ const UserWallet = () => {
       </div>
 
       <div className="min-h-screen bg-black text-white py-6 border-t-8 border-white/10 mt-5">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-xl font-semibold mb-6">Transactions History</h2>
-          <div className="relative">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild className="cursor-pointer">
-                <Icon
-                  icon="rivet-icons:filter"
-                  color="oklch(84.1% 0.238 128.85)"
-                  className="w-6 h-6"
-                />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="bottom"
-                align="end"
-                className="bg-black w-45 p-2 border-lightdark rounded-[12px]"
-                sideOffset={10}
-              >
-                <DropdownMenuItem className="text-white hover:text-primary mb-2">
-                  <div
-                    className="flex items-center gap-2 justify-between w-full cursor-pointer"
-                    onClick={() => toggleFilter("All")}
-                  >
-                    All
-                    <Checkbox
-                      className="cursor-pointer text-black border-grey hover:border-primary transition-colors"
-                      checked={selectedFilters.All}
-                      readOnly
-                    />
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-white hover:text-primary mb-2">
-                  <div
-                    className="flex items-center gap-2 justify-between w-full cursor-pointer"
-                    onClick={() => toggleFilter("Credit")}
-                  >
-                    Credit
-                    <Checkbox
-                      className="cursor-pointer text-black border-grey hover:border-primary transition-colors"
-                      checked={selectedFilters.Credit}
-                      readOnly
-                    />
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-white hover:text-primary mb-2">
-                  <div
-                    className="flex items-center gap-2 justify-between w-full cursor-pointer"
-                    onClick={() => toggleFilter("Debit")}
-                  >
-                    Debit
-                    <Checkbox
-                      className="cursor-pointer text-black border-grey hover:border-primary transition-colors"
-                      checked={selectedFilters.Debit}
-                      readOnly
-                    />
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-white hover:text-primary mb-2">
-                  <div
-                    className="flex items-center gap-2 justify-between w-full cursor-pointer"
-                    onClick={() => toggleFilter("Custom")}
-                  >
-                    Custom
-                    <Checkbox
-                      className="cursor-pointer text-black border-grey hover:border-primary transition-colors"
-                      checked={selectedFilters.Custom}
-                      readOnly
-                    />
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+        {/* Tab Navigation */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex space-x-1 bg-gray-800 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveTab("transactions")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "transactions"
+                  ? "bg-primary text-black"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              Transactions
+            </button>
+            <button
+              onClick={() => setActiveTab("purchases")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "purchases"
+                  ? "bg-primary text-black"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              Workout Purchases
+            </button>
           </div>
+
+          {activeTab === "transactions" && (
+            <div className="relative">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild className="cursor-pointer">
+                  <Icon
+                    icon="rivet-icons:filter"
+                    color="oklch(84.1% 0.238 128.85)"
+                    className="w-6 h-6"
+                  />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  side="bottom"
+                  align="end"
+                  className="bg-black w-45 p-2 border-lightdark rounded-[12px]"
+                  sideOffset={10}
+                >
+                  <DropdownMenuItem className="text-white hover:text-primary mb-2">
+                    <div
+                      className="flex items-center gap-2 justify-between w-full cursor-pointer"
+                      onClick={() => toggleFilter("All")}
+                    >
+                      All
+                      <Checkbox
+                        className="cursor-pointer text-black border-grey hover:border-primary transition-colors"
+                        checked={selectedFilters.All}
+                      />
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-white hover:text-primary mb-2">
+                    <div
+                      className="flex items-center gap-2 justify-between w-full cursor-pointer"
+                      onClick={() => toggleFilter("Credit")}
+                    >
+                      Credit
+                      <Checkbox
+                        className="cursor-pointer text-black border-grey hover:border-primary transition-colors"
+                        checked={selectedFilters.Credit}
+                      />
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-white hover:text-primary mb-2">
+                    <div
+                      className="flex items-center gap-2 justify-between w-full cursor-pointer"
+                      onClick={() => toggleFilter("Debit")}
+                    >
+                      Debit
+                      <Checkbox
+                        className="cursor-pointer text-black border-grey hover:border-primary transition-colors"
+                        checked={selectedFilters.Debit}
+                      />
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-white hover:text-primary mb-2">
+                    <div
+                      className="flex items-center gap-2 justify-between w-full cursor-pointer"
+                      onClick={() => toggleFilter("Custom")}
+                    >
+                      Custom
+                      <Checkbox
+                        className="cursor-pointer text-black border-grey hover:border-primary transition-colors"
+                        checked={selectedFilters.Custom}
+                      />
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
-          {transactionsLoading && transactions.length === 0 ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin" />
-              <span className="ml-2">Loading transactions...</span>
-            </div>
-          ) : transactions.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              <p>No transactions found</p>
-              <p className="text-sm mt-2">
-                Your transaction history will appear here
-              </p>
-            </div>
+          {activeTab === "transactions" ? (
+            <>
+              {transactionsLoading && transactions.length === 0 ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <span className="ml-2">Loading transactions...</span>
+                </div>
+              ) : transactions.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  <p>No transactions found</p>
+                  <p className="text-sm mt-2">
+                    Your transaction history will appear here
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {transactions.map((transaction) => (
+                    <div
+                      key={transaction.id}
+                      className="flex justify-between items-center p-4 bg-white/10 rounded-xl"
+                    >
+                      <div className="flex flex-col">
+                        <p className="text-white text-base font-semibold mb-1">
+                          {transaction.title}
+                        </p>
+                        <p className="text-gray-400 text-sm mb-2">
+                          Tran. ID: {transaction.transaction_id}
+                        </p>
+                        <p className="text-gray-400 text-xs">
+                          {transaction.formatted_date} • {transaction.time}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <p
+                          className={`text-base font-bold mb-1 ${
+                            transaction.type === "credit"
+                              ? "text-primary"
+                              : "text-red-500"
+                          }`}
+                        >
+                          {transaction.formatted_amount}
+                        </p>
+                        <p className="text-gray-400 text-xs">
+                          {transaction.payment_method}
+                        </p>
+                        {transaction.status !== "completed" && (
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full mt-1 ${
+                              transaction.status === "pending"
+                                ? "bg-yellow-500/20 text-yellow-500"
+                                : transaction.status === "failed"
+                                ? "bg-red-500/20 text-red-500"
+                                : "bg-gray-500/20 text-gray-500"
+                            }`}
+                          >
+                            {transaction.status}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Load More Button */}
+                  {hasMoreTransactions && (
+                    <div className="flex justify-center pt-4">
+                      <Button
+                        onClick={loadMoreTransactions}
+                        disabled={transactionsLoading}
+                        variant="outline"
+                        className="min-w-[120px]"
+                      >
+                        {transactionsLoading ? (
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Loading...
+                          </div>
+                        ) : (
+                          "Load More"
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </>
           ) : (
             <>
-              {transactions.map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex justify-between items-center p-4 bg-white/10 rounded-xl"
-                >
-                  <div className="flex flex-col">
-                    <p className="text-white text-base font-semibold mb-1">
-                      {transaction.title}
-                    </p>
-                    <p className="text-gray-400 text-sm mb-2">
-                      Tran. ID: {transaction.transaction_id}
-                    </p>
-                    <p className="text-gray-400 text-xs">
-                      {transaction.formatted_date} • {transaction.time}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <p
-                      className={`text-base font-bold mb-1 ${
-                        transaction.type === "credit"
-                          ? "text-primary"
-                          : "text-red-500"
-                      }`}
+              {workoutPurchasesLoading && workoutPurchases.length === 0 ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <span className="ml-2">Loading workout purchases...</span>
+                </div>
+              ) : workoutPurchases.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  <p>No workout purchases found</p>
+                  <p className="text-sm mt-2">
+                    Your workout purchase history will appear here
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {workoutPurchases.map((purchase) => (
+                    <div
+                      key={purchase.paymentId}
+                      className="flex justify-between items-center p-4 bg-white/10 rounded-xl"
                     >
-                      {transaction.formatted_amount}
-                    </p>
-                    <p className="text-gray-400 text-xs">
-                      {transaction.payment_method}
-                    </p>
-                    {transaction.status !== "completed" && (
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full mt-1 ${
-                          transaction.status === "pending"
-                            ? "bg-yellow-500/20 text-yellow-500"
-                            : transaction.status === "failed"
-                            ? "bg-red-500/20 text-red-500"
-                            : "bg-gray-500/20 text-gray-500"
-                        }`}
-                      >
-                        {transaction.status}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {/* Load More Button */}
-              {hasMoreTransactions && (
-                <div className="flex justify-center pt-4">
-                  <Button
-                    onClick={loadMoreTransactions}
-                    disabled={transactionsLoading}
-                    variant="outline"
-                    className="min-w-[120px]"
-                  >
-                    {transactionsLoading ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Loading...
+                      <div className="flex items-center space-x-4">
+                        {purchase.workout.thumbnail && (
+                          <img
+                            src={purchase.workout.thumbnail}
+                            alt={purchase.workout.title}
+                            className="w-12 h-12 rounded-lg object-cover cursor-pointer"
+                            onClick={() =>
+                              navigate(`/user/workouts/workout-details`, {
+                                state: purchase.workout,
+                              })
+                            }
+                          />
+                        )}
+                        <div className="flex flex-col">
+                          <p
+                            className="text-white text-base font-semibold mb-1 cursor-pointer"
+                            onClick={() =>
+                              navigate(`/user/workouts/workout-details`, {
+                                state: purchase.workout,
+                              })
+                            }
+                          >
+                            {purchase.workout.title}
+                          </p>
+                          <p className="text-gray-400 text-sm mb-1">
+                            Coach:{" "}
+                            <span
+                              className="cursor-pointer hover:underline"
+                              onClick={() => {
+                                navigate("/user/profile", {
+                                  state: { id: purchase.coach._id },
+                                });
+                              }}
+                            >
+                              {purchase.coach.fullname}
+                            </span>
+                          </p>
+                          <p className="text-gray-400 text-xs">
+                            Purchased:{" "}
+                            {new Date(
+                              purchase.purchaseDate
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
-                    ) : (
-                      "Load More"
-                    )}
-                  </Button>
-                </div>
+                      <div className="flex flex-col items-end">
+                        <p className="text-red-500 text-base font-bold mb-1">
+                          -${(purchase.amount / 100).toFixed(2)}
+                        </p>
+                        <p className="text-gray-400 text-xs">
+                          Payment ID: {purchase.paymentId.slice(-8)}
+                        </p>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full mt-1 ${
+                            purchase.status === "succeeded"
+                              ? "bg-green-500/20 text-green-500"
+                              : purchase.status === "pending"
+                              ? "bg-yellow-500/20 text-yellow-500"
+                              : "bg-red-500/20 text-red-500"
+                          }`}
+                        >
+                          {purchase.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </>
               )}
             </>
           )}
@@ -772,10 +936,10 @@ const UserWallet = () => {
       </CustomModal>
 
       <DrawerSidebar
-        openDrawer={openDrawer}
-        setOpenDrawer={setOpenDrawer}
+        open={openDrawer}
+        setOpen={setOpenDrawer}
         title=""
-        showHeader={false}
+        showFooter={false}
       >
         <div className="p-4">
           <h3 className="text-white text-lg font-semibold mb-4">

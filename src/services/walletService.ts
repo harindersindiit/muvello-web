@@ -198,9 +198,9 @@ class WalletService {
   // Debug and refresh Stripe account status
   async debugStripeAccountStatus(): Promise<
     ServiceResponse<{
-      coach_account: any;
-      stripe_account: any;
-      status_analysis: any;
+      coach_account: Record<string, unknown>;
+      stripe_account: Record<string, unknown>;
+      status_analysis: Record<string, unknown>;
     }>
   > {
     try {
@@ -422,6 +422,49 @@ class WalletService {
         message:
           (error as ApiError)?.response?.data?.message ||
           "Failed to connect bank accounts to Stripe",
+        error: (error as ApiError)?.message,
+      };
+    }
+  }
+
+  // Get workout purchase transactions
+  async getWorkoutPurchaseTransactions(): Promise<
+    ServiceResponse<{
+      purchases: Array<{
+        paymentId: string;
+        workout: {
+          id: string;
+          title: string;
+          thumbnail?: string;
+        };
+        coach: {
+          id: string;
+          name: string;
+          email: string;
+        };
+        purchaseDate: string;
+        amount: number;
+        platformFee: number;
+        coachEarning: number;
+        status: string;
+      }>;
+      totalPurchases: number;
+    }>
+  > {
+    try {
+      const response = await axiosInstance.get("/payments/purchased-workouts");
+      return {
+        success: true,
+        message: "Workout purchases retrieved successfully",
+        body: response.data.body,
+      };
+    } catch (error: unknown) {
+      console.error("Error fetching workout purchases:", error);
+      return {
+        success: false,
+        message:
+          (error as ApiError)?.response?.data?.message ||
+          "Failed to fetch workout purchases",
         error: (error as ApiError)?.message,
       };
     }

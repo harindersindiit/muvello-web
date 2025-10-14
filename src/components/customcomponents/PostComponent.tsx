@@ -22,6 +22,8 @@ import axiosInstance from "@/utils/axiosInstance";
 import { toast } from "react-toastify";
 import { useUser } from "@/context/UserContext";
 import { Loader2 } from "lucide-react";
+import ReportComponent, { ReportType } from "./ReportComponent";
+
 interface PostCardProps {
   postImages?: string[];
   userName?: string;
@@ -60,6 +62,7 @@ const PostCard: React.FC<PostCardProps> = ({
   const [commentInput, setCommentInput] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   const settings = {
     dots: true,
@@ -271,14 +274,22 @@ const PostCard: React.FC<PostCardProps> = ({
                       </button>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="text-white hover:text-primary mb-2">
-                      <Link
-                        to="#"
+                      <button
                         onClick={() => onReport(item.user)}
                         className="flex items-center gap-2"
                       >
                         <img src={IMAGES.flag} alt="flag" />
-                        Report
-                      </Link>
+                        Report User
+                      </button>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-white hover:text-primary mb-2">
+                      <button
+                        onClick={() => setIsReportOpen(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <img src={IMAGES.flag} alt="flag" />
+                        Report Post
+                      </button>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -451,6 +462,19 @@ const PostCard: React.FC<PostCardProps> = ({
           </button>
         )}
       </div>
+
+      {/* Report Component */}
+      <ReportComponent
+        open={isReportOpen}
+        setOpen={setIsReportOpen}
+        reportType="post"
+        reportedItemId={item._id}
+        reportedUserId={item.user._id}
+        reportedItemTitle={item.caption?.slice(0, 50) + "..."}
+        onReportSuccess={() => {
+          // Optional: Add any success handling here
+        }}
+      />
     </Card>
   );
 };

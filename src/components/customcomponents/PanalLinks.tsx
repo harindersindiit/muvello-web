@@ -288,7 +288,7 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
                         updateInfo("push", !pushNotification);
                       }, 0);
                     }}
-                    className="flex items-center gap-3 justify-between w-full border-b border-gray-800 py-3 px-4"
+                    className="flex items-center gap-3 justify-between w-ful py-3 px-4"
                   >
                     <div>
                       <p className="text-white text-xs font-medium mb-1">
@@ -304,7 +304,7 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
              data-[state=checked]:[&>span]:bg-white cursor-pointer"
                     />
                   </div>
-                  <div
+                  {/* <div
                     onClick={(e) => {
                       e.stopPropagation();
                       setEmailNotification(!emailNotification);
@@ -325,7 +325,7 @@ const PanalLinks = ({ closePanel }: { closePanel: () => void }) => {
              [&>span]:bg-white 
              data-[state=checked]:[&>span]:bg-white cursor-pointer"
                     />
-                  </div>
+                  </div> */}
                 </div>
               )}
             </div>
