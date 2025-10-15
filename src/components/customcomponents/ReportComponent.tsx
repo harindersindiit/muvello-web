@@ -16,7 +16,6 @@ export interface ReportComponentProps {
   setOpen: (open: boolean) => void;
   reportType: ReportType;
   reportedItemId: string;
-  reportedUserId?: string;
   reportedItemTitle?: string;
   onReportSuccess?: () => void;
 }
@@ -38,7 +37,6 @@ const ReportComponent: React.FC<ReportComponentProps> = ({
   setOpen,
   reportType,
   reportedItemId,
-  reportedUserId,
   reportedItemTitle,
   onReportSuccess,
 }) => {

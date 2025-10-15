@@ -635,7 +635,6 @@ const Home = () => {
         setOpen={setIsReport}
         reportType="user"
         reportedItemId={reportedUser?._id}
-        reportedUserId={reportedUser?._id}
         reportedItemTitle={reportedUser?.fullname}
         onReportSuccess={() => {
           // Optional: Add any success handling here

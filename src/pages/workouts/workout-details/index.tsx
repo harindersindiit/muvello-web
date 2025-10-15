@@ -976,7 +976,6 @@ const WorkoutDetails = () => {
         setOpen={setIsReportOpen}
         reportType="workout"
         reportedItemId={workoutId}
-        reportedUserId={workoutDetails?.user_id}
         reportedItemTitle={workoutDetails?.title}
         onReportSuccess={() => {
           // Optional: Add any success handling here

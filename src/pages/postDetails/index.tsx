@@ -797,7 +797,6 @@ const PostDetails = () => {
         setOpen={setReportModal}
         reportType="post"
         reportedItemId={state?._id}
-        reportedUserId={state?.user_id}
         reportedItemTitle={state?.caption}
         onReportSuccess={() => {
           setReportModal(false);

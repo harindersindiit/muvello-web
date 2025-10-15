@@ -309,13 +309,13 @@ const ProgressDetails = () => {
                                     <img
                                       src={mediaItem.url}
                                       alt={`Workout media ${mediaIndex + 1}`}
-                                      className="absolute inset-0 w-full h-full object-cover hover:opacity-90 transition-opacity"
+                                      className="absolute inset-0 w-full h-full object-cover hover:opacity-90 transition-opacity cursor-pointer"
                                       loading="lazy"
                                     />
                                   </div>
                                 ) : mediaItem.type === "video" ? (
                                   <div
-                                    className="relative cursor-pointer w-full aspect-square overflow-hidden rounded-lg bg-gray-700"
+                                    className="relative cursor-pointer w-full aspect-square overflow-hidden rounded-lg bg-gray-700 "
                                     onClick={() =>
                                       window.open(mediaItem.url, "_blank")
                                     }
@@ -323,7 +323,7 @@ const ProgressDetails = () => {
                                     <video
                                       src={mediaItem.url}
                                       controls
-                                      className="absolute inset-0 w-full h-full object-cover hover:opacity-90 transition-opacity"
+                                      className="absolute inset-0 w-full h-full object-cover hover:opacity-90 transition-opacity cursor-pointer"
                                       preload="metadata"
                                       onClick={(e) => {
                                         e.preventDefault();
