@@ -9,7 +9,7 @@ import localStorageService from "@/utils/localStorageService";
 import { toast } from "react-toastify";
 import { reportUserSchema } from "@/utils/validations";
 
-export type ReportType = "post" | "workout" | "user";
+export type ReportType = "post" | "workout" | "user" | "reel";
 
 export interface ReportComponentProps {
   open: boolean;
@@ -20,17 +20,55 @@ export interface ReportComponentProps {
   onReportSuccess?: () => void;
 }
 
-const reportOptions = [
-  "Fake profile/spam",
-  "Inappropriate content",
-  "False Information",
-  "Spam or Promotions",
-  "Offline behavior",
-  "Violates Community Guidelines",
-  "Illegal or Dangerous Activities",
-  "Misleading Purpose",
-  "Other",
-];
+// Report reasons configuration for each type
+const getReportReasons = (reportType: ReportType): string[] => {
+  switch (reportType) {
+    case "user":
+      return [
+        "Harassment and cyberbullying",
+        "Privacy",
+        "Impersonation",
+        "Violent threats",
+        "Child endangerment",
+        "Hate speech",
+        "Spam and scams",
+        "Other",
+      ];
+    case "post":
+    case "reel":
+      return [
+        "Sexual content",
+        "Violent or repulsive content",
+        "Hateful or abusive content",
+        "Harassment or bullying",
+        "Harmful or dangerous acts",
+        "Injury or self-harm",
+        "Misinformation",
+        "Child abuse",
+        "Promotes Nudity",
+        "Spam or misleading",
+        "Legal issue",
+        "Other",
+      ];
+    case "workout":
+      return [
+        "Child abuse",
+        "Sexual and Promotes Nudity",
+        "Violent or repulsive content",
+        "Harassment or bullying",
+        "Overtraining or burnout",
+        "Recovery issues",
+        "Over price",
+        "Injury or self-harm",
+        "Misinformation",
+        "Mental Health issue",
+        "Improper form and heavy weights",
+        "Other",
+      ];
+    default:
+      return ["Other"];
+  }
+};
 
 const ReportComponent: React.FC<ReportComponentProps> = ({
   open,
@@ -40,7 +78,7 @@ const ReportComponent: React.FC<ReportComponentProps> = ({
   reportedItemTitle,
   onReportSuccess,
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, setIsSubmitting] = useState(false);
 
   const initialValues = {
     reportType: "",
@@ -55,6 +93,8 @@ const ReportComponent: React.FC<ReportComponentProps> = ({
         return "Report Workout";
       case "user":
         return "Report User";
+      case "reel":
+        return "Report Reel";
       default:
         return "Report";
     }
@@ -68,20 +108,25 @@ const ReportComponent: React.FC<ReportComponentProps> = ({
         return "We don't tell the workout creator about this report.";
       case "user":
         return "We don't tell the user about this report.";
+      case "reel":
+        return "We don't tell the reel creator about this report.";
       default:
         return "We don't tell the reported user about this report.";
     }
   };
 
   const handleReportSubmit = async (
-    values: any,
-    { setSubmitting, resetForm }: any
+    values: { reportType: string; reason: string },
+    {
+      setSubmitting,
+      resetForm,
+    }: { setSubmitting: (value: boolean) => void; resetForm: () => void }
   ) => {
     try {
       setIsSubmitting(true);
       const token = localStorageService.getItem("accessToken");
 
-      let payload: any = {
+      const payload: Record<string, string> = {
         reason:
           values.reportType === "Other" ? values.reason : values.reportType,
       };
@@ -96,6 +141,9 @@ const ReportComponent: React.FC<ReportComponentProps> = ({
           break;
         case "user":
           payload.reported_user = reportedItemId;
+          break;
+        case "reel":
+          payload.reel_id = reportedItemId;
           break;
       }
 
@@ -112,8 +160,10 @@ const ReportComponent: React.FC<ReportComponentProps> = ({
       toast.success("Report submitted successfully.");
       setOpen(false);
       onReportSuccess?.();
-    } catch (error: any) {
-      const message = error?.response?.data?.error || "Reporting failed.";
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error || "Reporting failed.";
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -155,6 +205,8 @@ const ReportComponent: React.FC<ReportComponentProps> = ({
                       ? "Post:"
                       : reportType === "workout"
                       ? "Workout:"
+                      : reportType === "reel"
+                      ? "Reel:"
                       : "User:"}
                   </p>
                   <p className="text-white text-sm font-medium line-clamp-2 break-all">
@@ -165,7 +217,7 @@ const ReportComponent: React.FC<ReportComponentProps> = ({
 
               <div className="flex flex-col">
                 <div className="space-y-6 mb-3">
-                  {reportOptions.map((option) => (
+                  {getReportReasons(reportType).map((option) => (
                     <button
                       key={option}
                       type="button"
@@ -195,9 +247,15 @@ const ReportComponent: React.FC<ReportComponentProps> = ({
               {values.reportType === "Other" && (
                 <div className="mt-4">
                   <Field name="reason">
-                    {({ field }: any) => (
+                    {(props: { field: Record<string, unknown> }) => (
                       <CustomTextArea
-                        {...field}
+                        name={props.field.name as string}
+                        value={props.field.value as string}
+                        onChange={
+                          props.field.onChange as (
+                            e: React.ChangeEvent<HTMLInputElement>
+                          ) => void
+                        }
                         placeholder="Write your reason here..."
                         icon={<Lines color="white" />}
                         error={null}
