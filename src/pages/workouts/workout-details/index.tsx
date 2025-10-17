@@ -42,6 +42,8 @@ const WorkoutDetails = () => {
   const { user } = useUser();
   const { state } = useLocation();
 
+  console.log("🚀 ~ WorkoutDetails ~ state:", state);
+
   const workoutId = state?._id; // Only get _id from state
   const [workoutDetails, setWorkoutDetails] = useState<WorkoutDetailsType>({});
   const [workoutLoader, setWorkoutLoader] = useState(false);

@@ -839,7 +839,7 @@ const UserWallet = () => {
                           -${(purchase.amount / 100).toFixed(2)}
                         </p>
                         <p className="text-gray-400 text-xs">
-                          Payment ID: {purchase.paymentId.slice(-8)}
+                          Transaction ID: {purchase.paymentId}
                         </p>
                         <span
                           className={`text-xs px-2 py-1 rounded-full mt-1 ${
