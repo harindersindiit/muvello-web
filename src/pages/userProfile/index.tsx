@@ -378,6 +378,16 @@ const UserProfile = () => {
           />
           {/* Name and Followers for mobile device */}
           <div className="flex-col gap-2 min-w-[150px] flex sm:hidden">
+            <div className="flex items-center gap-2 mb-2">
+              <h5 className="text-lg font-semibold text-white">
+                {capitalize(user?.fullname || "")}
+              </h5>
+              {user?.account_status === "Inactive" && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30">
+                  Inactive
+                </span>
+              )}
+            </div>
             <div className="flex  gap-5">
               <div
                 className="cursor-pointer"
@@ -467,12 +477,19 @@ const UserProfile = () => {
           <div className="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-10 flex-wrap w-full justify-between">
             {/* Name and Followers */}
             <div className=" hidden sm:flex flex-col gap-2 min-w-[150px]">
-              <h5 className="text-lg font-semibold  max-w-[250px] whitespace-nowrap  text-white text-sm">
-                {/* {state?.name || "Mariana Castro"} */}
-                {capitalize(user?.fullname || "")?.length > 70
-                  ? `${capitalize(user?.fullname || "").substring(0, 70)}...`
-                  : capitalize(user?.fullname || "")}
-              </h5>
+              <div className="flex items-center gap-2">
+                <h5 className="text-lg font-semibold  max-w-[250px] whitespace-nowrap  text-white text-sm">
+                  {/* {state?.name || "Mariana Castro"} */}
+                  {capitalize(user?.fullname || "")?.length > 70
+                    ? `${capitalize(user?.fullname || "").substring(0, 70)}...`
+                    : capitalize(user?.fullname || "")}
+                </h5>
+                {user?.account_status === "Inactive" && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30">
+                    Inactive
+                  </span>
+                )}
+              </div>
               <div className="flex gap-10">
                 <div
                   className="cursor-pointer "

@@ -174,9 +174,13 @@ export const contactUsSchema = Yup.object().shape({
     .email("Invalid email address")
     .required("Email is required"),
   message: Yup.string()
-    .matches(/^\S.*$/, "Cannot start with a whitespace")
+    .test(
+      "no-leading-whitespace",
+      "Cannot start with a whitespace",
+      (value) => !value || value.trimStart().length === 0 || value[0] !== " "
+    )
     .min(10, "Message must be at least 10 characters")
-    .max(500, "Message must be less than 500 characters")
+    .max(2000, "Message must be less than 2000 characters")
     .required("Message is required"),
 });
 

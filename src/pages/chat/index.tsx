@@ -95,7 +95,7 @@ const AddMembersPopup = ({
           onChange={(e) => setSearchText(e.target.value)}
           className="mb-3"
         />
-        <div className="mt-4 text-white">
+        <div className="mt-4 text-white h-72 overflow-y-auto custom-scrollbar">
           {availableToAdd.map((user) => (
             <label
               key={user._id}
@@ -109,7 +109,7 @@ const AddMembersPopup = ({
               />
               <div className="border-b border-gray-600 pb-4 w-full">
                 <div className="flex justify-between items-center w-full">
-                  <h3 className="text-white text-base font-semibold">
+                  <h3 className="text-white text-base font-semibold truncate max-w-[300px]">
                     {user.fullname}
                   </h3>
                   <Checkbox
@@ -134,6 +134,7 @@ const AddMembersPopup = ({
             </label>
           ))}
         </div>
+
         <div className="mt-6 text-right">
           <CustomButton
             text="Add"
@@ -195,7 +196,7 @@ const ChooseAdmin = ({
         </DialogHeader>
 
         <TextInput
-          placeholder="Search members"
+          placeholder="Search members 1"
           type="text"
           icon={<Icon icon="uil:search" color="white" className="w-5 h-5" />}
           value={searchText}
@@ -203,7 +204,7 @@ const ChooseAdmin = ({
           className="mb-3"
         />
 
-        <div className="mt-4 text-white">
+        <div className="mt-4 text-white h-72 overflow-y-auto pr-2 custom-scrollbar">
           {filteredFollowers.map((user) => (
             <label
               key={user.user._id}
@@ -217,16 +218,16 @@ const ChooseAdmin = ({
               />
               <div className="border-b border-gray-600 pb-4 w-full">
                 <div className="flex justify-between items-center w-full">
-                  <h3 className="text-white text-base font-semibold">
+                  <h3 className="text-white text-base font-semibold truncate max-w-[300px]">
                     {user.user.fullname}
                   </h3>
                   <Checkbox
                     id={`group-${user.user._id}`}
-                    className="cursor-pointer text-black border-grey hover:border-primary transition-colors"
+                    className="cursor-pointer shrink-0 text-black border-grey hover:border-primary transition-colors"
                     checked={selectedAdminId === user.user._id}
                     onCheckedChange={() => {
                       if (selectedAdminId === user.user._id) {
-                        onSelect(null); // unselect if clicked again
+                        onSelect(null);
                       } else {
                         onSelect(user.user._id);
                       }
@@ -429,6 +430,12 @@ const GroupChatUI = () => {
         },
       });
 
+      setSelectedGroup((prevGroup) => ({
+        ...prevGroup,
+        name: editGroupName.trim(),
+        group_picture_url: reqData.group_picture_url,
+      }));
+
       toast.success("Group updated successfully");
       setEditProfile(false);
       setEditErrors({});
@@ -587,17 +594,19 @@ const GroupChatUI = () => {
     try {
       const token = localStorageService.getItem("accessToken");
 
-      const res = await axiosInstance.get("user/follow-list/followers", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await axiosInstance.get(
+        `user/follow-list/followers?user_id=${user._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       setFollowers(res.data.body.list);
     } catch (error: any) {
       const message = error?.response?.data?.error || "Internal server error.";
       toast.error(message);
-    } finally {
     }
   };
 
@@ -1630,11 +1639,9 @@ const GroupChatUI = () => {
         <div className="text-center">
           <p className="text-red-400 mb-4">Unable to connect to chat server</p>
           <CustomButton
-            title="Retry Connection"
+            text="Retry Connection"
             onClick={() => {
-              setShowConnectionError(false);
-              setInitialLoadTime(Date.now());
-              reconnect();
+              window.location.reload();
             }}
           />
         </div>
