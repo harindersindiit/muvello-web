@@ -510,9 +510,13 @@ const WorkoutDetails = () => {
               <div className="flex items-center gap-3">
                 <CustomButton
                   className="w-auto py-5 bg-primary text-black"
-                  text={`${
-                    workoutDetails?.fees ? `$${workoutDetails.fees}` : "Free"
-                  }`}
+                  text={
+                    workoutAccess.isPurchased
+                      ? "Purchased"
+                      : workoutDetails?.fees
+                      ? `$${workoutDetails.fees}`
+                      : "Free"
+                  }
                   type="button"
                   disableHover={true}
                 />
