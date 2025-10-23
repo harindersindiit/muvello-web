@@ -38,6 +38,7 @@ const UserProfile = () => {
   const [activeTab, setActiveTab] = useState("followers");
   const [blockUserModal, setBlockUserModal] = useState(false);
   const [reportUserModal, setReportUserModal] = useState(false);
+  const [deletedAccountModal, setDeletedAccountModal] = useState(false);
   const [profileStats, setProfileStats] = useState([]);
 
   const [posts, setPosts] = useState([]);
@@ -94,6 +95,13 @@ const UserProfile = () => {
       localStorage.removeItem("profile_active_tab");
     }
   }, []);
+
+  // Check if user account is deleted
+  useEffect(() => {
+    if (user?.account_status === "Deleted") {
+      setDeletedAccountModal(true);
+    }
+  }, [user?.account_status]);
 
   const prepareStats = (data) => {
     const stats = [
@@ -349,7 +357,11 @@ const UserProfile = () => {
   if (loader || followLoader) return <FullScreenLoader />;
 
   return (
-    <div className="text-white my-6 mb-0 pb-9 px-1">
+    <div
+      className={`text-white my-6 mb-0 pb-9 px-1 ${
+        deletedAccountModal ? "blur-sm pointer-events-none" : ""
+      }`}
+    >
       <div className="w-full grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 grid-rows-[auto] gap-4">
         <div className="flex items-center gap-4 mb-3">
           <h2
@@ -962,6 +974,27 @@ const UserProfile = () => {
         onReportSuccess={() => {
           setReportUserModal(false);
         }}
+      />
+
+      {/* Deleted Account Modal - Non-dismissible */}
+      <CustomModal
+        title="Account Deleted"
+        open={deletedAccountModal}
+        setOpen={() => {}} // Prevent closing
+        onCancel={() => {}} // No cancel action
+        onSubmit={() => navigate(-1)} // Go back on submit
+        submitText="Go Back"
+        showCancelButton={false}
+        children={
+          <div className="text-white text-center mb-3">
+            <h3 className="font-semibold text-lg mb-3">
+              Account Not Available
+            </h3>
+            <p className="text-grey text-sm">
+              This account has been deleted and is no longer available.
+            </p>
+          </div>
+        }
       />
     </div>
   );
