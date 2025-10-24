@@ -706,7 +706,10 @@ const UserWallet = () => {
                     >
                       <div className="flex flex-col">
                         <p className="text-white text-base font-semibold mb-1">
-                          {transaction.title}
+                          {transaction.title} ({transaction.workout?.title})
+                        </p>
+                        <p className="text-white text-sm font-semibold mb-1">
+                          Buyer: {transaction.related_user?.name}
                         </p>
                         <p className="text-gray-400 text-sm mb-2">
                           Tran. ID: {transaction.transaction_id}
