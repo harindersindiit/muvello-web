@@ -96,7 +96,6 @@ const UserWallet = () => {
     All: true,
     Credit: false,
     Debit: false,
-    Custom: false,
   });
 
   // Tab state for switching between transactions and workout purchases
@@ -664,7 +663,7 @@ const UserWallet = () => {
                       />
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-white hover:text-primary mb-2">
+                  {/* <DropdownMenuItem className="text-white hover:text-primary mb-2">
                     <div
                       className="flex items-center gap-2 justify-between w-full cursor-pointer"
                       onClick={() => toggleFilter("Custom")}
@@ -675,7 +674,7 @@ const UserWallet = () => {
                         checked={selectedFilters.Custom}
                       />
                     </div>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
