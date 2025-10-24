@@ -709,7 +709,7 @@ const UserWallet = () => {
                           {transaction.title} ({transaction.workout?.title})
                         </p>
                         <p className="text-white text-sm font-semibold mb-1">
-                          Buyer: {transaction.related_user?.name}
+                          Buyer: {transaction.related_user?.fullname}
                         </p>
                         <p className="text-gray-400 text-sm mb-2">
                           Tran. ID: {transaction.transaction_id}
