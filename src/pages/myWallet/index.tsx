@@ -708,7 +708,16 @@ const UserWallet = () => {
                         <p className="text-white text-base font-semibold mb-1">
                           {transaction.title} ({transaction.workout?.title})
                         </p>
-                        <p className="text-white text-sm font-semibold mb-1">
+                        <p
+                          className="text-white text-sm font-semibold mb-1 cursor-pointer hover:underline"
+                          onClick={() => {
+                            if (transaction.related_user?._id) {
+                              navigate("/user/profile", {
+                                state: { id: transaction.related_user?._id },
+                              });
+                            }
+                          }}
+                        >
                           Buyer: {transaction.related_user?.fullname}
                         </p>
                         <p className="text-gray-400 text-sm mb-2">
