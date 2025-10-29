@@ -462,8 +462,9 @@ const CreateWorkout = () => {
       setIsSubmit(false);
     } catch (error) {
       setIsSubmit(false);
-      console.error(error);
-      toast.error("Failed to create workout");
+      const message =
+        error?.response?.data?.error || "Failed to create workout.";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
