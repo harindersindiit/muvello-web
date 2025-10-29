@@ -987,7 +987,7 @@ const SavedCards = () => {
                         }))
                       }
                       placeholder="Account number"
-                      type="password"
+                      // type="password"
                       className="bg-gray-800 border-gray-700 text-white"
                     />
                   </div>
@@ -1024,8 +1024,12 @@ const SavedCards = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-gray-800 border-gray-700">
-                        <SelectItem value="checking">Checking</SelectItem>
-                        <SelectItem value="savings">Savings</SelectItem>
+                        <SelectItem value="checking" className="text-white">
+                          Checking
+                        </SelectItem>
+                        <SelectItem value="savings" className="text-white">
+                          Savings
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
