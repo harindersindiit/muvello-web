@@ -507,30 +507,33 @@ const WorkoutDetails = () => {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
-                <CustomButton
-                  className="w-auto py-5 bg-primary text-black"
-                  text={
-                    workoutAccess.isPurchased
-                      ? "Purchased"
-                      : workoutDetails?.fees
-                      ? `$${workoutDetails.fees}`
-                      : "Free"
-                  }
-                  type="button"
-                  disableHover={true}
-                />
-                {workoutDetails?.user_id &&
-                  workoutDetails?.user_id !== user._id && (
-                    <button
-                      onClick={() => setIsReportOpen(true)}
-                      className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
-                    >
-                      <Icon icon="material-symbols:flag" fontSize={16} />
-                      Report
-                    </button>
-                  )}
-              </div>
+              {workoutDetails?.user_id && (
+                <div className="flex items-center gap-3">
+                  <CustomButton
+                    className="w-auto py-5 bg-primary text-black"
+                    text={
+                      workoutAccess.isPurchased &&
+                      workoutDetails?.user_id !== user._id
+                        ? "Purchased"
+                        : workoutDetails?.fees
+                        ? `$${workoutDetails.fees}`
+                        : "Free"
+                    }
+                    type="button"
+                    disableHover={true}
+                  />
+                  {workoutDetails?.user_id &&
+                    workoutDetails?.user_id !== user._id && (
+                      <button
+                        onClick={() => setIsReportOpen(true)}
+                        className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+                      >
+                        <Icon icon="material-symbols:flag" fontSize={16} />
+                        Report
+                      </button>
+                    )}
+                </div>
+              )}
             </div>
 
             <p className="text-sm text-white mt-4">{workoutDetails?.caption}</p>

@@ -22,6 +22,7 @@ import SelectComponent from "@/components/customcomponents/SelectComponent";
 import FullScreenLoader from "@/components/ui/loader";
 import TextInput from "@/components/customcomponents/TextInput";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import data from "./data.json";
 const COLORS = [
   "#A3FF12", // Lime Green
   "#3391FF", // Blue
@@ -92,6 +93,11 @@ const AthletesComparison = () => {
         selectedAthletesTemp.filter((id) => id !== athleteId)
       );
     } else {
+      // Check if we've reached the maximum limit of 15 users
+      if (selectedAthletesTemp.length >= 15) {
+        toast.error("Maximum 15 athletes can be selected at once");
+        return;
+      }
       setSelectedAthletesTemp([...selectedAthletesTemp, athleteId]);
     }
   };
@@ -316,7 +322,8 @@ const AthletesComparison = () => {
                 </div> */}
               </div>
               <p className="text-gray-400 text-sm mb-5">
-                Select min 2 athletes to compare side by side.
+                Select min 2 athletes to compare side by side. Maximum 15
+                athletes can be selected.
               </p>
 
               <TextInput
@@ -336,18 +343,31 @@ const AthletesComparison = () => {
                 {filteredFollowers.map((athlete) => {
                   // Ensure progress is between 0 and 100
                   const finalProgress = athlete.progress_percent;
+                  const isSelected = selectedAthletesTemp.includes(
+                    athlete.user._id
+                  );
+                  const isDisabled =
+                    !isSelected && selectedAthletesTemp.length >= 15;
 
                   return (
                     <div
                       key={athlete.user._id}
-                      className="flex items-center py-4"
+                      className={`flex items-center py-4 ${
+                        isDisabled
+                          ? "opacity-50 cursor-not-allowed"
+                          : "cursor-pointer"
+                      }`}
                       style={{ borderBottom: "1px solid #6F6F6F" }}
-                      onClick={() => handleCheckboxChange(athlete.user._id)}
+                      onClick={() =>
+                        !isDisabled && handleCheckboxChange(athlete.user._id)
+                      }
                     >
                       <div
                         className={`w-5 h-5 mr-3 border rounded flex items-center justify-center ${
-                          selectedAthletesTemp.includes(athlete.user._id)
+                          isSelected
                             ? "bg-[#A3FF12] border-[#A3FF12]"
+                            : isDisabled
+                            ? "border-gray-700 bg-gray-800"
                             : "border-gray-500"
                         }`}
                       >
@@ -620,7 +640,7 @@ const AthletesComparison = () => {
               {weightTimeframe} <ChevronDown className="w-4 h-4 ml-1" />
             </Button> */}
           </div>
-          <div className=" bg-[#1f1f1f] rounded-2xl p-4 pl-0 w-full min-h-[400px]">
+          <div className=" bg-[#1f1f1f] rounded-2xl p-4 pl-0 w-full min-h-[500px]">
             <ResponsiveContainer width="100%" height="100%" minHeight={380}>
               <BarChart
                 data={weightProgressData}
