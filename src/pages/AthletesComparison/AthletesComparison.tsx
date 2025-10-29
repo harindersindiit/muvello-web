@@ -629,7 +629,11 @@ const AthletesComparison = () => {
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                 <XAxis dataKey="name" stroke="#888" tick={{ fontSize: 12 }} />
-                <YAxis stroke="#888" tick={{ fontSize: 12 }} />
+                <YAxis
+                  stroke="#888"
+                  tick={{ fontSize: 12 }}
+                  domain={[0, 350]}
+                />
                 <Tooltip
                   contentStyle={{
                     fontSize: "13px",

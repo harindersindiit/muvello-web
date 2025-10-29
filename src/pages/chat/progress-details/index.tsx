@@ -70,7 +70,6 @@ const ProgressDetails = () => {
         }
       );
 
-      console.log(res.data.body.workouts[0]);
       setWorkoutDetails(res.data.body.workouts[0]);
     } catch (error: unknown) {
       const message =

@@ -148,6 +148,7 @@ export default function ProgressCharts({ statistics }) {
               <YAxis
                 stroke="#fff"
                 tick={{ fontSize: 12 }} // 👈 Set font size for Y-axis ticks
+                domain={[0, 350]} // 👈 Sets Y-axis from 0 to 100
               />
               <Tooltip
                 contentStyle={{
@@ -160,7 +161,7 @@ export default function ProgressCharts({ statistics }) {
                 cursor={{ fill: "transparent" }} // 👈 This removes the white hover bar
               />
 
-              <ReferenceLine y={55} stroke="#3391FF" />
+              {/* <ReferenceLine y={55} stroke="#3391FF" /> */}
 
               <Bar
                 dataKey="value"

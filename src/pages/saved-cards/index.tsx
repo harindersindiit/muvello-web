@@ -229,7 +229,8 @@ const countries = [
 
 const SavedCards = () => {
   const navigate = useNavigate();
-
+  const [stripeSetupModal, setStripeSetupModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
   // State management
   const [savedCards, setSavedCards] = useState<PaymentMethod[]>([]);
   const [savedAccounts, setSavedAccounts] = useState<BankAccount[]>([]);
@@ -914,9 +915,18 @@ const SavedCards = () => {
                   onClick={(e) => {
                     if (!stripeSetupStatus.isActive) {
                       e.preventDefault();
-                      alert(
-                        "You need to complete your Stripe Connect account setup before you can add bank accounts. Bank accounts must be connected to Stripe for withdrawals.\n\nPlease complete your Stripe Connect setup on the mobile app to enable this feature."
-                      );
+                      let message =
+                        "To withdraw funds, you need to complete the following on Mobile App:\n\n";
+                      message +=
+                        "• Complete your Stripe Connect account setup\n";
+                      message +=
+                        "• Connect your bank account through Stripe Connect\n";
+                      message +=
+                        "\nPlease complete these steps to enable withdrawals.";
+                      message +=
+                        "\n\nPlease complete your Stripe Connect setup on the mobile app to enable this feature.";
+                      setModalMessage(message);
+                      setStripeSetupModal(true);
                     }
                   }}
                 >
@@ -1506,6 +1516,23 @@ const SavedCards = () => {
           </div>
         }
       />
+
+      <CustomModal
+        title="Stripe Setup Required"
+        open={stripeSetupModal}
+        setOpen={setStripeSetupModal}
+        onSubmit={() => setStripeSetupModal(false)}
+        submitText="OK"
+        dialogHeader={true}
+        showCancelButton={false}
+        // disabled={true}
+      >
+        <div className="text-white text-center mb-3">
+          <p className="text-grey text-sm whitespace-pre-line">
+            {modalMessage}
+          </p>
+        </div>
+      </CustomModal>
       {/* 
 <CustomModal
         title=""

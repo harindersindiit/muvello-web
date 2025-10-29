@@ -635,6 +635,12 @@ const WorkoutDetails = () => {
                               ? item.user.fullname.slice(0, 25) + "..."
                               : item.user.fullname}
                           </p>
+                          {item.joined_date && (
+                            <p className="text-sm text-gray-400">
+                              Joined On:{" "}
+                              {moment(item.joined_date).format("DD/MM/YYYY")}
+                            </p>
+                          )}
                           <p
                             className={`${
                               finalProgress == 100
