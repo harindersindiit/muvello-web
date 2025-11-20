@@ -52,7 +52,11 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
             name={name}
             type={type}
             placeholder={placeholder}
-            className={`${inputClassName} pl-13 py-7 focus-visible:outline-none focus-visible:ring-[1px] focus-visible:ring-gray-800 rounded-full bg-lightdark border border-transparent text-white placeholder:text-grey placeholder:font-light focus:outline-none focus:border-gray-700 ${
+            className={`${inputClassName} pl-13 py-7 focus-visible:outline-none focus-visible:ring-[1px] focus-visible:ring-gray-800 rounded-full bg-lightdark border ${
+              error
+                ? "border-red-500 focus:border-red-500"
+                : "border-gray-600 focus:border-gray-400"
+            } text-white placeholder:text-grey placeholder:font-light focus:outline-none ${
               type === "number"
                 ? "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 : ""

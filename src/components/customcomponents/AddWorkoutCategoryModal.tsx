@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import TextInput from "./TextInput";
+import { Tag } from "lucide-react";
 import { CustomModal } from "./CustomModal";
 import axiosInstance from "@/utils/axiosInstance";
 import UploadDropBox from "./UploadDropBox";
@@ -235,6 +236,7 @@ const AddWorkoutCategoryModal = ({
           value={categoryName}
           onChange={(event) => setCategoryName(event.target.value)}
           className="mt-4"
+          icon={<Tag className="w-5 h-5 text-grey" />}
           error={error}
         />
       </div>
