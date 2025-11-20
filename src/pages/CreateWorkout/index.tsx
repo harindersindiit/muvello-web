@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 import { addWorkoutSchema } from "@/utils/validations";
 import localStorageService from "@/utils/localStorageService";
@@ -24,6 +25,7 @@ import axiosInstance from "@/utils/axiosInstance";
 import { toast } from "react-toastify";
 import { useUser } from "@/context/UserContext";
 import FullScreenLoader from "@/components/ui/loader";
+import AddWorkoutCategoryModal from "@/components/customcomponents/AddWorkoutCategoryModal";
 
 let formik;
 
@@ -117,6 +119,11 @@ const SelectExercisePopup = ({
   );
 };
 
+type SelectedGroup = {
+  _id: string;
+  [key: string]: unknown;
+};
+
 const CreateWorkout = () => {
   const location = useLocation();
   const editingWorkout = location.state || null;
@@ -148,17 +155,21 @@ const CreateWorkout = () => {
 
   const [, setPrefernces] = useState([]);
   const [workoutCategories, setWorkoutCategories] = useState([]);
+  const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [isSelectExerciseOpen, setSelectExerciseOpen] = useState(false);
   const [exercises, setExercises] = useState([]);
   const [initialVal, setInitialVal] = useState(iniVal);
   const [currentEditingDay, setCurrentEditingDay] = useState(null);
   const [isSubmit, setIsSubmit] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [selectedgroups, setSelectedgroups] = useState<unknown[]>([]);
+  const [selectedgroups, setSelectedgroups] = useState<SelectedGroup[]>([]);
   const [preferencesLoader, setPreferncesLoader] = useState(false);
   const [exerciseLoader, setExerciseLoader] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showWarning, setShowWarning] = useState(true);
+  const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(
+    null
+  );
 
   // Refs for form fields to enable scrolling to errors
   const titleRef = useRef(null);
@@ -222,7 +233,7 @@ const CreateWorkout = () => {
     }
   };
 
-  const onSelectGroups = (groups: unknown[]) => {
+  const onSelectGroups = (groups: SelectedGroup[]) => {
     setSelectedgroups(groups);
   };
 
@@ -339,12 +350,81 @@ const CreateWorkout = () => {
         }),
       ]);
       setPrefernces(targetPartRes.data.body.targetParts);
-      setWorkoutCategories(userPrefsRes.data.body.workoutCategories);
+      const categories = userPrefsRes.data.body.workoutCategories || [];
+      setWorkoutCategories(categories);
+      return categories;
     } catch (error) {
       const message = error?.response?.data?.error || "Internal Server Error.";
       toast.error(message);
+      return [];
     } finally {
       setPreferncesLoader(false);
+    }
+  };
+
+  const ensureCategoryInWorkoutCategories = (category) => {
+    if (!category?._id) return;
+
+    setWorkoutCategories((prev) => {
+      const exists = prev.some((item) => item._id === category._id);
+      if (exists) {
+        return prev.map((item) =>
+          item._id === category._id ? { ...item, ...category } : item
+        );
+      }
+      return [category, ...prev];
+    });
+  };
+
+  const handleWorkoutCategoryCreated = async (category) => {
+    ensureCategoryInWorkoutCategories(category);
+
+    if (canEdit) {
+      formik?.setFieldValue("workout_category", category?._id || "");
+    }
+
+    if (!category?.isCustom) {
+      await getPreferences();
+    }
+  };
+
+  const deleteCategory = async (id: string) => {
+    if (!id || deletingCategoryId === id) return;
+
+    setDeletingCategoryId(id);
+    try {
+      const token = localStorageService.getItem("accessToken");
+      const response = await axiosInstance.delete(
+        `/admin/delete-category/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = response?.data;
+
+      if (data?.success) {
+        setWorkoutCategories((prev) =>
+          prev.filter((category) => category._id !== id)
+        );
+
+        if (formik?.values?.workout_category === id) {
+          formik?.setFieldValue("workout_category", "");
+        }
+
+        toast.success(data?.message || "Category deleted successfully.");
+      } else {
+        toast.error(data?.message || "Failed to delete category.");
+      }
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error || "Failed to delete category.";
+      toast.error(message);
+    } finally {
+      setDeletingCategoryId(null);
     }
   };
 
@@ -416,9 +496,7 @@ const CreateWorkout = () => {
         visibility: visibility,
         is_draft: values.is_draft,
         workout_exercises,
-        groups: values.is_draft
-          ? []
-          : selectedgroups.map((group: any) => group._id),
+        groups: values.is_draft ? [] : selectedgroups.map((group) => group._id),
       };
 
       if (typeof thumbnailFile === "object") {
@@ -520,32 +598,55 @@ const CreateWorkout = () => {
     setWeeks(reindexedWeeks);
   };
   return (
-    <div className="bg-black min-h-screen text-white pb-12">
-      <div className="px-4 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 w-full">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 w-full md:w-auto cursor-pointer"
-        >
-          <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span className="text-lg font-semibold">
-            {editingWorkout ? "Update" : "Create"} Workout
-          </span>
-        </button>
-        <div className="flex gap-3 w-full md:w-auto justify-end">
-          {canSaveDraft && (
+    <>
+      <AddWorkoutCategoryModal
+        open={isAddCategoryModalOpen}
+        setOpen={setIsAddCategoryModalOpen}
+        onCategoryCreated={handleWorkoutCategoryCreated}
+      />
+
+      <div className="bg-black min-h-screen text-white pb-12">
+        <div className="px-4 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 w-full">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 w-full md:w-auto cursor-pointer"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                fillRule="evenodd"
+                d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <span className="text-lg font-semibold">
+              {editingWorkout ? "Update" : "Create"} Workout
+            </span>
+          </button>
+          <div className="flex gap-3 w-full md:w-auto justify-end">
+            {canSaveDraft && (
+              <CustomButton
+                className="w-1/2 md:w-auto py-5 px-11 border-2 border-[#94eb00] text-[#94eb00] bg-transparent font-semibold rounded-full transition-all hover:bg-[#94eb00]/10"
+                text="Save as Draft"
+                type="button"
+                onClick={() => {
+                  setIsSubmit(true);
+                  formik.setFieldValue("is_draft", true);
+                  // Scroll to first error after a short delay to allow form validation
+                  setTimeout(() => {
+                    scrollToFirstError(formik.errors, formik.touched);
+                  }, 100);
+                  document.getElementById("workout-form-submit")?.click();
+                }}
+              />
+            )}
+
             <CustomButton
-              className="w-1/2 md:w-auto py-5 px-11 border-2 border-[#94eb00] text-[#94eb00] bg-transparent font-semibold rounded-full transition-all hover:bg-[#94eb00]/10"
-              text="Save as Draft"
+              className="w-1/2 md:w-auto py-5 px-11 bg-[#94eb00] text-black font-semibold rounded-full transition-all hover:bg-[#94eb00]/90"
+              text="Publish"
               type="button"
               onClick={() => {
                 setIsSubmit(true);
-                formik.setFieldValue("is_draft", true);
+                formik.setFieldValue("is_draft", false);
                 // Scroll to first error after a short delay to allow form validation
                 setTimeout(() => {
                   scrollToFirstError(formik.errors, formik.touched);
@@ -553,71 +654,55 @@ const CreateWorkout = () => {
                 document.getElementById("workout-form-submit")?.click();
               }}
             />
-          )}
-
-          <CustomButton
-            className="w-1/2 md:w-auto py-5 px-11 bg-[#94eb00] text-black font-semibold rounded-full transition-all hover:bg-[#94eb00]/90"
-            text="Publish"
-            type="button"
-            onClick={() => {
-              setIsSubmit(true);
-              formik.setFieldValue("is_draft", false);
-              // Scroll to first error after a short delay to allow form validation
-              setTimeout(() => {
-                scrollToFirstError(formik.errors, formik.touched);
-              }, 100);
-              document.getElementById("workout-form-submit")?.click();
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Warning Message */}
-      {!canEdit && showWarning && (
-        <div className="mx-4 mb-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 relative">
-          <div className="flex items-start gap-3">
-            <Icon
-              icon="material-symbols:warning"
-              className="text-yellow-500 mt-0.5 flex-shrink-0"
-              fontSize={20}
-            />
-            <div className="flex-1">
-              <p className="text-yellow-500 font-medium">
-                Limited Editing Mode
-              </p>
-              <p className="text-yellow-400/80 text-sm mt-1">
-                Some users have already started this workout, so you can only
-                edit the title, thumbnail, and description.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowWarning(false)}
-              className="text-yellow-500/60 hover:text-yellow-500 transition-colors"
-            >
-              <Icon icon="material-symbols:close" fontSize={20} />
-            </button>
           </div>
         </div>
-      )}
 
-      <Formik
-        enableReinitialize={true} // ✅ ADD THIS LINE
-        innerRef={(ref) => {
-          formik = ref;
-        }}
-        initialValues={initialVal}
-        validationSchema={addWorkoutSchema}
-        onSubmit={handleSubmitFun}
-        validateOnChange={true}
-        validateOnBlur={true}
-      >
-        {({ values, errors, touched, handleChange, setFieldValue }) => (
-          <Form>
-            <div className="px-4 py-4">
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-4">Basic Info</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* <div className="border-2 cursor-pointer mb-3 border-dashed border-blue-500 rounded-lg h-65 flex flex-col justify-center items-center bg-[#1f1f1f]">
+        {/* Warning Message */}
+        {!canEdit && showWarning && (
+          <div className="mx-4 mb-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 relative">
+            <div className="flex items-start gap-3">
+              <Icon
+                icon="material-symbols:warning"
+                className="text-yellow-500 mt-0.5 flex-shrink-0"
+                fontSize={20}
+              />
+              <div className="flex-1">
+                <p className="text-yellow-500 font-medium">
+                  Limited Editing Mode
+                </p>
+                <p className="text-yellow-400/80 text-sm mt-1">
+                  Some users have already started this workout, so you can only
+                  edit the title, thumbnail, and description.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowWarning(false)}
+                className="text-yellow-500/60 hover:text-yellow-500 transition-colors"
+              >
+                <Icon icon="material-symbols:close" fontSize={20} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <Formik
+          enableReinitialize={true} // ✅ ADD THIS LINE
+          innerRef={(ref) => {
+            formik = ref;
+          }}
+          initialValues={initialVal}
+          validationSchema={addWorkoutSchema}
+          onSubmit={handleSubmitFun}
+          validateOnChange={true}
+          validateOnBlur={true}
+        >
+          {({ values, errors, touched, handleChange, setFieldValue }) => (
+            <Form>
+              <div className="px-4 py-4">
+                <div className="mb-6">
+                  <h2 className="text-lg font-semibold mb-4">Basic Info</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* <div className="border-2 cursor-pointer mb-3 border-dashed border-blue-500 rounded-lg h-65 flex flex-col justify-center items-center bg-[#1f1f1f]">
                     <Icon
                       icon="solar:gallery-outline"
                       className="text-blue mb-2"
@@ -628,504 +713,534 @@ const CreateWorkout = () => {
                     </p>
                   </div> */}
 
-                  <div
-                    ref={thumbnailRef}
-                    className="border-2 cursor-pointer mb-3 border-dashed border-blue-500 rounded-lg h-85 flex flex-col justify-center items-center bg-[#1f1f1f] relative overflow-hidden"
-                    onClick={() =>
-                      document.getElementById("thumbnailInput")?.click()
-                    }
-                  >
-                    {thumbnailFile ? (
-                      // <img
-                      //   src={URL.createObjectURL(thumbnailFile)}
-                      //   alt="Thumbnail Preview"
-                      //   className="w-full h-full object-cover"
-                      // />
-                      <img
-                        src={
-                          typeof thumbnailFile === "string"
-                            ? thumbnailFile
-                            : URL.createObjectURL(thumbnailFile)
-                        }
-                        alt="Thumbnail Preview"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <>
-                        <Icon
-                          icon="solar:gallery-outline"
-                          className="text-blue mb-2"
-                          fontSize={34}
+                    <div
+                      ref={thumbnailRef}
+                      className="border-2 cursor-pointer mb-3 border-dashed border-blue-500 rounded-lg h-85 flex flex-col justify-center items-center bg-[#1f1f1f] relative overflow-hidden"
+                      onClick={() =>
+                        document.getElementById("thumbnailInput")?.click()
+                      }
+                    >
+                      {thumbnailFile ? (
+                        // <img
+                        //   src={URL.createObjectURL(thumbnailFile)}
+                        //   alt="Thumbnail Preview"
+                        //   className="w-full h-full object-cover"
+                        // />
+                        <img
+                          src={
+                            typeof thumbnailFile === "string"
+                              ? thumbnailFile
+                              : URL.createObjectURL(thumbnailFile)
+                          }
+                          alt="Thumbnail Preview"
+                          className="w-full h-full object-cover"
                         />
-                        <p className="text-white text-sm">
-                          Upload Workout Thumbnail
-                        </p>
-                      </>
-                    )}
-                    <input
-                      id="thumbnailInput"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          formik.setFieldValue("thumbnail", file);
-                          setThumbnailFile(file);
-                        }
-                      }}
-                    />
-                    {touched.thumbnail && errors.thumbnail && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {String(errors.thumbnail)}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-4">
-                    <div ref={titleRef}>
-                      <TextInput
-                        placeholder="Workout Title"
-                        value={values.title}
-                        onChange={handleChange("title")}
-                        type="text"
-                        error={
-                          touched.title && errors.title
-                            ? String(errors.title)
-                            : ""
-                        }
-                        icon={
-                          <img
-                            src={IMAGES.textBlock}
-                            alt=""
-                            className="w-5 h-5"
+                      ) : (
+                        <>
+                          <Icon
+                            icon="solar:gallery-outline"
+                            className="text-blue mb-2"
+                            fontSize={34}
                           />
-                        }
-                        className="mb-3"
+                          <p className="text-white text-sm">
+                            Upload Workout Thumbnail
+                          </p>
+                        </>
+                      )}
+                      <input
+                        id="thumbnailInput"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            formik.setFieldValue("thumbnail", file);
+                            setThumbnailFile(file);
+                          }
+                        }}
                       />
+                      {touched.thumbnail && errors.thumbnail && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {String(errors.thumbnail)}
+                        </p>
+                      )}
                     </div>
 
-                    <div ref={categoryRef}>
-                      <SelectComponent
-                        fallbackValue={
-                          editingWorkout?.workout_category[0]?.title
-                        }
-                        placeholder="Select Workout Category"
-                        value={values.workout_category}
-                        onChange={(value: string) =>
-                          canEdit && setFieldValue("workout_category", value)
-                        }
-                        icon={IMAGES.category}
-                        className={`mb-3 ${
-                          canEdit
-                            ? "cursor-pointer"
-                            : "cursor-not-allowed opacity-60"
-                        }`}
-                        disabled={!canEdit}
-                        options={[
-                          { label: "Select Workout Category", value: "" },
-                          ...workoutCategories.map((item) => ({
-                            label: item.title,
-                            value: item._id,
-                            icon: item.icon,
-                          })),
-                        ]}
-                      />
-                    </div>
+                    <div className="space-y-4">
+                      <div ref={titleRef}>
+                        <TextInput
+                          placeholder="Workout Title"
+                          value={values.title}
+                          onChange={handleChange("title")}
+                          type="text"
+                          error={
+                            touched.title && errors.title
+                              ? String(errors.title)
+                              : ""
+                          }
+                          icon={
+                            <img
+                              src={IMAGES.textBlock}
+                              alt=""
+                              className="w-5 h-5"
+                            />
+                          }
+                          className="mb-3"
+                        />
+                      </div>
 
-                    {touched.workout_category && errors.workout_category && (
-                      <p className="text-red-500 text-sm col-span-2 mt-[-10px]">
-                        {String(errors.workout_category)}
-                      </p>
-                    )}
+                      <div ref={categoryRef}>
+                        {canEdit && (
+                          <Button
+                            type="button"
+                            onClick={() => setIsAddCategoryModalOpen(true)}
+                            className="flex items-center gap-2 bg-primary text-black font-semibold px-5 py-2 rounded-full mb-3 hover:opacity-90 transition w-fit"
+                          >
+                            <Icon
+                              icon="solar:add-circle-linear"
+                              fontSize={18}
+                            />
+                            Add New Category
+                          </Button>
+                        )}
+                        <SelectComponent
+                          fallbackValue={
+                            editingWorkout?.workout_category[0]?.title
+                          }
+                          placeholder="Select Workout Category"
+                          value={values.workout_category}
+                          onChange={(value: string) =>
+                            canEdit && setFieldValue("workout_category", value)
+                          }
+                          icon={IMAGES.category}
+                          className={`mb-3 ${
+                            canEdit
+                              ? "cursor-pointer"
+                              : "cursor-not-allowed opacity-60"
+                          }`}
+                          disabled={!canEdit}
+                          options={[
+                            { label: "Select Workout Category", value: "" },
+                            ...workoutCategories.map((item) => ({
+                              label: item.title,
+                              value: item._id,
+                              icon: item.icon,
+                              iconAlt: item.title,
+                              canDelete:
+                                !!user?._id &&
+                                (item.added_by === user._id ||
+                                  item?.added_by?._id === user._id),
+                              onDelete: () => deleteCategory(item._id),
+                              isDeleting: deletingCategoryId === item._id,
+                            })),
+                          ]}
+                        />
+                      </div>
 
-                    <div ref={captionRef}>
-                      <CustomTextArea
-                        placeholder="Write caption..."
-                        value={values.caption}
-                        onChange={handleChange("caption")}
-                        error={
-                          touched.caption && errors.caption
-                            ? String(errors.caption)
-                            : ""
-                        }
-                        icon={<Lines color="white" />}
-                        className="min-h-[120px] max-h-[120px]"
-                      />
+                      {touched.workout_category && errors.workout_category && (
+                        <p className="text-red-500 text-sm col-span-2 mt-[-10px]">
+                          {String(errors.workout_category)}
+                        </p>
+                      )}
+
+                      <div ref={captionRef}>
+                        <CustomTextArea
+                          placeholder="Write caption..."
+                          value={values.caption}
+                          onChange={handleChange("caption")}
+                          error={
+                            touched.caption && errors.caption
+                              ? String(errors.caption)
+                              : ""
+                          }
+                          icon={<Lines color="white" />}
+                          className="min-h-[120px] max-h-[120px]"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className={!canEdit ? "opacity-60" : ""}>
-                {weeks.map((week, weekIndex) => (
-                  <div
-                    key={weekIndex}
-                    className="mb-4 bg-white/3 p-5 rounded-lg relative"
-                  >
-                    {weeks.length > 1 && canEdit && (
-                      <div className="text-right absolute -top-1 -right-2">
-                        <div
-                          onClick={() => removeWeek(weekIndex)}
-                          className="cursor-pointer p-2 w-[30px] h-[30px] rounded-full flex justify-center items-center bg-red"
-                        >
-                          <Icon
-                            icon="bitcoin-icons:cross-outline"
-                            className="text-white"
-                            fontSize={34}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    <h2 className="text-lg font-semibold mb-4">
-                      Week {week.week}
-                    </h2>
-
-                    {week.days.map((day, dayIndex) => (
-                      <div
-                        key={dayIndex}
-                        data-week={weekIndex}
-                        data-day={dayIndex}
-                        className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3"
-                      >
-                        <TextInput
-                          placeholder={`Week ${week.week}`}
-                          value={`Week ${week.week}`}
-                          disabled
-                          type="text"
-                          inputClassName="!bg-[#333333]"
-                          icon={
-                            <img
-                              src={IMAGES.calendar}
-                              alt=""
-                              className="w-5 h-5"
-                            />
-                          }
-                        />
-                        <TextInput
-                          placeholder={`Day ${day.day}`}
-                          value={`Day ${day.day}`}
-                          disabled
-                          type="text"
-                          inputClassName="!bg-[#333333]"
-                          icon={
-                            <img
-                              src={IMAGES.calendar}
-                              alt=""
-                              className="w-5 h-5"
-                            />
-                          }
-                        />
-                        {/* <InputTag showInput={false} /> */}
-
-                        <div className="flex flex-row gap-10">
-                          <div className="w-80">
-                            <TextInput
-                              type="text"
-                              error={
-                                isSubmit &&
-                                (!day.duration || day.duration == "0") &&
-                                " Please add duration"
-                              }
-                              placeholder="45 min"
-                              value={day.duration}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                // Only allow numbers (no decimals)
-                                if (/^\d*$/.test(value)) {
-                                  if (canEdit) {
-                                    handleDurationChange(
-                                      weekIndex,
-                                      dayIndex,
-                                      value
-                                    );
-                                  }
-                                }
-                              }}
-                              inputClassName="!bg-[#333333]"
-                              disabled={!canEdit}
-                              icon={
-                                <img
-                                  src={IMAGES.clock}
-                                  alt=""
-                                  className="w-5 h-5"
-                                />
-                              }
+                <div className={!canEdit ? "opacity-60" : ""}>
+                  {weeks.map((week, weekIndex) => (
+                    <div
+                      key={weekIndex}
+                      className="mb-4 bg-white/3 p-5 rounded-lg relative"
+                    >
+                      {weeks.length > 1 && canEdit && (
+                        <div className="text-right absolute -top-1 -right-2">
+                          <div
+                            onClick={() => removeWeek(weekIndex)}
+                            className="cursor-pointer p-2 w-[30px] h-[30px] rounded-full flex justify-center items-center bg-red"
+                          >
+                            <Icon
+                              icon="bitcoin-icons:cross-outline"
+                              className="text-white"
+                              fontSize={34}
                             />
                           </div>
-                          <div className="flex flex-row gap-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (canEdit) {
-                                  setSelectExerciseOpen(true);
-                                  setCurrentEditingDay({ weekIndex, dayIndex });
-                                }
-                              }}
-                              className={`px-3 py-2 rounded-lg flex justify-center items-center bg-blue text-white font-semibold text-sm transition-all duration-200 ${
-                                canEdit
-                                  ? "cursor-pointer hover:bg-blue-700"
-                                  : "cursor-not-allowed opacity-60"
-                              }`}
-                              disabled={!canEdit}
-                            >
-                              Select Exercises
-                            </button>
+                        </div>
+                      )}
 
-                            <div
-                              onClick={() => {
-                                if (canEdit) {
-                                  removeDayFromWeek(weekIndex, dayIndex);
+                      <h2 className="text-lg font-semibold mb-4">
+                        Week {week.week}
+                      </h2>
+
+                      {week.days.map((day, dayIndex) => (
+                        <div
+                          key={dayIndex}
+                          data-week={weekIndex}
+                          data-day={dayIndex}
+                          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3"
+                        >
+                          <TextInput
+                            placeholder={`Week ${week.week}`}
+                            value={`Week ${week.week}`}
+                            disabled
+                            type="text"
+                            inputClassName="!bg-[#333333]"
+                            icon={
+                              <img
+                                src={IMAGES.calendar}
+                                alt=""
+                                className="w-5 h-5"
+                              />
+                            }
+                          />
+                          <TextInput
+                            placeholder={`Day ${day.day}`}
+                            value={`Day ${day.day}`}
+                            disabled
+                            type="text"
+                            inputClassName="!bg-[#333333]"
+                            icon={
+                              <img
+                                src={IMAGES.calendar}
+                                alt=""
+                                className="w-5 h-5"
+                              />
+                            }
+                          />
+                          {/* <InputTag showInput={false} /> */}
+
+                          <div className="flex flex-row gap-10">
+                            <div className="w-80">
+                              <TextInput
+                                type="text"
+                                error={
+                                  isSubmit &&
+                                  (!day.duration || day.duration == "0") &&
+                                  " Please add duration"
                                 }
-                              }}
-                              className={`p-2 w-[60px] h-[60px] rounded-full flex justify-center items-center bg-red ${
-                                canEdit
-                                  ? "cursor-pointer"
-                                  : "cursor-not-allowed opacity-60"
-                              }`}
-                            >
-                              <Icon
-                                icon="lsicon:minus-outline"
-                                className="text-white"
-                                fontSize={34}
+                                placeholder="45 min"
+                                value={day.duration}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  // Only allow numbers (no decimals)
+                                  if (/^\d*$/.test(value)) {
+                                    if (canEdit) {
+                                      handleDurationChange(
+                                        weekIndex,
+                                        dayIndex,
+                                        value
+                                      );
+                                    }
+                                  }
+                                }}
+                                inputClassName="!bg-[#333333]"
+                                disabled={!canEdit}
+                                icon={
+                                  <img
+                                    src={IMAGES.clock}
+                                    alt=""
+                                    className="w-5 h-5"
+                                  />
+                                }
                               />
                             </div>
-                          </div>
-                        </div>
+                            <div className="flex flex-row gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (canEdit) {
+                                    setSelectExerciseOpen(true);
+                                    setCurrentEditingDay({
+                                      weekIndex,
+                                      dayIndex,
+                                    });
+                                  }
+                                }}
+                                className={`px-3 py-2 rounded-lg flex justify-center items-center bg-blue text-white font-semibold text-sm transition-all duration-200 ${
+                                  canEdit
+                                    ? "cursor-pointer hover:bg-blue-700"
+                                    : "cursor-not-allowed opacity-60"
+                                }`}
+                                disabled={!canEdit}
+                              >
+                                Select Exercises
+                              </button>
 
-                        {/* Exercise List */}
-                        {day.exercises.length > 0 && (
-                          <div className="col-span-2 bg-white/5 p-3 rounded-lg">
-                            <p className="text-sm font-semibold text-white mb-2">
-                              Selected Exercises:
-                            </p>
-
-                            <div className="flex flex-wrap gap-2">
-                              {day.exercises.map((exercise, idx) => (
-                                <span
-                                  key={idx}
-                                  className="bg-green-600/20 text-green-400 text-sm px-3 py-1 rounded-full"
-                                >
-                                  {exercise.title}
-                                </span>
-                              ))}
+                              <div
+                                onClick={() => {
+                                  if (canEdit) {
+                                    removeDayFromWeek(weekIndex, dayIndex);
+                                  }
+                                }}
+                                className={`p-2 w-[60px] h-[60px] rounded-full flex justify-center items-center bg-red ${
+                                  canEdit
+                                    ? "cursor-pointer"
+                                    : "cursor-not-allowed opacity-60"
+                                }`}
+                              >
+                                <Icon
+                                  icon="lsicon:minus-outline"
+                                  className="text-white"
+                                  fontSize={34}
+                                />
+                              </div>
                             </div>
                           </div>
-                        )}
-                        {isSubmit &&
-                          (!day.exercises || day.exercises.length === 0) && (
-                            <p className="text-red-500 text-sm col-span-2 mt-[-10px]">
-                              Please add at least one exercise for Day {day.day}{" "}
-                              of Week {week.week}
-                            </p>
+
+                          {/* Exercise List */}
+                          {day.exercises.length > 0 && (
+                            <div className="col-span-2 bg-white/5 p-3 rounded-lg">
+                              <p className="text-sm font-semibold text-white mb-2">
+                                Selected Exercises:
+                              </p>
+
+                              <div className="flex flex-wrap gap-2">
+                                {day.exercises.map((exercise, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="bg-green-600/20 text-green-400 text-sm px-3 py-1 rounded-full"
+                                  >
+                                    {exercise.title}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
                           )}
-                      </div>
-                    ))}
+                          {isSubmit &&
+                            (!day.exercises || day.exercises.length === 0) && (
+                              <p className="text-red-500 text-sm col-span-2 mt-[-10px]">
+                                Please add at least one exercise for Day{" "}
+                                {day.day} of Week {week.week}
+                              </p>
+                            )}
+                        </div>
+                      ))}
 
-                    {canEdit && (
+                      {canEdit && (
+                        <button
+                          className="text-sm text-green-400 mb-2"
+                          type="button"
+                          onClick={() => addDayToWeek(weekIndex)}
+                        >
+                          + Add Day to Week {week.week}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+
+                  {canEdit && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 mb-6">
                       <button
-                        className="text-sm text-green-400 mb-2"
+                        className="flex items-center gap-2 text-lime-400 hover:text-lime-300 transition-colors cursor-pointer"
+                        // onClick={() => addExercise(1, 1)}
+                        onClick={addWeek} // 👈 Fixed this line
                         type="button"
-                        onClick={() => addDayToWeek(weekIndex)}
                       >
-                        + Add Day to Week {week.week}
+                        <img
+                          src={IMAGES.addsquare}
+                          alt=""
+                          className="w-5 h-5"
+                        />
+                        <span>Add More Week/Day Workout</span>
                       </button>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  )}
+                </div>
 
-                {canEdit && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 mb-6">
-                    <button
-                      className="flex items-center gap-2 text-lime-400 hover:text-lime-300 transition-colors cursor-pointer"
-                      // onClick={() => addExercise(1, 1)}
-                      onClick={addWeek} // 👈 Fixed this line
-                      type="button"
-                    >
-                      <img src={IMAGES.addsquare} alt="" className="w-5 h-5" />
-                      <span>Add More Week/Day Workout</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
+                  <div
+                    className={`p-5 rounded-lg pl-0 ${
+                      !canEdit ? "opacity-60" : ""
+                    }`}
+                  >
+                    <h2 className="text-lg font-semibold mb-4 text-white">
+                      Choose Your Workout Access
+                    </h2>
+                    <div className="flex items-center gap-2 custom-workout-access">
+                      <div className="flex items-center gap-2 bg-white/3 p-2 rounded-full">
+                        <span
+                          onClick={() => {
+                            if (canEdit) {
+                              formik.setFieldValue("fees", ""); // 👈 ADD THIS
+                              formik.setFieldValue("access", "Free"); // 👈 ADD THIS
+                            }
+                          }}
+                          className={` px-6 py-3 rounded-full pl-10 pr-10 ${
+                            canEdit ? "cursor-pointer" : "cursor-not-allowed"
+                          } ${
+                            values.access === "Free"
+                              ? "bg-primary text-black"
+                              : "bg-transparent text-white pl-10 pr-10"
+                          }`}
+                        >
+                          Free
+                        </span>
+                        <span
+                          onClick={() => {
+                            if (canEdit) {
+                              formik.setFieldValue("access", "Paid"); // 👈 ADD THIS
+                            }
+                          }}
+                          className={`px-6 py-3 rounded-full pl-10 pr-10 ${
+                            canEdit ? "cursor-pointer" : "cursor-not-allowed"
+                          } ${
+                            values.access === "Paid"
+                              ? "bg-primary text-black"
+                              : "bg-transparent text-white pl-10 pr-10"
+                          }`}
+                        >
+                          Paid
+                        </span>
+                      </div>
+                      {values.access === "Paid" && (
+                        <div ref={feesRef} className="w-full">
+                          <TextInput
+                            type="number"
+                            // pattern="[0-9]*"
+                            placeholder="Enter Amount"
+                            value={values.fees}
+                            onChange={handleChange("fees")}
+                            error={
+                              touched.fees && errors.fees
+                                ? String(errors.fees)
+                                : ""
+                            }
+                            className="w-full"
+                            disabled={!canEdit}
+                            icon={
+                              <img
+                                src={IMAGES.dollarsquare}
+                                alt=""
+                                className="w-5 h-5"
+                              />
+                            }
+                          />
+                        </div>
+                      )}
+                    </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
-                <div
-                  className={`p-5 rounded-lg pl-0 ${
-                    !canEdit ? "opacity-60" : ""
-                  }`}
-                >
-                  <h2 className="text-lg font-semibold mb-4 text-white">
-                    Choose Your Workout Access
-                  </h2>
-                  <div className="flex items-center gap-2 custom-workout-access">
+                    <h2 className="text-lg font-semibold mb-4 text-white mt-4">
+                      Workout Visibility
+                    </h2>
                     <div className="flex items-center gap-2 bg-white/3 p-2 rounded-full">
                       <span
                         onClick={() => {
                           if (canEdit) {
-                            formik.setFieldValue("fees", ""); // 👈 ADD THIS
-                            formik.setFieldValue("access", "Free"); // 👈 ADD THIS
+                            setVisibility("Public");
                           }
                         }}
-                        className={` px-6 py-3 rounded-full pl-10 pr-10 ${
+                        className={` px-6 py-3 w-[50%] text-center rounded-full ${
                           canEdit ? "cursor-pointer" : "cursor-not-allowed"
                         } ${
-                          values.access === "Free"
+                          visibility === "Public"
                             ? "bg-primary text-black"
-                            : "bg-transparent text-white pl-10 pr-10"
+                            : "bg-transparent text-white"
                         }`}
                       >
-                        Free
+                        Public
                       </span>
                       <span
                         onClick={() => {
                           if (canEdit) {
-                            formik.setFieldValue("access", "Paid"); // 👈 ADD THIS
+                            setVisibility("Private");
                           }
                         }}
-                        className={`px-6 py-3 rounded-full pl-10 pr-10 ${
+                        className={`px-6 py-3 w-[50%] text-center rounded-full ${
                           canEdit ? "cursor-pointer" : "cursor-not-allowed"
                         } ${
-                          values.access === "Paid"
+                          visibility === "Private"
                             ? "bg-primary text-black"
-                            : "bg-transparent text-white pl-10 pr-10"
+                            : "bg-transparent text-white"
                         }`}
                       >
-                        Paid
+                        Private
                       </span>
                     </div>
-                    {values.access === "Paid" && (
-                      <div ref={feesRef} className="w-full">
-                        <TextInput
-                          type="number"
-                          // pattern="[0-9]*"
-                          placeholder="Enter Amount"
-                          value={values.fees}
-                          onChange={handleChange("fees")}
-                          error={
-                            touched.fees && errors.fees
-                              ? String(errors.fees)
-                              : ""
-                          }
-                          className="w-full"
-                          disabled={!canEdit}
-                          icon={
-                            <img
-                              src={IMAGES.dollarsquare}
-                              alt=""
-                              className="w-5 h-5"
-                            />
-                          }
-                        />
-                      </div>
-                    )}
                   </div>
 
-                  <h2 className="text-lg font-semibold mb-4 text-white mt-4">
-                    Workout Visibility
-                  </h2>
-                  <div className="flex items-center gap-2 bg-white/3 p-2 rounded-full">
-                    <span
-                      onClick={() => {
-                        if (canEdit) {
-                          setVisibility("Public");
-                        }
-                      }}
-                      className={` px-6 py-3 w-[50%] text-center rounded-full ${
-                        canEdit ? "cursor-pointer" : "cursor-not-allowed"
-                      } ${
-                        visibility === "Public"
-                          ? "bg-primary text-black"
-                          : "bg-transparent text-white"
+                  {canEdit && canSaveDraft && (
+                    <div
+                      className={`p-5 rounded-lg ${
+                        !canEdit ? "opacity-60" : ""
                       }`}
                     >
-                      Public
-                    </span>
-                    <span
-                      onClick={() => {
-                        if (canEdit) {
-                          setVisibility("Private");
-                        }
-                      }}
-                      className={`px-6 py-3 w-[50%] text-center rounded-full ${
-                        canEdit ? "cursor-pointer" : "cursor-not-allowed"
-                      } ${
-                        visibility === "Private"
-                          ? "bg-primary text-black"
-                          : "bg-transparent text-white"
-                      }`}
-                    >
-                      Private
-                    </span>
-                  </div>
+                      <GroupInputTag
+                        onClickGroup={() => {}}
+                        onSelectGroups={onSelectGroups}
+                      />
+                    </div>
+                  )}
                 </div>
-
-                {canEdit && canSaveDraft && (
-                  <div
-                    className={`p-5 rounded-lg ${!canEdit ? "opacity-60" : ""}`}
-                  >
-                    <GroupInputTag
-                      onClickGroup={() => {}}
-                      onSelectGroups={onSelectGroups}
-                    />
-                  </div>
-                )}
               </div>
-            </div>
 
-            <button
-              type="submit"
-              className="hidden"
-              id="workout-form-submit"
-              // onClick={() => {
-              //   console.log(errors);
-              //   handleSubmit();
-              // }}
-            >
-              Submit
-            </button>
-          </Form>
-        )}
-      </Formik>
-      <SelectExercisePopup
-        open={isSelectExerciseOpen}
-        searchText={searchText}
-        setSearchText={setSearchText}
-        onClose={closeSelectExercisePopup}
-        exercises={exercises}
-        currentEditingDay={currentEditingDay}
-        weeks={weeks}
-        onSelect={(exercise) => {
-          if (currentEditingDay) {
-            const { weekIndex, dayIndex } = currentEditingDay;
-            const updatedWeeks = [...weeks];
-            const dayExercises =
-              updatedWeeks[weekIndex].days[dayIndex].exercises;
+              <button
+                type="submit"
+                className="hidden"
+                id="workout-form-submit"
+                // onClick={() => {
+                //   console.log(errors);
+                //   handleSubmit();
+                // }}
+              >
+                Submit
+              </button>
+            </Form>
+          )}
+        </Formik>
+        <SelectExercisePopup
+          open={isSelectExerciseOpen}
+          searchText={searchText}
+          setSearchText={setSearchText}
+          onClose={closeSelectExercisePopup}
+          exercises={exercises}
+          currentEditingDay={currentEditingDay}
+          weeks={weeks}
+          onSelect={(exercise) => {
+            if (currentEditingDay) {
+              const { weekIndex, dayIndex } = currentEditingDay;
+              const updatedWeeks = [...weeks];
+              const dayExercises =
+                updatedWeeks[weekIndex].days[dayIndex].exercises;
 
-            const existingIndex = dayExercises.findIndex(
-              (ex) => ex._id === exercise._id
-            );
+              const existingIndex = dayExercises.findIndex(
+                (ex) => ex._id === exercise._id
+              );
 
-            if (existingIndex !== -1) {
-              // Remove the exercise
-              dayExercises.splice(existingIndex, 1);
-              setWeeks(updatedWeeks);
-              // toast.info(`Removed "${exercise.title}"`);
-            } else {
-              // Add the exercise
-              dayExercises.push(exercise);
-              setWeeks(updatedWeeks);
-              // toast.success(`Added "${exercise.title}"`);
+              if (existingIndex !== -1) {
+                // Remove the exercise
+                dayExercises.splice(existingIndex, 1);
+                setWeeks(updatedWeeks);
+                // toast.info(`Removed "${exercise.title}"`);
+              } else {
+                // Add the exercise
+                dayExercises.push(exercise);
+                setWeeks(updatedWeeks);
+                // toast.success(`Added "${exercise.title}"`);
+              }
             }
-          }
-        }}
-      />
+          }}
+        />
 
-      {(submitting || exerciseLoader || preferencesLoader) && (
-        <FullScreenLoader />
-      )}
-    </div>
+        {(submitting || exerciseLoader || preferencesLoader) && (
+          <FullScreenLoader />
+        )}
+      </div>
+    </>
   );
 };
 

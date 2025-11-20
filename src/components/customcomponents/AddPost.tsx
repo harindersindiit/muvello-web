@@ -7,15 +7,38 @@ import { Icon } from "@iconify/react";
 import Lines from "@/components/svgcomponents/Lines";
 import SelectComponent from "@/components/customcomponents/SelectComponent";
 import GroupInputTag from "@/components/customcomponents/GroupInputTag";
-import { Formik, Form } from "formik";
+import { Formik, Form, FormikProps } from "formik";
 import { addPostSchema } from "@/utils/validations";
 import localStorageService from "@/utils/localStorageService";
 import axiosInstance from "@/utils/axiosInstance";
 import { toast } from "react-toastify";
 import FullScreenLoader from "../ui/loader";
-import { workerData } from "worker_threads";
+import AddWorkoutCategoryModal from "./AddWorkoutCategoryModal";
+import { useUser } from "@/context/UserContext";
 
-let formik: any;
+type UploadedFile = {
+  file: File | null;
+  url: string;
+};
+
+type WorkoutCategory = {
+  _id: string;
+  title: string;
+  icon?: string;
+  added_by?: string | { _id: string };
+  isCustom?: boolean;
+};
+
+type SelectedGroup = {
+  _id: string;
+  [key: string]: unknown;
+};
+
+type AddPostFormValues = {
+  caption: string;
+  workout_category: string;
+  media: UploadedFile[];
+};
 
 const AddPost = ({
   //   preferences,
@@ -26,17 +49,23 @@ const AddPost = ({
   onSuccess = null,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
+  const formikRef = useRef<FormikProps<AddPostFormValues> | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 
-  const [selectedgroups, setSelectedgroups] = useState<any[]>([]);
+  const [selectedgroups, setSelectedgroups] = useState<SelectedGroup[]>([]);
 
   // const [isShared, setIsShared] = useState(false);
   // const [selectGroupsOpen, setSelectGroupsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [preferences, setPrefernces] = useState([]);
+  const [preferences, setPrefernces] = useState<WorkoutCategory[]>([]);
+  const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   // const [preferencesLoader, setPreferncesLoader] = useState(false);
+  const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(
+    null
+  );
+  const { user } = useUser();
 
-  const iniVal = {
+  const iniVal: AddPostFormValues = {
     caption: "",
     workout_category: "",
     media: [],
@@ -54,15 +83,17 @@ const AddPost = ({
       }
 
       if (postDetails.media) {
-        const mediaArray = postDetails.media.map((media: any) => ({
-          file: null,
-          url: media.url,
-        }));
+        const mediaArray = (postDetails.media as Array<{ url: string }>).map(
+          (media) => ({
+            file: null,
+            url: media.url,
+          })
+        );
         setUploadedFiles(mediaArray);
 
         setInitialValues((prev) => ({
           ...prev,
-          media: postDetails.media,
+          media: mediaArray,
         }));
       }
     }
@@ -72,7 +103,7 @@ const AddPost = ({
     getPreferences();
   }, []);
 
-  const onSelectGroups = (groups) => {
+  const onSelectGroups = (groups: SelectedGroup[]) => {
     setSelectedgroups(groups);
   };
 
@@ -87,17 +118,93 @@ const AddPost = ({
         },
       });
 
-      console.log(res.data.body.workoutCategories);
-      setPrefernces(res.data.body.workoutCategories);
-    } catch (error: any) {
-      const message = error?.response?.data?.error || "Internal Server Error.";
+      const categories =
+        (res?.data?.body?.workoutCategories as WorkoutCategory[]) || [];
+      setPrefernces(categories);
+      return categories;
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error || "Internal Server Error.";
       toast.error(message);
+      return [];
     } finally {
       // setPreferncesLoader(false);
     }
   };
 
-  const [initialValues, setInitialValues] = useState(iniVal);
+  const ensureCategoryInPreferences = (category: WorkoutCategory) => {
+    if (!category?._id) return;
+
+    setPrefernces((prev) => {
+      const exists = prev.some((item) => item._id === category._id);
+      if (exists) {
+        return prev.map((item) =>
+          item._id === category._id ? { ...item, ...category } : item
+        );
+      }
+
+      return [category, ...prev];
+    });
+  };
+
+  const handleWorkoutCategoryCreated = async (category: WorkoutCategory) => {
+    ensureCategoryInPreferences(category);
+    formikRef.current?.setFieldValue("workout_category", category?._id);
+
+    if (!category?.isCustom) {
+      const latestCategories = await getPreferences();
+
+      const exists = latestCategories.some(
+        (item: WorkoutCategory) => item._id === category._id
+      );
+
+      if (!exists) {
+        ensureCategoryInPreferences(category);
+      }
+    }
+  };
+
+  const deleteCategory = async (id: string) => {
+    if (!id || deletingCategoryId === id) return;
+
+    setDeletingCategoryId(id);
+    try {
+      const token = localStorageService.getItem("accessToken");
+      const response = await axiosInstance.delete(
+        `/admin/delete-category/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = response?.data;
+
+      if (data?.success) {
+        setPrefernces((prev) => prev.filter((category) => category._id !== id));
+
+        const formikInstance = formikRef.current;
+        if (formikInstance?.values?.workout_category === id) {
+          formikInstance.setFieldValue("workout_category", "");
+        }
+
+        toast.success(data?.message || "Category deleted successfully.");
+      } else {
+        toast.error(data?.message || "Failed to delete category.");
+      }
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error || "Failed to delete category.";
+      toast.error(message);
+    } finally {
+      setDeletingCategoryId(null);
+    }
+  };
+
+  const [initialValues, setInitialValues] = useState<AddPostFormValues>(iniVal);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -155,21 +262,36 @@ const AddPost = ({
     setUploadedFiles((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const handleSubmitFun = async (values) => {
+  const handleSubmitFun = async (values: AddPostFormValues) => {
     setLoading(true);
 
+    const groups = selectedgroups.map((group) => group._id);
+
+    const payload: {
+      caption: string;
+      workout_category: string;
+      media: Array<{ url: string; type: "image" | "video" }>;
+      groups: string[];
+    } = {
+      caption: values.caption,
+      workout_category: values.workout_category,
+      media: [],
+      groups,
+    };
+
     try {
-      const reqData = {
-        ...values,
-        groups: selectedgroups.map((group) => group._id),
-      };
-
       const token = localStorageService.getItem("accessToken");
-      const uploadedMediaUrls: object[] = [];
+      if (!postDetails && uploadedFiles.length) {
+        const uploadedMediaUrls: Array<{
+          url: string;
+          type: "image" | "video";
+        }> = [];
 
-      if (!postDetails && uploadedFiles) {
         for (const mediaItem of uploadedFiles) {
           const file = mediaItem.file;
+          if (!file) {
+            continue;
+          }
           const mediaFormData = new FormData();
           mediaFormData.append("file", file);
 
@@ -195,19 +317,25 @@ const AddPost = ({
           );
 
           const url =
-            mediaResult.data.body.fileUrl || mediaResult.data.body.videoUrl;
+            mediaResult?.data?.body?.fileUrl ||
+            mediaResult?.data?.body?.videoUrl;
+
+          if (!url) {
+            toast.error("Failed to upload media.");
+            continue;
+          }
 
           uploadedMediaUrls.push({ url, type: isImage ? "image" : "video" });
         }
-        reqData.media = uploadedMediaUrls;
+
+        payload.media = uploadedMediaUrls;
       }
 
       if (postDetails) {
-        console.log("here 22");
         const exerciseResult = await axiosInstance.put(
           `post/${postDetails._id}`,
           {
-            caption: reqData.caption,
+            caption: payload.caption,
           },
           {
             headers: {
@@ -220,18 +348,17 @@ const AddPost = ({
 
         if (statusCode === 200 && message) {
           toast.success(message);
-          onSuccess(reqData.caption);
+          onSuccess?.(payload.caption);
           setPostDrawer(false);
         }
         refreshPosts();
       } else {
-        const exerciseResult = await axiosInstance.post("post", reqData, {
+        const exerciseResult = await axiosInstance.post("post", payload, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        console.log(exerciseResult);
         const { message, success } = exerciseResult.data;
 
         if (success && message) {
@@ -243,14 +370,10 @@ const AddPost = ({
         }
         refreshPosts();
       }
-
-      //   setPostDrawer(false);
-      //   setInitialVal(iniVal);
-      //   setThumbnailPreview(null);
-      //   setVideoPreview(null);
-    } catch (error: any) {
-      console.log(error);
-      const message = error?.response?.data?.error || "Adding exercise failed.";
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error || "Adding exercise failed.";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -258,204 +381,241 @@ const AddPost = ({
   };
 
   useEffect(() => {
-    formik?.setFieldValue("media", uploadedFiles);
+    formikRef.current?.setFieldValue("media", uploadedFiles);
   }, [uploadedFiles]);
 
   return (
-    <DrawerSidebar
-      title={postDetails ? "Edit Post" : "Add Post"}
-      submitText={postDetails ? "Update Post" : "Add Post"}
-      cancelText="Cancel"
-      onSubmit={() => document.getElementById("post-form-submit")?.click()}
-      onCancel={() => {
-        setPostDrawer(false);
-        setUploadedFiles([]);
-        setSelectedgroups([]);
-      }}
-      open={postDrawer}
-      setOpen={setPostDrawer}
-    >
-      {loading && <FullScreenLoader />}
+    <>
+      <AddWorkoutCategoryModal
+        open={isAddCategoryModalOpen}
+        setOpen={setIsAddCategoryModalOpen}
+        onCategoryCreated={handleWorkoutCategoryCreated}
+      />
 
-      <Formik
-        innerRef={(ref) => (formik = ref)}
-        enableReinitialize
-        initialValues={initialValues}
-        validationSchema={addPostSchema}
-        onSubmit={handleSubmitFun}
-        validateOnChange={true}
-        validateOnBlur={true}
+      <DrawerSidebar
+        title={postDetails ? "Edit Post" : "Add Post"}
+        submitText={postDetails ? "Update Post" : "Add Post"}
+        cancelText="Cancel"
+        onSubmit={() => document.getElementById("post-form-submit")?.click()}
+        onCancel={() => {
+          setPostDrawer(false);
+          setUploadedFiles([]);
+          setSelectedgroups([]);
+        }}
+        open={postDrawer}
+        setOpen={setPostDrawer}
       >
-        {({
-          values,
-          handleChange,
-          setFieldValue,
-          errors,
-          touched,
-          isSubmitting,
-          handleSubmit,
-        }) => (
-          <Form>
-            <div className="p-4">
-              <h3 className="text-white text-md font-semibold mb-2">
-                Basic Info
-              </h3>
+        {loading && <FullScreenLoader />}
 
-              {/* Upload Box */}
-              <div
-                className={`border-2 border-dashed rounded-lg h-40 flex flex-col justify-center items-center bg-[#1f1f1f] mb-3 ${
-                  uploadedFiles.length >= 6 || postDetails
-                    ? "border-gray-500 cursor-not-allowed opacity-50"
-                    : "border-blue-500 cursor-pointer"
-                }`}
-                onClick={() => {
-                  if (!postDetails && uploadedFiles.length < 6) {
-                    fileInputRef.current?.click();
-                  }
-                }}
-              >
-                <Icon
-                  icon="solar:gallery-outline"
-                  className={`mb-2 ${
-                    uploadedFiles.length >= 6 || postDetails
-                      ? "text-gray-500"
-                      : "text-blue"
-                  }`}
-                  fontSize={34}
-                />
-                <p
-                  className={`text-sm ${
-                    uploadedFiles.length >= 6 || postDetails
-                      ? "text-gray-500"
-                      : "text-white"
-                  }`}
-                >
-                  {uploadedFiles.length >= 6
-                    ? "Maximum 6 media files reached"
-                    : "Upload Images or Videos"}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {uploadedFiles.length}/6 files uploaded
-                </p>
-              </div>
+        <Formik
+          innerRef={formikRef}
+          enableReinitialize
+          initialValues={initialValues}
+          validationSchema={addPostSchema}
+          onSubmit={handleSubmitFun}
+          validateOnChange={true}
+          validateOnBlur={true}
+        >
+          {({ values, handleChange, setFieldValue, errors, touched }) => {
+            const mediaError =
+              touched.media && typeof errors.media === "string"
+                ? errors.media
+                : "";
+            const workoutCategoryError =
+              touched.workout_category &&
+              typeof errors.workout_category === "string"
+                ? errors.workout_category
+                : "";
+            const captionError =
+              touched.caption && typeof errors.caption === "string"
+                ? errors.caption
+                : "";
 
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="image/*,video/*"
-                multiple
-                onChange={handleFileChange}
-                className="hidden"
-              />
-
-              {errors.media && touched.media && (
-                <p className="text-sm text-red-500 mt-1">{errors.media}</p>
-              )}
-
-              {/* Previews */}
-              <div className="flex gap-4 mb-4 flex-wrap">
-                {uploadedFiles.map((fileObj, idx) => (
-                  <div
-                    key={idx}
-                    className="relative w-[110px] h-[110px] rounded-md overflow-hidden"
-                  >
-                    {fileObj.url.endsWith(".mp4") ||
-                    fileObj.file?.type?.startsWith("video/") ? (
-                      <video
-                        src={fileObj.url}
-                        className="w-full h-full object-cover rounded"
-                        controls
-                        controlsList="nodownload nofullscreen noremoteplayback"
-                        disablePictureInPicture
-                      />
-                    ) : (
-                      <img
-                        src={fileObj.url}
-                        alt=""
-                        className="w-full h-full object-cover rounded"
-                      />
-                    )}
-                    {!postDetails && (
-                      <Button
-                        size="icon"
-                        variant="destructive"
-                        onClick={() => removeFile(idx)}
-                        className="absolute top-1 right-1 h-5 w-5 p-0 rounded-full"
-                      >
-                        <img
-                          src={IMAGES.cross}
-                          alt=""
-                          className="w-full h-full"
-                        />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Dropdown */}
-              <SelectComponent
-                fallbackValue={postDetails?.workout_category_details[0].title}
-                placeholder="Select Workout Category"
-                disabled={postDetails}
-                value={values.workout_category}
-                onChange={(val) => setFieldValue("workout_category", val)}
-                icon={IMAGES.workout_category}
-                className="mb-3"
-                options={preferences.map((item) => ({
-                  label: item.title,
-                  value: item._id,
-                  icon: item.icon,
-                }))}
-              />
-              {errors.workout_category && touched.workout_category && (
-                <p className="text-sm text-red-500 mt-1">
-                  {errors.workout_category}
-                </p>
-              )}
-
-              {/* Caption */}
-              <CustomTextArea
-                placeholder="Write caption..."
-                value={values.caption}
-                onChange={handleChange("caption")}
-                icon={<Lines color="white" />}
-                error={touched.caption && errors.caption ? errors.caption : ""}
-                className="min-h-[120px] max-h-[120px]"
-              />
-            </div>
-
-            {!postDetails && (
-              <>
-                <div className="w-full h-[7px] bg-lightdark"></div>
+            return (
+              <Form>
                 <div className="p-4">
-                  <GroupInputTag
-                    onClickGroup={() => {}}
-                    onSelectGroups={onSelectGroups}
+                  <h3 className="text-white text-md font-semibold mb-2">
+                    Basic Info
+                  </h3>
+
+                  {/* Upload Box */}
+                  <div
+                    className={`border-2 border-dashed rounded-lg h-40 flex flex-col justify-center items-center bg-[#1f1f1f] mb-3 ${
+                      uploadedFiles.length >= 6 || postDetails
+                        ? "border-gray-500 cursor-not-allowed opacity-50"
+                        : "border-blue-500 cursor-pointer"
+                    }`}
+                    onClick={() => {
+                      if (!postDetails && uploadedFiles.length < 6) {
+                        fileInputRef.current?.click();
+                      }
+                    }}
+                  >
+                    <Icon
+                      icon="solar:gallery-outline"
+                      className={`mb-2 ${
+                        uploadedFiles.length >= 6 || postDetails
+                          ? "text-gray-500"
+                          : "text-blue"
+                      }`}
+                      fontSize={34}
+                    />
+                    <p
+                      className={`text-sm ${
+                        uploadedFiles.length >= 6 || postDetails
+                          ? "text-gray-500"
+                          : "text-white"
+                      }`}
+                    >
+                      {uploadedFiles.length >= 6
+                        ? "Maximum 6 media files reached"
+                        : "Upload Images or Videos"}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {uploadedFiles.length}/6 files uploaded
+                    </p>
+                  </div>
+
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*,video/*"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+
+                  {mediaError && (
+                    <p className="text-sm text-red-500 mt-1">{mediaError}</p>
+                  )}
+
+                  {/* Previews */}
+                  <div className="flex gap-4 mb-4 flex-wrap">
+                    {uploadedFiles.map((fileObj, idx) => (
+                      <div
+                        key={idx}
+                        className="relative w-[110px] h-[110px] rounded-md overflow-hidden"
+                      >
+                        {fileObj.url.endsWith(".mp4") ||
+                        fileObj.file?.type?.startsWith("video/") ? (
+                          <video
+                            src={fileObj.url}
+                            className="w-full h-full object-cover rounded"
+                            controls
+                            controlsList="nodownload nofullscreen noremoteplayback"
+                            disablePictureInPicture
+                          />
+                        ) : (
+                          <img
+                            src={fileObj.url}
+                            alt=""
+                            className="w-full h-full object-cover rounded"
+                          />
+                        )}
+                        {!postDetails && (
+                          <Button
+                            size="icon"
+                            variant="destructive"
+                            onClick={() => removeFile(idx)}
+                            className="absolute top-1 right-1 h-5 w-5 p-0 rounded-full"
+                          >
+                            <img
+                              src={IMAGES.cross}
+                              alt=""
+                              className="w-full h-full"
+                            />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Dropdown */}
+                  {!postDetails && (
+                    <Button
+                      type="button"
+                      onClick={() => setIsAddCategoryModalOpen(true)}
+                      className="flex items-center gap-2 bg-primary text-black font-semibold px-5 py-2 rounded-full mb-3 hover:opacity-90 transition"
+                    >
+                      <Icon icon="solar:add-circle-linear" fontSize={18} />
+                      Add New Category
+                    </Button>
+                  )}
+                  <SelectComponent
+                    fallbackValue={
+                      postDetails?.workout_category_details?.[0]?.title
+                    }
+                    placeholder="Select Workout Category"
+                    disabled={postDetails}
+                    value={values.workout_category}
+                    onChange={(val) => setFieldValue("workout_category", val)}
+                    icon={IMAGES.category}
+                    className="mb-3"
+                    options={preferences.map((item) => ({
+                      label: item.title,
+                      value: item._id,
+                      icon: item.icon,
+                      iconAlt: item.title,
+                      canDelete:
+                        !postDetails &&
+                        !!user?._id &&
+                        (item.added_by === user._id ||
+                          (typeof item.added_by === "object" &&
+                            item.added_by?._id === user._id)),
+                      onDelete: () => deleteCategory(item._id),
+                      isDeleting: deletingCategoryId === item._id,
+                    }))}
+                  />
+                  {workoutCategoryError && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {workoutCategoryError}
+                    </p>
+                  )}
+
+                  {/* Caption */}
+                  <CustomTextArea
+                    placeholder="Write caption..."
+                    value={values.caption}
+                    onChange={handleChange("caption")}
+                    icon={<Lines color="white" />}
+                    error={captionError}
+                    className="min-h-[120px] max-h-[120px]"
                   />
                 </div>
-              </>
-            )}
 
-            {/* Submit Button (Hidden, DrawerFooter has a button) */}
+                {!postDetails && (
+                  <>
+                    <div className="w-full h-[7px] bg-lightdark"></div>
+                    <div className="p-4">
+                      <GroupInputTag
+                        onClickGroup={() => {}}
+                        onSelectGroups={onSelectGroups}
+                      />
+                    </div>
+                  </>
+                )}
 
-            <button
-              type="submit"
-              className="hidden"
-              id="post-form-submit"
-              disabled={loading}
-              //   onClick={() => {
-              //     handleSubmit();
-              //   }}
-            >
-              Submit
-            </button>
+                {/* Submit Button (Hidden, DrawerFooter has a button) */}
 
-            {/* <button type="submit" className="hidden" /> */}
-          </Form>
-        )}
-      </Formik>
-    </DrawerSidebar>
+                <button
+                  type="submit"
+                  className="hidden"
+                  id="post-form-submit"
+                  disabled={loading}
+                  //   onClick={() => {
+                  //     handleSubmit();
+                  //   }}
+                >
+                  Submit
+                </button>
+
+                {/* <button type="submit" className="hidden" /> */}
+              </Form>
+            );
+          }}
+        </Formik>
+      </DrawerSidebar>
+    </>
   );
 };
 

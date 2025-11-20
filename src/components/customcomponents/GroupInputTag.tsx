@@ -11,32 +11,42 @@ import { toast } from "react-toastify";
 import { useUser } from "@/context/UserContext";
 import { Checkbox } from "../ui/checkbox";
 
+type Group = {
+  _id: string;
+  name?: string;
+  group_picture_url?: string;
+  followers?: number | string;
+  [key: string]: unknown;
+};
+
+interface GroupInputTagProps {
+  onClickGroup: () => void;
+  onSelectGroups?: (groups: Group[]) => void;
+}
+
 const GroupInputTag = ({
   onClickGroup,
   onSelectGroups,
-}: {
-  onClickGroup: () => void;
-  onSelectGroups: () => void;
-}) => {
+}: GroupInputTagProps) => {
   const { user } = useUser();
   const [inputValue, setInputValue] = useState("");
-  const [selectedGroups, setSelectedGroups] = useState<any[]>([]);
-  const [selectedGroupsCopy, setSelectedGroupsCopy] = useState<any[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<Group[]>([]);
+  const [selectedGroupsCopy, setSelectedGroupsCopy] = useState<Group[]>([]);
   const [openShare, setOpenShare] = useState(false);
   const [isShared, setIsShared] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [groups, setGroups] = useState<any[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    onSelectGroups(selectedGroups);
-  }, [selectedGroups]);
+    onSelectGroups?.(selectedGroups);
+  }, [selectedGroups, onSelectGroups]);
 
   const handleRemove = (id: string) => {
     setSelectedGroups((prev) => prev.filter((g) => g._id !== id));
   };
 
-  const toggleGroup = (group: any) => {
+  const toggleGroup = (group: Group) => {
     const exists = selectedGroups.find((g) => g._id === group._id);
     if (exists) {
       setSelectedGroups(selectedGroups.filter((g) => g._id !== group._id));
@@ -53,7 +63,7 @@ const GroupInputTag = ({
         headers: { Authorization: `Bearer ${token}` },
       });
       const { body } = res.data;
-      setGroups(body.groups || []);
+      setGroups((body.groups || []) as Group[]);
     } catch (error: any) {
       const message = error?.response?.data?.error || "Fetching groups failed.";
       toast.error(message);
@@ -132,7 +142,7 @@ const GroupInputTag = ({
                 <div className="relative">
                   <img
                     src={group.group_picture_url || IMAGES.groupPlaceholder}
-                    alt={group.name}
+                    alt={group.name || "Group"}
                     className="w-16 h-16 rounded-full object-cover"
                   />
                   <button
@@ -214,7 +224,7 @@ const GroupInputTag = ({
               >
                 <img
                   src={group.group_picture_url || IMAGES.groupPlaceholder}
-                  alt={group.name}
+                  alt={group.name || "Group"}
                   className="w-10 h-10 rounded-full object-cover"
                 />
                 <div className="flex items-center gap-3 justify-between w-full border-b border-gray-800 py-4">
