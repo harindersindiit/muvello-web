@@ -27,8 +27,6 @@ interface AddCategoryResponse {
   };
 }
 
-const DEFAULT_CATEGORY_ICON = "https://picsum.photos/id/1/200/300";
-
 const createFallbackCategory = (
   title: string,
   icon: string
@@ -83,6 +81,12 @@ const AddWorkoutCategoryModal = ({
   };
 
   const handleIconSelect = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      setIconError("Selected file must be an image");
+      toast.error("Please select a valid image file.");
+      return;
+    }
+
     if (iconPreview) {
       URL.revokeObjectURL(iconPreview);
     }
@@ -94,45 +98,59 @@ const AddWorkoutCategoryModal = ({
   const handleSubmit = async () => {
     const trimmedName = categoryName.trim();
 
+    setError("");
+    setIconError("");
+
     if (!trimmedName) {
       setError("Category name is required");
       return;
     }
 
+    if (!iconFile) {
+      setIconError("Category icon is required");
+      toast.error("Please select an icon for this category.");
+      return;
+    }
+
+    if (!iconFile.type.startsWith("image/")) {
+      setIconError("Selected file must be an image");
+      toast.error("The selected file must be a valid image.");
+      return;
+    }
+
     setLoading(true);
-    setError("");
-    setIconError("");
 
-    let iconUrl = DEFAULT_CATEGORY_ICON;
+    let iconUrl: string;
 
-    if (iconFile) {
-      try {
-        const token = localStorageService.getItem("accessToken");
-        const uploadData = new FormData();
-        uploadData.append("file", iconFile);
+    try {
+      const token = localStorageService.getItem("accessToken");
+      const uploadData = new FormData();
+      uploadData.append("file", iconFile);
 
-        const uploadResponse = await axiosInstance.post(
-          "/s3/upload-image",
-          uploadData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+      const uploadResponse = await axiosInstance.post(
+        "/s3/upload-image",
+        uploadData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-        iconUrl =
-          uploadResponse?.data?.body?.fileUrl ||
-          uploadResponse?.data?.body?.videoUrl ||
-          DEFAULT_CATEGORY_ICON;
-      } catch {
-        setIconError("Failed to upload icon. Using default image instead.");
-        toast.error(
-          "Unable to upload icon. The category will use the default icon."
-        );
-        iconUrl = DEFAULT_CATEGORY_ICON;
+      iconUrl =
+        uploadResponse?.data?.body?.fileUrl ||
+        uploadResponse?.data?.body?.videoUrl ||
+        "";
+
+      if (!iconUrl) {
+        throw new Error("Icon URL missing from upload response");
       }
+    } catch {
+      setLoading(false);
+      setIconError("Failed to upload icon. Please try again.");
+      toast.error("Unable to upload icon. Please try again.");
+      return;
     }
 
     const payload = {
