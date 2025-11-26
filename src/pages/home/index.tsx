@@ -442,7 +442,7 @@ const Home = () => {
                 <h3 className="text-xl font-semibold mb-3 md:mb-0 mr-3">
                   Exercises
                 </h3>
-                <div className="flex gap-1 mr-2 overflow-x-auto whitespace-nowrap scrollbar-none">
+                <div className="flex gap-1 mr-2 overflow-x-auto whitespace-nowrap scroll-hide">
                   {[{ _id: "all", name: "All" }, ...preferences].map((tag) => (
                     <button
                       key={tag._id}
