@@ -175,7 +175,7 @@ const WorkoutDetails = () => {
 
       if (!isPaidWorkout) {
         setWorkoutAccess({
-          isPurchased: true,
+          isPurchased: false,
           isLoading: false,
           isPaidWorkout: false,
         });
@@ -512,13 +512,10 @@ const WorkoutDetails = () => {
                   <CustomButton
                     className="w-auto py-5 bg-primary text-black"
                     text={
-                      workoutDetails?.user_id === user._id
-                        ? workoutDetails?.fees && workoutDetails.fees > 0
-                          ? `$${workoutDetails.fees}`
-                          : "Free"
-                        : workoutAccess.isPurchased
+                      workoutAccess.isPurchased &&
+                      workoutDetails?.user_id !== user._id
                         ? "Purchased"
-                        : workoutDetails?.fees && workoutDetails.fees > 0
+                        : workoutDetails?.fees
                         ? `$${workoutDetails.fees}`
                         : "Free"
                     }
