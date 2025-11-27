@@ -9,7 +9,6 @@ import {
   BarChart,
   Bar,
   Tooltip,
-  ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
 import { useMemo, useState } from "react";
@@ -38,6 +37,17 @@ export default function ProgressCharts({ statistics }) {
       total: day.total_exercises,
     }));
   }, [exerciseWeek, statistics]);
+
+  const exerciseYAxisMax = useMemo(() => {
+    if (!exerciseData.length) return 8;
+
+    const maxTotal = Math.max(...exerciseData.map((day) => day.total ?? 0));
+    const maxCompleted = Math.max(
+      ...exerciseData.map((day) => day.completed ?? 0)
+    );
+
+    return Math.max(8, maxTotal, maxCompleted);
+  }, [exerciseData]);
 
   const weightData = useMemo(() => {
     const selectedWeekData = statistics.find(
@@ -88,7 +98,7 @@ export default function ProgressCharts({ statistics }) {
               />
               <YAxis
                 stroke="#fff"
-                domain={[0, 8]}
+                domain={[0, exerciseYAxisMax]}
                 tick={{ fontSize: 12 }} // 👈 font size here
               />
               <Tooltip
