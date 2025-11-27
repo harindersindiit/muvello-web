@@ -651,7 +651,7 @@ const UserProfile = () => {
                         <Loader2 className="animate-spin text-white w-12 h-12" />
                       ) : (
                         <>
-                          {pinnedPosts?.slice(0, 5).map((item, index) => {
+                          {pinnedPosts.map((item, index) => {
                             return (
                               <ProfilePostCard
                                 key={index}
@@ -713,7 +713,7 @@ const UserProfile = () => {
                     </h6>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 border-b border-gray-900 pb-6 mb-6">
-                      {pinnedWorkouts.slice(0, 5).map((workout, index) => (
+                      {pinnedWorkouts.map((workout, index) => (
                         <WorkoutComponent
                           visibility={workout.visibility}
                           is_draft={workout.is_draft}

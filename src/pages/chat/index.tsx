@@ -44,6 +44,7 @@ import NoDataPlaceholder from "@/components/ui/nodata";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { reportUserSchema } from "@/utils/validations";
 import { totalWorkoutDuration } from "@/lib/utils";
+import { truncateText } from "@/utils/text";
 
 const AddMembersPopup = ({
   open,
@@ -1562,10 +1563,6 @@ const GroupChatUI = () => {
   // }, [openNewAdminPopup]);
 
   const [leaveLoader, setLeaveLoader] = useState(false);
-
-  const truncateText = (text, maxLength = 33) => {
-    return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
-  };
 
   const getOtherUserDetails = async () => {
     const getOtherUser =

@@ -1,5 +1,6 @@
 import { IMAGES } from "@/contants/images";
 import CustomButton from "./CustomButton";
+import { truncateText } from "@/utils/text";
 
 interface WorkoutComponentProps {
   image: string;
@@ -105,7 +106,7 @@ const WorkoutComponent = ({
       >
         <div>
           <h4 className="font-semibold text-sm mb-1 truncate" title={title}>
-            {title.length > 40 ? title.substring(0, 40) + "..." : title}
+            {truncateText(title, 30)}
           </h4>
 
           <p className="text-sm text-gray-400 flex gap-1 items-center">
