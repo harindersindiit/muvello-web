@@ -298,12 +298,12 @@ input:-webkit-autofill:active {
 
 :root {
   --sb-track-color: #000000;
-  --sb-thumb-color: #94eb00;
+  --sb-thumb-color: #95eb0066;
   --sb-size: 3px;
 }
 
 *::-webkit-scrollbar {
-  width: var(--sb-size);
+  width: 0;
   height: var(--sb-size);
 }
 
@@ -319,6 +319,6 @@ input:-webkit-autofill:active {
 
 @supports not selector(::-webkit-scrollbar) {
   * {
-    scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+    scrollbar-width: none;
   }
 }

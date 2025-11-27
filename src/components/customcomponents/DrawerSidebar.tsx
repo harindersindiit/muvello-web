@@ -52,7 +52,7 @@ export function DrawerSidebar({
         }}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <div className="mx-auto w-full max-w-sm">
+        <div className="mx-auto w-full max-w-sm scroll-hide">
           <DrawerHeader className="border-b border-gray-800">
             <DrawerTitle className="text-md font-semibold text-white flex items-center gap-2">
               <img
