@@ -296,7 +296,7 @@ const Home = () => {
       {/* <div className="w-full grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 grid-rows-[auto] gap-4"> */}
       <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 h-[calc(100vh-80px)]">
         {/* <div className="col-span-1 md:col-span-2 xl:col-span-3"> */}
-        <div className="col-span-1 md:col-span-2 xl:col-span-3 overflow-y-auto pr-2 scroll-hide">
+        <div className="col-span-1 md:col-span-2 xl:col-span-3 overflow-y-auto pr-2">
           <div className="sticky top-0">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 bg-[#1a1a1a] p-4 rounded-lg">
@@ -442,7 +442,7 @@ const Home = () => {
                 <h3 className="text-xl font-semibold mb-3 md:mb-0 mr-3">
                   Exercises
                 </h3>
-                <div className="flex gap-1 mr-2 overflow-x-auto whitespace-nowrap scroll-hide">
+                <div className="flex gap-1 mr-2 overflow-x-auto whitespace-nowrap">
                   {[{ _id: "all", name: "All" }, ...preferences].map((tag) => (
                     <button
                       key={tag._id}
@@ -518,7 +518,7 @@ const Home = () => {
         {/* <div className="col-span-1 md:col-span-2 xl:col-span-1 md:mt-5 xl:mt-0"> */}
         <div
           ref={postContainerRef}
-          className="col-span-1 md:col-span-2 xl:col-span-1 overflow-y-auto pl-2 scroll-hide"
+          className="col-span-1 md:col-span-2 xl:col-span-1 overflow-y-auto pl-2"
         >
           {/* Sidebar */}
           <div className=" xl:block">

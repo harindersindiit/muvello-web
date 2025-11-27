@@ -168,7 +168,7 @@ const ProgressDetails = () => {
 
           {/* Sidebar - 4 columns */}
           <div className="col-span-0 md:col-span-12 lg:col-span-4 xl:col-span-3 pl-2">
-            <div className="max-h-[calc(100vh-100px)] overflow-y-auto pr-1 scroll-hide">
+            <div className="max-h-[calc(100vh-100px)] overflow-y-auto pr-1">
               <div className="flex items-center gap-4 mb-3">
                 <h2 className="text-md font-semibold">
                   <span className="text-white">Exercises</span>

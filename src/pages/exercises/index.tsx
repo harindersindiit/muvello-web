@@ -133,7 +133,14 @@ const Exercise = () => {
           <div className="flex justify-between items-center flex-wrap space-y-3 mb-3">
             <h3 className="text-xl font-semibold mb-3">Exercises</h3>
 
-            <div className="flex gap-2 mr-2 overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-[#3a3a3a] scrollbar-track-[#1a1a1a] hover:scrollbar-thumb-[#4a4a4a]">
+            <div
+              className="flex gap-2 mr-2 overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-[#3a3a3a] scrollbar-track-[#1a1a1a] hover:scrollbar-thumb-[#4a4a4a]"
+              style={{
+                height: "48px",
+                alignItems: "center",
+                minHeight: "48px",
+              }} // give explicit height so scrollbar has margin to top
+            >
               {[{ _id: "all", name: "All" }, ...preferences].map((tag) => (
                 <button
                   key={tag._id}
